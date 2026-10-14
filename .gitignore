@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+.cache/
+certs/*
+!certs/.gitkeep
+*.log
+.DS_Store
