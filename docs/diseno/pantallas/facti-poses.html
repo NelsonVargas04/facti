@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Facti — poses del personaje</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&amp;family=Nunito:wght@400;600;700;800&amp;display=swap">
+<style>
+body{margin:0;background:#F2F5F9}
+@media (prefers-reduced-motion: no-preference){
+.f-float{animation:fFloat 3.2s ease-in-out infinite}
+.f-blink{animation:fBlink 4.6s infinite;transform-box:fill-box;transform-origin:center}
+.f-wave{animation:fWave 1.6s ease-in-out infinite;transform-origin:220px 150px}
+.f-wave-l{animation:fWaveL 2.2s ease-in-out infinite .3s;transform-origin:40px 150px}
+.f-conf{animation:fConf 2.4s ease-in infinite;transform-box:fill-box;transform-origin:center}
+.f-z{animation:fZ 2.4s ease-out infinite;opacity:0}
+.f-shake{animation:fShake 2.8s ease-in-out infinite}
+.f-pulse{animation:fPulse 1.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.f-sweep{animation:fSweep 2.2s ease-in-out infinite;transform-origin:220px 150px}
+}
+@keyframes fFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes fBlink{0%,91%,100%{transform:scaleY(1)}94%{transform:scaleY(.1)}}
+@keyframes fWave{0%,100%{transform:rotate(0deg)}50%{transform:rotate(-22deg)}}
+@keyframes fWaveL{0%,100%{transform:rotate(0deg)}50%{transform:rotate(14deg)}}
+@keyframes fConf{0%{transform:translateY(-10px) rotate(0deg);opacity:0}15%{opacity:1}100%{transform:translateY(90px) rotate(200deg);opacity:0}}
+@keyframes fZ{0%{transform:translate(0,10px);opacity:0}30%{opacity:1}100%{transform:translate(10px,-20px);opacity:0}}
+@keyframes fShake{0%,70%,100%{transform:translateX(0)}74%{transform:translateX(-5px)}78%{transform:translateX(5px)}82%{transform:translateX(-4px)}86%{transform:translateX(3px)}}
+@keyframes fPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+@keyframes fSweep{0%,100%{transform:rotate(0deg)}50%{transform:rotate(-14deg)}}
+</style>
+</helmet>
+<div style="background: #F2F5F9; color: #15193A; font-family: 'Nunito', 'Segoe UI', system-ui, sans-serif; font-size: 16px; line-height: 1.55; padding: 56px 64px; box-sizing: border-box; min-height: 1560px; display: flex; flex-direction: column; gap: 32px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 8px; max-width: 720px">
+<h1 style="margin: 0; font-family: 'Quicksand', 'Nunito', sans-serif; font-weight: 700; font-size: 48px; letter-spacing: -0.02em">Facti, el personaje</h1>
+<p style="margin: 0; font-size: 18px; color: #4A5072">Siempre el mismo Facti: un ticket de factura lila con borde en zigzag, manos amarillas y cachetes rosados. Cambian la pose, la cara y los accesorios según el momento. Las poses animadas se usan en momentos clave; las estáticas, donde el movimiento distraería.</p>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 18px"><div style="display: flex; align-items: center; gap: 10px"><span style="width: 36px; height: 36px; border-radius: 12px; background: #7B7FF2; border: 1px solid #E1E5EE"></span><span><strong style="display: block; font-size: 14px">Cuerpo</strong><span style="font-size: 13px; color: #5A6080">#7B7FF2</span></span></div><div style="display: flex; align-items: center; gap: 10px"><span style="width: 36px; height: 36px; border-radius: 12px; background: #FFD25E; border: 1px solid #E1E5EE"></span><span><strong style="display: block; font-size: 14px">Manos</strong><span style="font-size: 13px; color: #5A6080">#FFD25E</span></span></div><div style="display: flex; align-items: center; gap: 10px"><span style="width: 36px; height: 36px; border-radius: 12px; background: #FF9FB2; border: 1px solid #E1E5EE"></span><span><strong style="display: block; font-size: 14px">Cachetes</strong><span style="font-size: 13px; color: #5A6080">#FF9FB2</span></span></div><div style="display: flex; align-items: center; gap: 10px"><span style="width: 36px; height: 36px; border-radius: 12px; background: #15193A; border: 1px solid #E1E5EE"></span><span><strong style="display: block; font-size: 14px">Ojos y boca</strong><span style="font-size: 13px; color: #5A6080">#15193A</span></span></div></div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 22px">
+<div style="background: #FFFFFF; border-radius: 24px; padding: 28px; box-shadow: 0 8px 24px rgba(21,25,58,0.06); padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center">
+<div style="width: 100%; height: 210px; background: #F2F5F9; border-radius: 18px; display: flex; align-items: center; justify-content: center"><dc-import name="Facti" pose="saludo" size="190" hint-size="190px,179px"></dc-import></div>
+<div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center"><strong style="font-size: 19px">Saludando</strong><span style="background: #ECEDFF; color: #2A2DB0; padding: 5px 12px; border-radius: 999px; font-weight: 800; font-size: 13px">Animado</span></div>
+<span style="font-size: 15px; color: #4A5072">Bienvenida, landing, registro</span>
+<code style="font-size: 13px; color: #5A6080; background: #F2F5F9; padding: 3px 8px; border-radius: 6px">pose="saludo"</code>
+</div>
+<div style="background: #FFFFFF; border-radius: 24px; padding: 28px; box-shadow: 0 8px 24px rgba(21,25,58,0.06); padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center">
+<div style="width: 100%; height: 210px; background: #F2F5F9; border-radius: 18px; display: flex; align-items: center; justify-content: center"><dc-import name="Facti" pose="ok" size="190" hint-size="190px,179px"></dc-import></div>
+<div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center"><strong style="font-size: 19px">Todo bien</strong><span style="background: #EEF0F5; color: #3C4268; padding: 5px 12px; border-radius: 999px; font-weight: 800; font-size: 13px">Estático</span></div>
+<span style="font-size: 15px; color: #4A5072">Confirmaciones, pasos completados</span>
+<code style="font-size: 13px; color: #5A6080; background: #F2F5F9; padding: 3px 8px; border-radius: 6px">pose="ok"</code>
+</div>
+<div style="background: #FFFFFF; border-radius: 24px; padding: 28px; box-shadow: 0 8px 24px rgba(21,25,58,0.06); padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center">
+<div style="width: 100%; height: 210px; background: #F2F5F9; border-radius: 18px; display: flex; align-items: center; justify-content: center"><dc-import name="Facti" pose="festejo" size="190" hint-size="190px,179px"></dc-import></div>
+<div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center"><strong style="font-size: 19px">Festejando</strong><span style="background: #ECEDFF; color: #2A2DB0; padding: 5px 12px; border-radius: 999px; font-weight: 800; font-size: 13px">Animado</span></div>
+<span style="font-size: 15px; color: #4A5072">Factura autorizada, onboarding listo</span>
+<code style="font-size: 13px; color: #5A6080; background: #F2F5F9; padding: 3px 8px; border-radius: 6px">pose="festejo"</code>
+</div>
+<div style="background: #FFFFFF; border-radius: 24px; padding: 28px; box-shadow: 0 8px 24px rgba(21,25,58,0.06); padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center">
+<div style="width: 100%; height: 210px; background: #F2F5F9; border-radius: 18px; display: flex; align-items: center; justify-content: center"><dc-import name="Facti" pose="factura" size="190" hint-size="190px,179px"></dc-import></div>
+<div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center"><strong style="font-size: 19px">Con una factura</strong><span style="background: #EEF0F5; color: #3C4268; padding: 5px 12px; border-radius: 999px; font-weight: 800; font-size: 13px">Estático</span></div>
+<span style="font-size: 15px; color: #4A5072">Vista previa, comprobantes, PDF</span>
+<code style="font-size: 13px; color: #5A6080; background: #F2F5F9; padding: 3px 8px; border-radius: 6px">pose="factura"</code>
+</div>
+<div style="background: #FFFFFF; border-radius: 24px; padding: 28px; box-shadow: 0 8px 24px rgba(21,25,58,0.06); padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center">
+<div style="width: 100%; height: 210px; background: #F2F5F9; border-radius: 18px; display: flex; align-items: center; justify-content: center"><dc-import name="Facti" pose="pensando" size="190" hint-size="190px,179px"></dc-import></div>
+<div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center"><strong style="font-size: 19px">Pensando</strong><span style="background: #EEF0F5; color: #3C4268; padding: 5px 12px; border-radius: 999px; font-weight: 800; font-size: 13px">Estático</span></div>
+<span style="font-size: 15px; color: #4A5072">Ayuda, preguntas frecuentes, dudas</span>
+<code style="font-size: 13px; color: #5A6080; background: #F2F5F9; padding: 3px 8px; border-radius: 6px">pose="pensando"</code>
+</div>
+<div style="background: #FFFFFF; border-radius: 24px; padding: 28px; box-shadow: 0 8px 24px rgba(21,25,58,0.06); padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center">
+<div style="width: 100%; height: 210px; background: #F2F5F9; border-radius: 18px; display: flex; align-items: center; justify-content: center"><dc-import name="Facti" pose="senalando" size="190" hint-size="190px,179px"></dc-import></div>
+<div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center"><strong style="font-size: 19px">Señalando</strong><span style="background: #EEF0F5; color: #3C4268; padding: 5px 12px; border-radius: 999px; font-weight: 800; font-size: 13px">Estático</span></div>
+<span style="font-size: 15px; color: #4A5072">Tips, próximos pasos, tutoriales</span>
+<code style="font-size: 13px; color: #5A6080; background: #F2F5F9; padding: 3px 8px; border-radius: 6px">pose="senalando"</code>
+</div>
+<div style="background: #FFFFFF; border-radius: 24px; padding: 28px; box-shadow: 0 8px 24px rgba(21,25,58,0.06); padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center">
+<div style="width: 100%; height: 210px; background: #F2F5F9; border-radius: 18px; display: flex; align-items: center; justify-content: center"><dc-import name="Facti" pose="buscando" size="190" hint-size="190px,179px"></dc-import></div>
+<div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center"><strong style="font-size: 19px">Buscando en ARCA</strong><span style="background: #ECEDFF; color: #2A2DB0; padding: 5px 12px; border-radius: 999px; font-weight: 800; font-size: 13px">Animado</span></div>
+<span style="font-size: 15px; color: #4A5072">Consultando padrón, cargando datos</span>
+<code style="font-size: 13px; color: #5A6080; background: #F2F5F9; padding: 3px 8px; border-radius: 6px">pose="buscando"</code>
+</div>
+<div style="background: #FFFFFF; border-radius: 24px; padding: 28px; box-shadow: 0 8px 24px rgba(21,25,58,0.06); padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center">
+<div style="width: 100%; height: 210px; background: #F2F5F9; border-radius: 18px; display: flex; align-items: center; justify-content: center"><dc-import name="Facti" pose="alerta" size="190" hint-size="190px,179px"></dc-import></div>
+<div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center"><strong style="font-size: 19px">Atento</strong><span style="background: #ECEDFF; color: #2A2DB0; padding: 5px 12px; border-radius: 999px; font-weight: 800; font-size: 13px">Animado</span></div>
+<span style="font-size: 15px; color: #4A5072">Topes de monotributo, vencimientos, errores</span>
+<code style="font-size: 13px; color: #5A6080; background: #F2F5F9; padding: 3px 8px; border-radius: 6px">pose="alerta"</code>
+</div>
+<div style="background: #FFFFFF; border-radius: 24px; padding: 28px; box-shadow: 0 8px 24px rgba(21,25,58,0.06); padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center">
+<div style="width: 100%; height: 210px; background: #F2F5F9; border-radius: 18px; display: flex; align-items: center; justify-content: center"><dc-import name="Facti" pose="durmiendo" size="190" hint-size="190px,179px"></dc-import></div>
+<div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center"><strong style="font-size: 19px">Esperando</strong><span style="background: #ECEDFF; color: #2A2DB0; padding: 5px 12px; border-radius: 999px; font-weight: 800; font-size: 13px">Animado</span></div>
+<span style="font-size: 15px; color: #4A5072">ARCA caída, cola de emisión, sin datos</span>
+<code style="font-size: 13px; color: #5A6080; background: #F2F5F9; padding: 3px 8px; border-radius: 6px">pose="durmiendo"</code>
+</div>
+</div>
+<div style="background: #FFFFFF; border-radius: 24px; padding: 28px; box-shadow: 0 8px 24px rgba(21,25,58,0.06); display: flex; flex-wrap: wrap; gap: 28px">
+<div style="flex: 1 1 300px; display: flex; flex-direction: column; gap: 6px"><strong style="font-size: 17px">Cómo reusarlo</strong><span style="color: #4A5072; font-size: 15px">Cada pose sale del mismo componente “Facti” con las propiedades pose, size y animated. Con animated en falso, cualquier pose queda quieta.</span></div>
+<div style="flex: 1 1 300px; display: flex; flex-direction: column; gap: 6px"><strong style="font-size: 17px">Accesibilidad</strong><span style="color: #4A5072; font-size: 15px">Si el dispositivo pide reducir movimiento, todas las animaciones se apagan solas.</span></div>
+<div style="flex: 1 1 300px; display: flex; flex-direction: column; gap: 6px"><strong style="font-size: 17px">Regla de oro</strong><span style="color: #4A5072; font-size: 15px">No cambiar colores ni proporciones del cuerpo. Una sola pose animada por pantalla.</span></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1560}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

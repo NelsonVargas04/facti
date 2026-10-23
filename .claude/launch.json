@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev:web"],
+      "port": 3000
+    },
+    {
+      "name": "api",
+      "runtimeExecutable": "C:\\Program Files\\Go\\bin\\go.exe",
+      "runtimeArgs": ["-C", "apps/api", "run", "./cmd/api"],
+      "port": 4000
+    }
+  ]
+}

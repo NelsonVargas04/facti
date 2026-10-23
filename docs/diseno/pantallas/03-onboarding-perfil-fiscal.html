@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Facti — Tu perfil fiscal</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&amp;family=Nunito:wght@400;600;700;800&amp;display=swap">
+<style>
+body{margin:0;background:#F2F5F9}
+a{color:#2A2DB0}a:hover{color:#15193A}
+@media (prefers-reduced-motion: no-preference){
+.f-float{animation:fFloat 3.2s ease-in-out infinite}
+.f-blink{animation:fBlink 4.6s infinite;transform-box:fill-box;transform-origin:center}
+.f-wave{animation:fWave 1.6s ease-in-out infinite;transform-origin:220px 150px}
+.f-wave-l{animation:fWaveL 2.2s ease-in-out infinite .3s;transform-origin:40px 150px}
+.f-pop{animation:fPop .7s cubic-bezier(.3,1.6,.5,1) both .4s;transform-origin:10% 100%}
+}
+@keyframes fFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes fBlink{0%,91%,100%{transform:scaleY(1)}94%{transform:scaleY(.1)}}
+@keyframes fWave{0%,100%{transform:rotate(0deg)}50%{transform:rotate(-22deg)}}
+@keyframes fWaveL{0%,100%{transform:rotate(0deg)}50%{transform:rotate(14deg)}}
+@keyframes fPop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+input,select,button{font-family:inherit}
+</style>
+</helmet>
+<div style="background: #F2F5F9; color: #15193A; font-family: 'Nunito', 'Segoe UI', system-ui, sans-serif; font-size: 16px; line-height: 1.55; min-height: 1150px">
+<header style="max-width: 1180px; margin: 0 auto; padding: 24px 32px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap">
+<span style="display: flex; align-items: center; gap: 10px"><svg width="34" height="34" viewBox="0 0 40 40" aria-hidden="true"><path d="M6 12 Q6 5 13 5 L27 5 Q34 5 34 12 L34 32 L30 36 L26 32 L22 36 L18 32 L14 36 L10 32 L6 36 Z" fill="#7B7FF2"></path><g class="f-blink"><ellipse cx="15" cy="17" rx="2.6" ry="3.2" fill="#15193A"></ellipse><ellipse cx="25" cy="17" rx="2.6" ry="3.2" fill="#15193A"></ellipse></g><path d="M15 24 Q20 29 25 24" fill="none" stroke="#15193A" stroke-width="2.4" stroke-linecap="round"></path></svg><span style="font-family: 'Quicksand', 'Nunito', sans-serif; font-weight: 700; font-size: 24px">Facti</span></span>
+<a href="#ayuda" style="font-weight: 700; text-decoration: none; color: #3C4268">¿Necesitás ayuda?</a>
+</header>
+<main style="max-width: 1180px; margin: 0 auto; padding: 8px 32px 48px; display: flex; flex-direction: column; gap: 28px">
+<div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap"><div style="display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 15px; color: #15193A"><span style="width: 34px; height: 34px; border-radius: 50%; background: {{primary}}; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-weight: 800">1</span>Tu perfil</div>
+<span style="flex: 1 1 24px; min-width: 16px; border-top: 2px dashed #C9CEDD"></span>
+<div style="display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 15px; color: #5A6080"><span style="width: 34px; height: 34px; border-radius: 50%; background: #E6EAF2; color: #5A6080; display: flex; align-items: center; justify-content: center; font-weight: 800">2</span>Clave fiscal</div>
+<span style="flex: 1 1 24px; min-width: 16px; border-top: 2px dashed #C9CEDD"></span>
+<div style="display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 15px; color: #5A6080"><span style="width: 34px; height: 34px; border-radius: 50%; background: #E6EAF2; color: #5A6080; display: flex; align-items: center; justify-content: center; font-weight: 800">3</span>Autorizar en ARCA</div>
+<span style="flex: 1 1 24px; min-width: 16px; border-top: 2px dashed #C9CEDD"></span>
+<div style="display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 15px; color: #5A6080"><span style="width: 34px; height: 34px; border-radius: 50%; background: #E6EAF2; color: #5A6080; display: flex; align-items: center; justify-content: center; font-weight: 800">4</span>Punto de venta</div>
+<span style="flex: 1 1 24px; min-width: 16px; border-top: 2px dashed #C9CEDD"></span>
+<div style="display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 15px; color: #5A6080"><span style="width: 34px; height: 34px; border-radius: 50%; background: #E6EAF2; color: #5A6080; display: flex; align-items: center; justify-content: center; font-weight: 800">5</span>¡Listo!</div>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start">
+<section style="flex: 999 1 560px; min-width: 0; background: #FFFFFF; border-radius: 24px; padding: 28px; box-shadow: 0 8px 24px rgba(21,25,58,0.06); padding: 36px; display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 13px; font-weight: 800; color: #5A6080; letter-spacing: 0.06em">PASO 1 DE 5</span>
+<h1 style="margin: 0; font-family: 'Quicksand', 'Nunito', sans-serif; font-weight: 700; font-size: 34px; line-height: 1.2">¿Para quién vas a facturar?</h1>
+<p style="margin: 0; color: #4A5072; font-size: 17px">Con tu CUIT consultamos el padrón de ARCA y configuramos todo según tu situación.</p>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 14px">
+<button type="button" aria-pressed="true" style="flex: 1 1 220px; text-align: left; border: 2px solid {{primary}}; background: #F4F4FF; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 10px; cursor: pointer; font-family: inherit; color: #15193A"><span style="display: flex; justify-content: space-between; align-items: center; width: 100%"><span style="color: #2A2DB0"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"></path></svg></span><span style="width: 24px; height: 24px; border-radius: 50%; background: {{primary}}; color: #FFFFFF; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span></span><strong style="font-size: 17px">Persona humana</strong><span style="font-size: 14px; color: #4A5072">Monotributo, responsable inscripto o exento</span></button>
+<button type="button" aria-pressed="false" style="flex: 1 1 220px; text-align: left; border: 2px solid #E1E5EE; background: #FFFFFF; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 10px; cursor: pointer; font-family: inherit; color: #15193A"><span style="display: flex; justify-content: space-between; align-items: center; width: 100%"><span style="color: #2A2DB0"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M9 7h2M13 7h2M9 11h2M13 11h2M10 21v-4h4v4"></path></svg></span><span style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid #C9CEDD"></span></span><strong style="font-size: 17px">Sociedad</strong><span style="font-size: 14px; color: #4A5072">SAS, SRL, SA u otra persona jurídica</span></button>
+<button type="button" aria-pressed="false" style="flex: 1 1 220px; text-align: left; border: 2px solid #E1E5EE; background: #FFFFFF; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 10px; cursor: pointer; font-family: inherit; color: #15193A"><span style="display: flex; justify-content: space-between; align-items: center; width: 100%"><span style="color: #2A2DB0"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"></path></svg></span><span style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid #C9CEDD"></span></span><strong style="font-size: 17px">Asociación o fundación</strong><span style="font-size: 14px; color: #4A5072">Entidades sin fines de lucro</span></button>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end">
+<label style="display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: 14px; flex: 1 1 260px">Tu CUIT<input type="text" value="27-31456789-4" style="width: 100%; box-sizing: border-box; height: 48px; padding: 0 16px; border-radius: 14px; border: 1.5px solid #DCE1EC; background: #FFFFFF; font-size: 16px; color: #15193A"></label>
+<button type="button" style="height: 48px; padding: 0 20px; border-radius: 14px; border: none; background: #15193A; color: #FFFFFF; font-weight: 800; font-size: 15px; display: flex; align-items: center; gap: 8px; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>Consultar en ARCA</button>
+</div>
+<div style="background: #F2F5F9; border-radius: 18px; padding: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px">
+<div style="grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; color: #0E5C38; font-weight: 800; font-size: 14px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>Encontramos tus datos en el padrón de ARCA</div>
+<div><div style="font-size: 13px; color: #5A6080">Nombre</div><strong>Fernández Lucía</strong></div>
+<div><div style="font-size: 13px; color: #5A6080">Condición</div><strong>Monotributo · Categoría C</strong></div>
+<div><div style="font-size: 13px; color: #5A6080">Actividad</div><strong>Servicios de diseño</strong></div>
+<div><div style="font-size: 13px; color: #5A6080">Domicilio fiscal</div><strong>Av. Rivadavia 5100, CABA</strong></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-family: 'Quicksand', 'Nunito', sans-serif; font-weight: 700; font-size: 20px">Con tu perfil vas a poder emitir</h2>
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px"><li style="display: flex; gap: 10px; align-items: center"><span style="color: #1E9E63"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span><span><strong>Factura C</strong> · <span style="color: #4A5072">Para todos tus clientes</span></span></li><li style="display: flex; gap: 10px; align-items: center"><span style="color: #1E9E63"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span><span><strong>Notas de crédito y débito C</strong> · <span style="color: #4A5072">Para corregir o anular</span></span></li><li style="display: flex; gap: 10px; align-items: center"><span style="color: #1E9E63"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span><span><strong>Factura E</strong> · <span style="color: #4A5072">Si exportás servicios o bienes</span></span></li></ul>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: flex-end">
+<a href="Registro.dc.html" style="height: 52px; padding: 0 24px; border-radius: 999px; border: 1.5px solid #DCE1EC; background: #FFFFFF; color: #15193A; text-decoration: none; font-weight: 800; display: flex; align-items: center">Volver</a>
+<a href="ConectarArca.dc.html" style="height: 52px; padding: 0 28px; border-radius: 999px; background: {{primary}}; color: #FFFFFF; text-decoration: none; font-weight: 800; display: flex; align-items: center; box-shadow: 0 10px 24px rgba(59,63,216,0.25)">Sí, soy yo. Continuar</a>
+</div>
+</section>
+<aside style="flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+<div style="background: #FFFFFF; border-radius: 24px; padding: 28px; box-shadow: 0 8px 24px rgba(21,25,58,0.06); display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center">
+<div class="f-pop" style="background: #15193A; color: #FFFFFF; border-radius: 20px 20px 20px 6px; padding: 12px 16px; font-weight: 800; font-size: 15px; line-height: 1.4">Vas a necesitar tu<br><span style="color: #FFD25E">clave fiscal nivel 3</span>.</div>
+<dc-import name="Facti" pose="buscando" size="190" hint-size="190px,179px"></dc-import>
+</div>
+<div style="background: #FFFFFF; border-radius: 24px; padding: 28px; box-shadow: 0 8px 24px rgba(21,25,58,0.06); display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-family: 'Quicksand', 'Nunito', sans-serif; font-weight: 700; font-size: 18px">¿Facturás por una sociedad?</h2>
+<p style="margin: 0; font-size: 15px; color: #4A5072">La conexión la hace el representante legal, con su clave fiscal nivel 3 y dado de alta como Administrador de Relaciones de la sociedad en ARCA.</p>
+<a href="#sociedades" style="font-weight: 800; text-decoration: none; font-size: 15px">Ver qué necesito</a>
+</div>
+<div style="background: #FFFFFF; border-radius: 24px; padding: 28px; box-shadow: 0 8px 24px rgba(21,25,58,0.06); display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-family: 'Quicksand', 'Nunito', sans-serif; font-weight: 700; font-size: 18px">¿Sos contador?</h2>
+<p style="margin: 0; font-size: 15px; color: #4A5072">Podés administrar varios CUIT desde una sola cuenta, si cada cliente te autoriza.</p>
+</div>
+</aside>
+</div>
+<p style="margin: 0; font-size: 13px; color: #5A6080; text-align: center">Facti es una herramienta complementaria y de ayuda. No es ARCA ni un organismo oficial.</p>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"primary":{"editor":"color","default":"#3B3FD8","options":["#3B3FD8","#13795B","#C2410C","#7C3AED"]},"$preview":{"width":1440,"height":1150}}'>
+class Component extends DCLogic {
+renderVals() {
+return { primary: this.props.primary ?? '#3B3FD8' };
+}
+}
+</script>
+</body>
+</html>

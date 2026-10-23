@@ -1,8 +1,12 @@
 node_modules/
 dist/
+.next/
+*.tsbuildinfo
 .env
+.env.local
 .cache/
 certs/*
 !certs/.gitkeep
 *.log
+apps/api/bin/
 .DS_Store

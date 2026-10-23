@@ -6,7 +6,7 @@ Herramienta complementaria y de ayuda para facturar en ARCA: facturas A, B, C, M
 
 ## Estado
 
-Primera pieza del MVP: el paquete `@facti/arca`, que se conecta con los web services oficiales.
+La API en Go (`apps/api`) se conecta con los web services oficiales; la web (`apps/web`) tiene las pantallas del MVP.
 
 | Servicio de ARCA | Estado |
 | --- | --- |
@@ -19,26 +19,36 @@ Primera pieza del MVP: el paquete `@facti/arca`, que se conecta con los web serv
 ## Estructura
 
 ```
+apps/
+  api/      Backend en Go — puerto 4000
+    cmd/api/            el servidor HTTP
+    cmd/arca/           pruebas manuales contra homologación (pnpm arca:*)
+    internal/arca/      conexión con ARCA: WSAA, WSFEv1, padrón, QR y tablas de códigos
+    internal/servidor/  rutas, CORS y manejo de errores
+    internal/cuit/      validación de CUIT
+    internal/config/    lectura del .env
+  web/      Frontend (Next.js) con el diseño de Facti — puerto 3000
 packages/
-  arca/     Conexión con ARCA: WSAA, WSFEv1, padrón, QR y tablas de códigos
-  shared/   Validación de CUIT y parámetros normativos con fecha de vigencia
-scripts/    Pruebas manuales contra homologación
+  shared/   Validación de CUIT y parámetros normativos con fecha de vigencia (TS, para la web)
+  arca/     Versión anterior en TypeScript de la conexión con ARCA (referencia; la usa scripts/)
 docs/       Decisiones técnicas
 certs/      Certificados locales (ignorados por git)
 ```
 
-Próximas carpetas: `apps/api` (backend con cola de emisión), `apps/web` (Next.js) y, más adelante, `apps/mobile` (Expo).
+Próxima carpeta: `apps/mobile` (Expo).
 
 ## Requisitos
 
 - Node.js 20.6 o superior
+- pnpm 9 o superior (`npm i -g pnpm` o `corepack enable`)
+- Go 1.24 o superior (`winget install GoLang.Go` en Windows, o desde https://go.dev/dl)
 - CUIT con clave fiscal nivel 3 (para el certificado de homologación)
 
 ## Primeros pasos
 
 ```bash
-npm install
-npm test
+pnpm install
+pnpm test          # tests de TypeScript (vitest) y de la API (go test)
 cp .env.example .env
 ```
 
@@ -66,10 +76,48 @@ En homologación se puede usar un punto de venta de prueba. En producción, el u
 ### 3. Probar
 
 ```bash
-npm run arca:probar                 # estado de ARCA, puntos de venta y último número
-npm run arca:padron -- 20123456786  # datos de un CUIT del padrón
-npm run arca:factura-c              # emite una Factura C de prueba y muestra CAE y QR
+pnpm arca:probar              # estado de ARCA, puntos de venta y último número
+pnpm arca:padron 20123456786  # datos de un CUIT del padrón
+pnpm arca:factura-c           # emite una Factura C de prueba y muestra CAE y QR
 ```
+
+## Levantar la app
+
+Un solo comando prende la web y la API juntas:
+
+```bash
+pnpm dev
+#   web  -> http://localhost:3000   (lo que abrís en el navegador, con recarga en caliente)
+#   api  -> http://localhost:4000   (backend JSON en Go; reiniciala después de cambiar código Go)
+```
+
+O por separado: `pnpm dev:web` / `pnpm dev:api`. La API también se puede correr directo con
+`go run ./cmd/api` desde `apps/api`.
+
+### Web (`apps/web`, Next.js)
+
+El frontend con el diseño de Facti. Abrí `http://localhost:3000`:
+
+- `/` — landing con la mascota y las features.
+- `/estado` — chequeo en vivo de la API y de los servidores de ARCA.
+
+### API (`apps/api`, Go)
+
+El backend arranca aunque todavía no haya `.env` ni certificado: las rutas de
+salud funcionan siempre, y las de ARCA responden `503` con un mensaje claro
+hasta que completes la configuración. Lee el `.env` de la raíz del repo.
+
+| Ruta | Qué hace |
+| --- | --- |
+| `GET /salud` | Confirma que el server está vivo y en qué entorno |
+| `GET /arca/estado` | Estado de los servidores de ARCA (FEDummy) |
+| `GET /arca/puntos-venta` | Puntos de venta Web Services del emisor |
+| `GET /arca/condiciones-iva?clase=C` | Condiciones frente al IVA del receptor (RG 5616) |
+| `GET /arca/padron/{cuit}` | Datos y condición fiscal de un CUIT del padrón |
+| `POST /facturas` | Emite una Factura C y devuelve CAE, vencimiento y QR |
+
+Errores: `400` datos inválidos · `422` ARCA rechazó el comprobante · `502` error de ARCA ·
+`503` falta configuración · `504` ARCA no respondió.
 
 ## Reglas del proyecto
 

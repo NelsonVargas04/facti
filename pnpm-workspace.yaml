@@ -1,0 +1,12 @@
+packages:
+  - 'packages/*'
+  - 'apps/*'
+
+# esbuild (lo usan vitest y tsx) necesita correr su script de instalación
+# para bajar el binario nativo de la plataforma.
+allowBuilds:
+  esbuild: true
+
+# Los scripts usan la sintaxis `VAR=valor comando` (por ejemplo WATCHPACK_POLLING=true next dev).
+# Con el emulador de shell de pnpm también funcionan en Windows (cmd/PowerShell).
+shellEmulator: true

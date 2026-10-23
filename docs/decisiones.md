@@ -1,10 +1,10 @@
 # Decisiones técnicas
 
 ## 001 — TypeScript en todo el proyecto
-Backend, web y móvil comparten tipos y validaciones. Monorepo con npm workspaces.
+Backend, web y móvil comparten tipos y validaciones. Monorepo con pnpm workspaces.
 
 ## 002 — Conexión directa con ARCA, sin SDK de terceros
-Se implementan WSAA y los web services con SOAP sobre `fetch` y `node-forge` para la firma CMS.
+Se implementan WSAA y los web services con SOAP a mano (hoy en Go, ver 008).
 Evita depender de servicios externos pagos y nos da control sobre errores y reintentos.
 
 ## 003 — Delegación en lugar de certificados por usuario
@@ -21,6 +21,30 @@ se consulta con FECompConsultar si el número quedó autorizado antes de reinten
 ## 006 — Parámetros normativos con vigencia
 Montos (consumidor final, FCE), plazos y escalas de monotributo cambian seguido.
 Se guardan con fecha de vigencia y fuente legal.
+
+## 007 — Gestor de paquetes: pnpm
+Monorepo con pnpm workspaces (`pnpm-workspace.yaml`). Más rápido y con `node_modules`
+enlazado desde un store único. Los workspaces se referencian con `workspace:*`.
+
+## 008 — API en Go (reemplaza a Fastify)
+El backend (`apps/api`) está en Go, con `net/http` de la biblioteca estándar.
+La conexión con ARCA se portó de `packages/arca` a `apps/api/internal/arca`
+(WSAA con firma CMS vía `smallstep/pkcs7`, WSFEv1, padrón A5, QR). Se eligió Go por
+el manejo de concurrencia para la cola de emisión, un binario único para desplegar y bajo consumo.
+- Los clientes de ARCA se construyen de forma perezosa (en el primer request), así el server
+  levanta aunque todavía no haya certificado ni `.env`.
+- El `.env` se lee desde la raíz del repo y las rutas relativas se resuelven contra ella.
+- Los tickets de acceso se guardan con el mismo formato y nombre de archivo que la versión TS,
+  así no se pierde un ticket vigente al cambiar de una a otra.
+- `apps/api/package.json` solo existe para que `pnpm dev` levante la API junto con la web.
+- La decisión 001 queda acotada a web y móvil: los tipos de la API se mantienen a mano en
+  `apps/web/src/lib/api.ts` (más adelante, generarlos desde un OpenAPI).
+
+## 009 — Web con Next.js (App Router)
+El frontend (`apps/web`) usa Next.js con App Router y las tipografías Quicksand/Nunito
+vía `next/font`. Estilo soft UI con tokens CSS (sin framework de CSS por ahora).
+La web corre en el puerto 3000 y la API en el 4000; la API habilita CORS para la web.
+El navegador habla con la API por HTTP (`NEXT_PUBLIC_API_URL`).
 
 ## Pendientes a validar en homologación
 - Que el padrón A5 devuelva la categoría de monotributo como esperamos.

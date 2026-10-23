@@ -4,14 +4,19 @@
   "version": "0.1.0",
   "description": "Facti: facturación electrónica conectada con ARCA",
   "type": "module",
-  "workspaces": ["packages/*"],
-  "engines": { "node": ">=20.6" },
+  "packageManager": "pnpm@11.28.2",
+  "engines": { "node": ">=20.6", "pnpm": ">=9" },
   "scripts": {
+    "dev": "pnpm --parallel --filter \"./apps/*\" dev",
+    "dev:web": "pnpm --filter @facti/web dev",
+    "dev:api": "pnpm --filter @facti/api dev",
+    "api:start": "pnpm --filter @facti/api start",
+    "api:test": "pnpm --filter @facti/api test",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "vitest run",
-    "arca:probar": "tsx --env-file=.env scripts/probar-conexion.ts",
-    "arca:padron": "tsx --env-file=.env scripts/consultar-padron.ts",
-    "arca:factura-c": "tsx --env-file=.env scripts/emitir-factura-c.ts"
+    "test": "vitest run && pnpm api:test",
+    "arca:probar": "pnpm --filter @facti/api arca probar",
+    "arca:padron": "pnpm --filter @facti/api arca padron",
+    "arca:factura-c": "pnpm --filter @facti/api arca factura-c"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

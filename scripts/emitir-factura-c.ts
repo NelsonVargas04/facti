@@ -1,6 +1,6 @@
 /**
  * Emite una Factura C de prueba a consumidor final en HOMOLOGACIÓN.
- * Uso: npm run arca:factura-c
+ * Uso: pnpm arca:factura-c
  */
 import {
   CONCEPTOS, CONDICION_IVA_RECEPTOR, TIPOS_COMPROBANTE, TIPOS_DOCUMENTO, aFechaArca, deFechaArca, urlQR,

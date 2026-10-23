@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Facti — Crear cuenta</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&amp;family=Nunito:wght@400;600;700;800&amp;display=swap">
+<style>
+body{margin:0;background:#F2F5F9}
+a{color:#2A2DB0}a:hover{color:#15193A}
+@media (prefers-reduced-motion: no-preference){
+.f-float{animation:fFloat 3.2s ease-in-out infinite}
+.f-blink{animation:fBlink 4.6s infinite;transform-box:fill-box;transform-origin:center}
+.f-wave{animation:fWave 1.6s ease-in-out infinite;transform-origin:220px 150px}
+.f-wave-l{animation:fWaveL 2.2s ease-in-out infinite .3s;transform-origin:40px 150px}
+.f-pop{animation:fPop .7s cubic-bezier(.3,1.6,.5,1) both .4s;transform-origin:10% 100%}
+}
+@keyframes fFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes fBlink{0%,91%,100%{transform:scaleY(1)}94%{transform:scaleY(.1)}}
+@keyframes fWave{0%,100%{transform:rotate(0deg)}50%{transform:rotate(-22deg)}}
+@keyframes fWaveL{0%,100%{transform:rotate(0deg)}50%{transform:rotate(14deg)}}
+@keyframes fPop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+input,select,button{font-family:inherit}
+</style>
+</helmet>
+<div style="background: #F2F5F9; color: #15193A; font-family: 'Nunito', 'Segoe UI', system-ui, sans-serif; font-size: 16px; line-height: 1.55; min-height: 900px; display: flex; flex-wrap: wrap">
+<div style="flex: 1 1 520px; background: {{primary}}; color: #FFFFFF; padding: 48px 56px; box-sizing: border-box; display: flex; flex-direction: column; gap: 28px; position: relative; overflow: hidden">
+<a href="Main.dc.html" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #FFFFFF"><svg width="34" height="34" viewBox="0 0 40 40" aria-hidden="true"><path d="M6 12 Q6 5 13 5 L27 5 Q34 5 34 12 L34 32 L30 36 L26 32 L22 36 L18 32 L14 36 L10 32 L6 36 Z" fill="#7B7FF2"></path><g class="f-blink"><ellipse cx="15" cy="17" rx="2.6" ry="3.2" fill="#15193A"></ellipse><ellipse cx="25" cy="17" rx="2.6" ry="3.2" fill="#15193A"></ellipse></g><path d="M15 24 Q20 29 25 24" fill="none" stroke="#15193A" stroke-width="2.4" stroke-linecap="round"></path></svg><span style="font-family: 'Quicksand', 'Nunito', sans-serif; font-weight: 700; font-size: 26px">Facti</span></a>
+<div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; text-align: center">
+<div style="position: relative">
+<div style="position: absolute; top: -10px; right: -150px; transform: rotate(4deg)"><div class="f-pop" style="background: #FFFFFF; color: #15193A; border-radius: 22px 22px 22px 6px; padding: 12px 18px; font-weight: 800; font-size: 15px; white-space: nowrap; box-shadow: 0 12px 26px rgba(21,25,58,0.2)">¡Qué bueno verte por acá!</div></div>
+<div class="f-float"><svg width="240" height="268" viewBox="0 0 260 290" role="img" aria-label="Facti saludando">
+<ellipse cx="130" cy="276" rx="84" ry="10" fill="#15193A" opacity="0.08"></ellipse>
+<g class="f-wave-l"><path d="M40 150 Q14 140 18 112" fill="none" stroke="#FFFFFF" stroke-width="16" stroke-linecap="round"></path><circle cx="18" cy="104" r="13" fill="#FFD25E"></circle></g>
+<g class="f-wave"><path d="M220 150 Q248 132 238 100" fill="none" stroke="#FFFFFF" stroke-width="16" stroke-linecap="round"></path><circle cx="238" cy="92" r="13" fill="#FFD25E"></circle></g>
+<path d="M40 70 Q40 34 76 34 L184 34 Q220 34 220 70 L220 238 L202 254 L184 238 L166 254 L148 238 L130 254 L112 238 L94 254 L76 238 L58 254 L40 238 Z" fill="#FFFFFF"></path>
+<path d="M56 74 Q56 50 80 50 L178 50 Q202 50 202 74 L202 104 L56 104 Z" fill="#FFFFFF" opacity="0.18"></path>
+<g class="f-blink"><ellipse cx="102" cy="128" rx="13" ry="16" fill="#15193A"></ellipse><ellipse cx="158" cy="128" rx="13" ry="16" fill="#15193A"></ellipse><circle cx="106" cy="122" r="5" fill="#FFFFFF"></circle><circle cx="162" cy="122" r="5" fill="#FFFFFF"></circle></g>
+<ellipse cx="82" cy="156" rx="12" ry="7" fill="#FF9FB2" opacity="0.8"></ellipse>
+<ellipse cx="178" cy="156" rx="12" ry="7" fill="#FF9FB2" opacity="0.8"></ellipse>
+<path d="M108 158 Q130 182 152 158" fill="none" stroke="#15193A" stroke-width="6" stroke-linecap="round"></path>
+<path d="M76 196 L184 196 M76 214 L150 214" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity="0.6"></path>
+</svg></div>
+</div>
+<h1 style="margin: 0; font-family: 'Quicksand', 'Nunito', sans-serif; font-weight: 700; font-size: 44px; line-height: 1.15; max-width: 460px">Tu ayudante para facturar en ARCA</h1>
+<p style="margin: 0; font-size: 18px; color: #E4E5FF; max-width: 420px">Facturas A, B, C, M y E, tu monotributo bajo control y tus cobros en un solo lugar.</p>
+</div>
+</div>
+<div style="flex: 1 1 520px; padding: 48px 56px; box-sizing: border-box; display: flex; align-items: center; justify-content: center">
+<div style="width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h2 style="margin: 0; font-family: 'Quicksand', 'Nunito', sans-serif; font-weight: 700; font-size: 36px">Creá tu cuenta</h2>
+<p style="margin: 0; color: #4A5072">Es gratis. Después conectamos tu CUIT con ARCA.</p>
+</div>
+<button type="button" style="height: 52px; border-radius: 999px; border: 1.5px solid #DCE1EC; background: #FFFFFF; font-weight: 800; font-size: 16px; color: #15193A; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="#3C4268" stroke-width="2"></circle><path d="M12 12h8" stroke="#3C4268" stroke-width="2"></path></svg>Continuar con Google</button>
+<div style="display: flex; align-items: center; gap: 12px; color: #5A6080; font-size: 14px"><span style="flex: 1; border-top: 1.5px solid #DCE1EC"></span>o con tu email<span style="flex: 1; border-top: 1.5px solid #DCE1EC"></span></div>
+<label style="display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: 14px">Nombre y apellido<input type="text" placeholder="Lucía Fernández" style="width: 100%; box-sizing: border-box; height: 48px; padding: 0 16px; border-radius: 14px; border: 1.5px solid #DCE1EC; background: #FFFFFF; font-size: 16px; color: #15193A"></label>
+<label style="display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: 14px">Email<input type="email" placeholder="lucia@ejemplo.com" style="width: 100%; box-sizing: border-box; height: 48px; padding: 0 16px; border-radius: 14px; border: 1.5px solid #DCE1EC; background: #FFFFFF; font-size: 16px; color: #15193A"></label>
+<label style="display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: 14px">Contraseña<input type="password" placeholder="Mínimo 8 caracteres" style="width: 100%; box-sizing: border-box; height: 48px; padding: 0 16px; border-radius: 14px; border: 1.5px solid #DCE1EC; background: #FFFFFF; font-size: 16px; color: #15193A"></label>
+<div style="background: #FFF3D1; color: #6B4600; border-radius: 16px; padding: 14px 16px; display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.45"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8v.5"></path></svg><span><strong>Facti es una herramienta complementaria y de ayuda.</strong> No es ARCA ni un organismo oficial, y no reemplaza el asesoramiento de un contador.</span></div>
+<label style="display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: #3C4268"><input type="checkbox" required style="width: 18px; height: 18px; margin-top: 2px"><span>Leí y acepto los <a href="#terminos" style="font-weight: 800">Términos y Condiciones</a> y la <a href="#privacidad" style="font-weight: 800">Política de Privacidad</a>.</span></label>
+<a href="PerfilFiscal.dc.html" style="height: 54px; border-radius: 999px; background: {{primary}}; color: #FFFFFF; text-decoration: none; font-weight: 800; font-size: 17px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 24px rgba(59,63,216,0.25)">Crear cuenta</a>
+<p style="margin: 0; text-align: center; font-size: 15px; color: #4A5072">¿Ya tenés cuenta? <a href="#login" style="font-weight: 800">Iniciá sesión</a></p>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"primary":{"editor":"color","default":"#3B3FD8","options":["#3B3FD8","#13795B","#C2410C","#7C3AED"]},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+renderVals() {
+return { primary: this.props.primary ?? '#3B3FD8' };
+}
+}
+</script>
+</body>
+</html>

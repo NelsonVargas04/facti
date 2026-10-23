@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Facti — Landing page</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&amp;family=Nunito:wght@400;600;700;800&amp;family=Caveat:wght@700&amp;family=Space+Mono:wght@400;700&amp;display=swap">
+<style>
+body{margin:0;background:#F2F5F9}
+a{color:#2A2DB0}a:hover{color:#15193A}
+@media (prefers-reduced-motion: no-preference){
+.f-float{animation:fFloat 3.2s ease-in-out infinite}
+.f-bob{animation:fFloat 2.6s ease-in-out infinite .4s}
+.f-blink{animation:fBlink 4.6s infinite;transform-box:fill-box;transform-origin:center}
+.f-wave{animation:fWave 1.6s ease-in-out infinite;transform-origin:220px 150px}
+.f-wave-l{animation:fWaveL 2.2s ease-in-out infinite .3s;transform-origin:40px 150px}
+.f-print{animation:fPrint 3.8s ease-in-out infinite}
+.f-spark{animation:fSpark 2.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.f-spark-late{animation-delay:1.2s}
+.f-pop{animation:fPop .7s cubic-bezier(.3,1.6,.5,1) both .4s;transform-origin:15% 100%}
+.f-tilt{animation:fTilt 5s ease-in-out infinite}
+}
+@keyframes fFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+@keyframes fBlink{0%,91%,100%{transform:scaleY(1)}94%{transform:scaleY(.1)}}
+@keyframes fWave{0%,100%{transform:rotate(0deg)}50%{transform:rotate(-22deg)}}
+@keyframes fPrint{0%{transform:translateY(44px)}40%,78%{transform:translateY(0)}100%{transform:translateY(44px)}}
+@keyframes fSpark{0%,100%{transform:scale(.5);opacity:.25}50%{transform:scale(1);opacity:1}}
+@keyframes fPop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes fWaveL{0%,100%{transform:rotate(0deg)}50%{transform:rotate(14deg)}}
+@keyframes fTilt{0%,100%{transform:rotate(0deg)}50%{transform:rotate(2deg)}}
+</style>
+</helmet>
+<div style="background: #F2F5F9; color: #15193A; font-family: 'Nunito', 'Segoe UI', system-ui, sans-serif; font-size: 17px; line-height: 1.6; overflow: hidden">
+
+<header style="max-width: 1200px; margin: 0 auto; padding: 28px 32px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px">
+<a href="#inicio" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #15193A">
+<svg width="38" height="38" viewBox="0 0 40 40" aria-hidden="true"><path d="M6 12 Q6 5 13 5 L27 5 Q34 5 34 12 L34 32 L30 36 L26 32 L22 36 L18 32 L14 36 L10 32 L6 36 Z" fill="{{primary}}"></path><g class="f-blink"><ellipse cx="15" cy="17" rx="2.6" ry="3.2" fill="#FFFFFF"></ellipse><ellipse cx="25" cy="17" rx="2.6" ry="3.2" fill="#FFFFFF"></ellipse></g><path d="M15 24 Q20 29 25 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"></path></svg>
+<span style="font-family: 'Quicksand', 'Nunito', sans-serif; font-weight: 700; font-size: 26px; letter-spacing: -0.01em">Facti</span>
+</a>
+<nav aria-label="Principal" style="display: flex; flex-wrap: wrap; gap: 28px; font-size: 15px; font-weight: 600">
+<a href="#como" style="color: #3C4268; text-decoration: none">Cómo funciona</a>
+<a href="#comprobantes" style="color: #3C4268; text-decoration: none">Comprobantes</a>
+<a href="#monotributo" style="color: #3C4268; text-decoration: none">Monotributo</a>
+<a href="#precios" style="color: #3C4268; text-decoration: none">Precios</a>
+</nav>
+<div style="display: flex; align-items: center; gap: 12px">
+<a href="#ingresar" style="color: #15193A; text-decoration: none; font-weight: 700; font-size: 15px; padding: 12px 16px">Iniciar sesión</a>
+<a href="#empezar" style="background: {{primary}}; color: #FFFFFF; text-decoration: none; font-weight: 800; font-size: 15px; padding: 13px 24px; border-radius: 999px; box-shadow: 0 8px 20px rgba(59,63,216,0.25)">Empezar gratis</a>
+</div>
+</header>
+
+<section id="inicio" style="max-width: 1200px; margin: 0 auto; padding: 48px 32px 100px; display: flex; flex-wrap: wrap; align-items: center; gap: 56px">
+<div style="flex: 1 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 28px">
+<div style="display: flex; flex-wrap: wrap; gap: 10px">
+<span style="background: #FFFFFF; border-radius: 999px; padding: 8px 16px; font-size: 14px; font-weight: 700; box-shadow: 0 4px 14px rgba(21,25,58,0.07); transform: rotate(-2deg); display: inline-flex; align-items: center; gap: 8px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #1E9E63"></span>Facturas A, B, C y E</span>
+<span style="background: #FFFFFF; border-radius: 999px; padding: 8px 16px; font-size: 14px; font-weight: 700; box-shadow: 0 4px 14px rgba(21,25,58,0.07); transform: rotate(1.5deg); display: inline-flex; align-items: center; gap: 8px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #3B3FD8"></span>Conectada con ARCA</span>
+<span style="background: #FFFFFF; border-radius: 999px; padding: 8px 16px; font-size: 14px; font-weight: 700; box-shadow: 0 4px 14px rgba(21,25,58,0.07); transform: rotate(-1deg); display: inline-flex; align-items: center; gap: 8px"><span style="width: 8px; height: 8px; border-radius: 50%; background: #E0A100"></span>Sin instalar nada</span>
+</div>
+<h1 style="margin: 0; font-family: 'Quicksand', 'Nunito', sans-serif; font-weight: 700; font-size: 68px; line-height: 1.12; letter-spacing: -0.02em">¿Facturar en <span style="display: inline-block; background: #FFFFFF; color: {{primary}}; border-radius: 999px; padding: 0 26px 6px; box-shadow: 0 10px 30px rgba(21,25,58,0.10); transform: rotate(-2deg)">ARCA</span> te complica?<br><span style="background: linear-gradient(transparent 58%, #FFD25E 58%, #FFD25E 92%, transparent 92%); padding: 0 6px">Facti lo hace simple.</span></h1>
+<p style="margin: 0; font-size: 20px; color: #4A5072; max-width: 560px">Emití facturas electrónicas en un par de clics, conectadas directo con ARCA, y tené tu <strong style="color: #15193A">categoría de monotributo siempre bajo control</strong>. Sin pantallas confusas ni planillas.</p>
+<div style="display: flex; flex-wrap: wrap; gap: 14px">
+<a href="#empezar" style="background: {{primary}}; color: #FFFFFF; text-decoration: none; font-weight: 800; font-size: 18px; padding: 18px 32px; border-radius: 999px; box-shadow: 0 12px 28px rgba(59,63,216,0.28); display: inline-flex; align-items: center; gap: 10px">Quiero facturar fácil <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+<a href="#como" style="background: #FFFFFF; color: #15193A; text-decoration: none; font-weight: 800; font-size: 18px; padding: 18px 32px; border-radius: 999px; border: 1.5px solid #DCE1EC">Ver cómo funciona</a>
+</div>
+</div>
+
+<div style="flex: 1 1 440px; min-width: 0; position: relative; min-height: 540px; display: flex; align-items: center; justify-content: center">
+<div style="position: absolute; top: 10px; left: 0; width: 330px; background: #FFFFFF; border-radius: 24px; padding: 24px; box-shadow: 0 20px 50px rgba(21,25,58,0.12); transform: rotate(-4deg); display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<span style="background: #ECEDFF; color: #2A2DB0; font-weight: 800; font-size: 13px; padding: 5px 12px; border-radius: 999px">Factura C</span>
+<span style="font-size: 13px; color: #5A6080; font-weight: 600">N° 00003-00000128</span>
+</div>
+<div><div style="font-size: 13px; color: #5A6080">Cliente</div><div style="font-weight: 800">Estudio Lumen SRL</div></div>
+<div style="display: flex; justify-content: space-between; align-items: flex-end; border-top: 1.5px dashed #DCE1EC; padding-top: 14px">
+<div style="font-size: 14px; color: #4A5072">Diseño de logo</div>
+<div style="font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 30px">$85.000</div>
+</div>
+<div style="background: #D7F5E6; color: #0E5C38; border-radius: 14px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+<span>Autorizada por ARCA<br><span style="font-weight: 600; font-size: 12px">CAE 76419283746521 · vence 24/10</span></span>
+</div>
+</div>
+
+<div style="position: absolute; top: 40px; right: 0; width: 230px; background: #FFFFFF; border-radius: 22px; padding: 20px; box-shadow: 0 20px 50px rgba(21,25,58,0.12); transform: rotate(3deg); display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 12px; font-weight: 800; color: #5A6080; letter-spacing: 0.06em">MONOTRIBUTO</div>
+<div style="font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 22px">Categoría D</div>
+<div style="height: 12px; background: #ECEFF5; border-radius: 999px; overflow: hidden"><div style="width: 68%; height: 100%; background: {{primary}}; border-radius: 999px"></div></div>
+<div style="font-size: 13px; color: #4A5072">68% del tope anual</div>
+</div>
+
+<svg width="34" height="34" viewBox="0 0 40 40" aria-hidden="true" style="position: absolute; top: 300px; left: 40px"><path class="f-spark" d="M20 2 L24 16 L38 20 L24 24 L20 38 L16 24 L2 20 L16 16 Z" fill="#FFD25E"></path></svg>
+<svg width="26" height="26" viewBox="0 0 40 40" aria-hidden="true" style="position: absolute; top: 280px; right: 50px"><path class="f-spark f-spark-late" d="M20 2 L24 16 L38 20 L24 24 L20 38 L16 24 L2 20 L16 16 Z" fill="{{primary}}"></path></svg>
+
+<div class="f-float" style="position: relative; top: 80px">
+<svg width="260" height="290" viewBox="0 0 260 290" role="img" aria-label="Facti, la mascota: un ticket de factura sonriente que saluda">
+<ellipse cx="130" cy="276" rx="84" ry="10" fill="#15193A" opacity="0.08"></ellipse>
+<g class="f-wave-l"><path d="M40 150 Q14 140 18 112" fill="none" stroke="#7B7FF2" stroke-width="16" stroke-linecap="round"></path><circle cx="18" cy="104" r="13" fill="#FFD25E"></circle></g>
+<g class="f-wave"><path d="M220 150 Q248 132 238 100" fill="none" stroke="#7B7FF2" stroke-width="16" stroke-linecap="round"></path><circle cx="238" cy="92" r="13" fill="#FFD25E"></circle></g>
+<path d="M40 70 Q40 34 76 34 L184 34 Q220 34 220 70 L220 238 L202 254 L184 238 L166 254 L148 238 L130 254 L112 238 L94 254 L76 238 L58 254 L40 238 Z" fill="#7B7FF2"></path>
+<path d="M56 74 Q56 50 80 50 L178 50 Q202 50 202 74 L202 104 L56 104 Z" fill="#FFFFFF" opacity="0.18"></path>
+<g class="f-blink"><ellipse cx="102" cy="128" rx="13" ry="16" fill="#15193A"></ellipse><ellipse cx="158" cy="128" rx="13" ry="16" fill="#15193A"></ellipse><circle cx="106" cy="122" r="5" fill="#FFFFFF"></circle><circle cx="162" cy="122" r="5" fill="#FFFFFF"></circle></g>
+<ellipse cx="82" cy="156" rx="12" ry="7" fill="#FF9FB2" opacity="0.8"></ellipse>
+<ellipse cx="178" cy="156" rx="12" ry="7" fill="#FF9FB2" opacity="0.8"></ellipse>
+<path d="M108 158 Q130 182 152 158" fill="none" stroke="#15193A" stroke-width="6" stroke-linecap="round"></path>
+<path d="M76 196 L184 196 M76 214 L150 214" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity="0.6"></path>
+</svg>
+</div>
+
+<div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%) rotate(-2deg)">
+<div class="f-pop" style="background: #D7F5E6; color: #0E5C38; border-radius: 999px; padding: 14px 26px; font-weight: 800; font-size: 17px; white-space: nowrap; box-shadow: 0 12px 30px rgba(21,25,58,0.10)">¡Factura autorizada y enviada al cliente!</div>
+</div>
+</div>
+</section>
+
+<section style="max-width: 1100px; margin: 0 auto; padding: 40px 32px 100px; display: flex; flex-direction: column; align-items: center; gap: 40px">
+<h2 style="margin: 0; font-family: 'Quicksand', 'Nunito', sans-serif; font-weight: 700; font-size: 44px; letter-spacing: -0.02em; text-align: center">¿Te suena?</h2>
+<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px">
+<div style="flex: 1 1 440px; max-width: 500px; background: #FFFFFF; border-radius: 22px; padding: 22px 26px; box-shadow: 0 8px 24px rgba(21,25,58,0.07); display: flex; gap: 12px; transform: rotate(-1.5deg)"><span style="width: 9px; height: 9px; border-radius: 50%; margin-top: 9px; flex: none; background: #1E9E63"></span>Comprobantes en línea se cuelga justo cuando tengo que facturar a fin de mes.</div>
+<div style="flex: 1 1 440px; max-width: 500px; background: #FFFFFF; border-radius: 22px; padding: 22px 26px; box-shadow: 0 8px 24px rgba(21,25,58,0.07); display: flex; gap: 12px; transform: rotate(1deg)"><span style="width: 9px; height: 9px; border-radius: 50%; margin-top: 9px; flex: none; background: #3B3FD8"></span>Nunca sé si a este cliente le tengo que hacer factura A o B.</div>
+<div style="flex: 1 1 440px; max-width: 500px; background: #FFFFFF; border-radius: 22px; padding: 22px 26px; box-shadow: 0 8px 24px rgba(21,25,58,0.07); display: flex; gap: 12px; transform: rotate(1.5deg)"><span style="width: 9px; height: 9px; border-radius: 50%; margin-top: 9px; flex: none; background: #E0A100"></span>Me enteré tarde de que tenía que recategorizarme.</div>
+<div style="flex: 1 1 440px; max-width: 500px; background: #FFFFFF; border-radius: 22px; padding: 22px 26px; box-shadow: 0 8px 24px rgba(21,25,58,0.07); display: flex; gap: 12px; transform: rotate(-1deg)"><span style="width: 9px; height: 9px; border-radius: 50%; margin-top: 9px; flex: none; background: #D9466F"></span>Paso horas copiando el CUIT y los datos de cada cliente.</div>
+</div>
+</section>
+
+<section id="como" style="max-width: 1200px; margin: 0 auto; padding: 40px 32px 100px; display: flex; flex-direction: column; gap: 48px">
+<div style="text-align: center; display: flex; flex-direction: column; gap: 12px; align-items: center">
+<h2 style="margin: 0; font-family: 'Quicksand', 'Nunito', sans-serif; font-weight: 700; font-size: 44px; letter-spacing: -0.02em">Así de fácil funciona</h2>
+<p style="margin: 0; color: #4A5072; font-size: 19px; max-width: 620px">Conectás tu CUIT con ARCA una sola vez y después facturás desde la compu o el celular.</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px">
+<div style="background: #FFFFFF; border-radius: 28px; padding: 32px; box-shadow: 0 10px 30px rgba(21,25,58,0.07); display: flex; flex-direction: column; gap: 14px">
+<div style="width: 56px; height: 56px; border-radius: 18px; display: flex; align-items: center; justify-content: center; background: #ECEDFF; color: #2A2DB0"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"></path><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"></path></svg></div>
+<div style="font-size: 13px; font-weight: 800; color: #5A6080; letter-spacing: 0.06em">PASO 1</div>
+<h3 style="margin: 0; font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 24px">Conectá tu CUIT</h3>
+<p style="margin: 0; color: #4A5072">Te guiamos pantalla por pantalla para autorizar a Facti en ARCA y crear tu punto de venta. Sin certificados ni términos raros.</p>
+</div>
+<div style="background: #FFFFFF; border-radius: 28px; padding: 32px; box-shadow: 0 10px 30px rgba(21,25,58,0.07); display: flex; flex-direction: column; gap: 14px">
+<div style="width: 56px; height: 56px; border-radius: 18px; display: flex; align-items: center; justify-content: center; background: #FFF3D1; color: #8A5A00"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"></path><path d="M14 3v5h5M9 13h7M9 17h5"></path></svg></div>
+<div style="font-size: 13px; font-weight: 800; color: #5A6080; letter-spacing: 0.06em">PASO 2</div>
+<h3 style="margin: 0; font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 24px">Facturá sin pensar</h3>
+<p style="margin: 0; color: #4A5072">Escribís el CUIT del cliente y Facti completa sus datos desde el padrón de ARCA y elige el tipo de factura correcto. Vos solo ponés el monto.</p>
+</div>
+<div style="background: #FFFFFF; border-radius: 28px; padding: 32px; box-shadow: 0 10px 30px rgba(21,25,58,0.07); display: flex; flex-direction: column; gap: 14px">
+<div style="width: 56px; height: 56px; border-radius: 18px; display: flex; align-items: center; justify-content: center; background: #D7F5E6; color: #0E5C38"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V5M4 19h16"></path><path d="M8 15l4-4 3 3 5-6"></path></svg></div>
+<div style="font-size: 13px; font-weight: 800; color: #5A6080; letter-spacing: 0.06em">PASO 3</div>
+<h3 style="margin: 0; font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 24px">Cobrá y relajate</h3>
+<p style="margin: 0; color: #4A5072">ARCA autoriza la factura con su CAE y le llega al cliente con su QR. Vos ves qué está cobrado, qué falta y cuánto te queda de tu categoría.</p>
+</div>
+</div>
+</section>
+
+<section id="comprobantes" style="max-width: 1200px; margin: 0 auto; padding: 40px 32px 110px; display: flex; flex-direction: column; gap: 44px">
+<div style="text-align: center; display: flex; flex-direction: column; gap: 12px; align-items: center">
+<h2 style="margin: 0; font-family: 'Quicksand', 'Nunito', sans-serif; font-weight: 700; font-size: 44px; letter-spacing: -0.02em">Todos los comprobantes que necesitás</h2>
+<p style="margin: 0; color: #4A5072; font-size: 19px; max-width: 620px">Seas monotributista, responsable inscripto o exportador, Facti te muestra solo los que te corresponden.</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px">
+<div style="position: relative; background: #FFFFFF; border-radius: 20px; padding: 24px 28px; display: flex; gap: 18px; align-items: center"><span style="position: absolute; left: -11px; top: 50%; margin-top: -11px; width: 22px; height: 22px; border-radius: 50%; background: #F2F5F9"></span><span style="position: absolute; right: -11px; top: 50%; margin-top: -11px; width: 22px; height: 22px; border-radius: 50%; background: #F2F5F9"></span><span style="flex: none; width: 58px; height: 58px; border-radius: 16px; background: {{primary}}; color: #FFFFFF; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 28px; display: flex; align-items: center; justify-content: center">A</span><span style="border-left: 2px dashed #DCE1EC; padding-left: 18px"><strong style="display: block; font-size: 18px">Factura A</strong><span style="color: #4A5072; font-size: 15px">Entre responsables inscriptos</span></span></div>
+<div style="position: relative; background: #FFFFFF; border-radius: 20px; padding: 24px 28px; display: flex; gap: 18px; align-items: center"><span style="position: absolute; left: -11px; top: 50%; margin-top: -11px; width: 22px; height: 22px; border-radius: 50%; background: #F2F5F9"></span><span style="position: absolute; right: -11px; top: 50%; margin-top: -11px; width: 22px; height: 22px; border-radius: 50%; background: #F2F5F9"></span><span style="flex: none; width: 58px; height: 58px; border-radius: 16px; background: {{primary}}; color: #FFFFFF; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 28px; display: flex; align-items: center; justify-content: center">B</span><span style="border-left: 2px dashed #DCE1EC; padding-left: 18px"><strong style="display: block; font-size: 18px">Factura B</strong><span style="color: #4A5072; font-size: 15px">A consumidores finales</span></span></div>
+<div style="position: relative; background: #FFFFFF; border-radius: 20px; padding: 24px 28px; display: flex; gap: 18px; align-items: center"><span style="position: absolute; left: -11px; top: 50%; margin-top: -11px; width: 22px; height: 22px; border-radius: 50%; background: #F2F5F9"></span><span style="position: absolute; right: -11px; top: 50%; margin-top: -11px; width: 22px; height: 22px; border-radius: 50%; background: #F2F5F9"></span><span style="flex: none; width: 58px; height: 58px; border-radius: 16px; background: {{primary}}; color: #FFFFFF; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 28px; display: flex; align-items: center; justify-content: center">C</span><span style="border-left: 2px dashed #DCE1EC; padding-left: 18px"><strong style="display: block; font-size: 18px">Factura C</strong><span style="color: #4A5072; font-size: 15px">Para monotributistas</span></span></div>
+<div style="position: relative; background: #FFFFFF; border-radius: 20px; padding: 24px 28px; display: flex; gap: 18px; align-items: center"><span style="position: absolute; left: -11px; top: 50%; margin-top: -11px; width: 22px; height: 22px; border-radius: 50%; background: #F2F5F9"></span><span style="position: absolute; right: -11px; top: 50%; margin-top: -11px; width: 22px; height: 22px; border-radius: 50%; background: #F2F5F9"></span><span style="flex: none; width: 58px; height: 58px; border-radius: 16px; background: {{primary}}; color: #FFFFFF; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 28px; display: flex; align-items: center; justify-content: center">M</span><span style="border-left: 2px dashed #DCE1EC; padding-left: 18px"><strong style="display: block; font-size: 18px">Factura M</strong><span style="color: #4A5072; font-size: 15px">Inscriptos con observaciones</span></span></div>
+<div style="position: relative; background: #FFFFFF; border-radius: 20px; padding: 24px 28px; display: flex; gap: 18px; align-items: center"><span style="position: absolute; left: -11px; top: 50%; margin-top: -11px; width: 22px; height: 22px; border-radius: 50%; background: #F2F5F9"></span><span style="position: absolute; right: -11px; top: 50%; margin-top: -11px; width: 22px; height: 22px; border-radius: 50%; background: #F2F5F9"></span><span style="flex: none; width: 58px; height: 58px; border-radius: 16px; background: #FFD25E; color: #15193A; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 28px; display: flex; align-items: center; justify-content: center">E</span><span style="border-left: 2px dashed #DCE1EC; padding-left: 18px"><strong style="display: block; font-size: 18px">Factura E</strong><span style="color: #4A5072; font-size: 15px">Para exportaciones</span></span></div>
+<div style="position: relative; background: #FFFFFF; border-radius: 20px; padding: 24px 28px; display: flex; gap: 18px; align-items: center"><span style="position: absolute; left: -11px; top: 50%; margin-top: -11px; width: 22px; height: 22px; border-radius: 50%; background: #F2F5F9"></span><span style="position: absolute; right: -11px; top: 50%; margin-top: -11px; width: 22px; height: 22px; border-radius: 50%; background: #F2F5F9"></span><span style="flex: none; width: 58px; height: 58px; border-radius: 16px; background: #D7F5E6; color: #0E5C38; font-family: 'Space Mono', monospace; font-weight: 700; font-size: 22px; display: flex; align-items: center; justify-content: center">NC</span><span style="border-left: 2px dashed #DCE1EC; padding-left: 18px"><strong style="display: block; font-size: 18px">Notas de crédito y débito</strong><span style="color: #4A5072; font-size: 15px">Para corregir o anular</span></span></div>
+</div>
+</section>
+
+<section id="monotributo" style="max-width: 1200px; margin: 0 auto; padding: 40px 32px 110px; display: flex; flex-wrap: wrap; align-items: center; gap: 56px">
+<div style="flex: 1 1 460px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+<span style="align-self: flex-start; background: #FFF3D1; color: #6B4600; font-weight: 800; font-size: 14px; padding: 7px 16px; border-radius: 12px">Para monotributistas</span>
+<h2 style="margin: 0; font-family: 'Quicksand', 'Nunito', sans-serif; font-weight: 700; font-size: 44px; line-height: 1.15; letter-spacing: -0.02em">Facti cuida tu categoría <span style="font-family: 'Caveat', cursive; color: {{primary}}; font-size: 54px">como si fuera suya</span></h2>
+<p style="margin: 0; color: #4A5072; font-size: 19px">Como Facti hace tus facturas, ya sabe cuánto facturaste. Te avisa antes de que te pases del tope y te recuerda cuándo recategorizarte, con los números listos.</p>
+<div style="display: flex; flex-direction: column; gap: 12px; font-weight: 700">
+<span style="display: flex; gap: 10px; align-items: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E9E63" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>Facturación de los últimos 12 meses</span>
+<span style="display: flex; gap: 10px; align-items: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E9E63" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>Alerta cuando te acercás al tope</span>
+<span style="display: flex; gap: 10px; align-items: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E9E63" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>Recordatorio de recategorización</span>
+</div>
+</div>
+<div style="flex: 1 1 420px; min-width: 0; position: relative; padding-top: 30px">
+<div style="background: #FFFFFF; border-radius: 28px; padding: 34px; box-shadow: 0 20px 50px rgba(21,25,58,0.10); display: flex; flex-direction: column; gap: 20px">
+<div><div style="font-size: 13px; font-weight: 800; color: #5A6080; letter-spacing: 0.06em">TU MONOTRIBUTO</div><div style="font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 28px">Categoría D</div></div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; justify-content: space-between; font-weight: 700"><span>Facturado en 12 meses</span><span>68% del tope</span></div>
+<div style="height: 16px; background: #ECEFF5; border-radius: 999px; overflow: hidden"><div style="width: 68%; height: 100%; background: {{primary}}; border-radius: 999px"></div></div>
+<div style="display: flex; justify-content: space-between; font-size: 14px; color: #4A5072"><span>[MONTO FACTURADO]</span><span>Tope: [TOPE CATEGORÍA]</span></div>
+</div>
+<div style="background: #FFF3D1; color: #6B4600; border-radius: 18px; padding: 16px 18px; display: flex; gap: 12px; align-items: flex-start; font-weight: 700">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 2px"><path d="M12 8v5M12 16.5v.5"></path><circle cx="12" cy="12" r="9"></circle></svg>
+<span>La próxima recategorización vence el [FECHA]. Ya tengo tus números listos.</span>
+</div>
+</div>
+</div>
+</section>
+
+<section id="precios" style="max-width: 1000px; margin: 0 auto; padding: 40px 32px 110px; display: flex; flex-direction: column; gap: 44px">
+<div style="text-align: center; display: flex; flex-direction: column; gap: 12px; align-items: center">
+<h2 style="margin: 0; font-family: 'Quicksand', 'Nunito', sans-serif; font-weight: 700; font-size: 44px; letter-spacing: -0.02em">Empezá gratis</h2>
+<p style="margin: 0; color: #4A5072; font-size: 19px">Pasate a Pro cuando lo necesites.</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px">
+<div style="background: #FFFFFF; border-radius: 28px; padding: 36px; box-shadow: 0 10px 30px rgba(21,25,58,0.07); display: flex; flex-direction: column; gap: 18px">
+<h3 style="margin: 0; font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 26px">Gratis</h3>
+<div style="font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 44px">$0</div>
+<div style="display: flex; flex-direction: column; gap: 10px; color: #3C4268">
+<span>Hasta [CANTIDAD] facturas por mes</span>
+<span>Facturas A, B y C</span>
+<span>Panel de monotributo</span>
+</div>
+<a href="#empezar" style="margin-top: 8px; text-align: center; background: #FFFFFF; color: #15193A; text-decoration: none; font-weight: 800; padding: 16px; border-radius: 16px; border: 2px solid #15193A">Crear cuenta</a>
+</div>
+<div style="background: #15193A; color: #FFFFFF; border-radius: 28px; padding: 36px; box-shadow: 0 20px 50px rgba(21,25,58,0.25); display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; justify-content: space-between; align-items: center"><h3 style="margin: 0; font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 26px">Pro</h3><span style="background: #FFD25E; color: #15193A; font-weight: 800; font-size: 13px; padding: 6px 12px; border-radius: 10px">Más elegido</span></div>
+<div style="font-family: 'Quicksand', sans-serif; font-weight: 700; font-size: 44px">[PRECIO]<span style="font-size: 18px; font-weight: 600; color: #C9CCE8"> / mes</span></div>
+<div style="display: flex; flex-direction: column; gap: 10px; color: #DADCF2">
+<span>Facturas ilimitadas</span>
+<span>Todos los comprobantes, incluida la E</span>
+<span>Registro de cobros y recordatorios</span>
+<span>Factura de crédito MiPyME</span>
+</div>
+<a href="#empezar" style="margin-top: 8px; text-align: center; background: #FFD25E; color: #15193A; text-decoration: none; font-weight: 800; padding: 16px; border-radius: 16px">Probar Pro</a>
+</div>
+</div>
+</section>
+
+<section id="empezar" style="max-width: 1200px; margin: 0 auto; padding: 20px 32px 80px">
+<div style="background: {{primary}}; color: #FFFFFF; border-radius: 40px; padding: 56px 48px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 40px">
+<div class="f-float" style="flex: none">
+<svg width="180" height="200" viewBox="0 0 260 290" aria-hidden="true">
+<ellipse cx="130" cy="276" rx="84" ry="10" fill="#15193A" opacity="0.08"></ellipse>
+<g class="f-wave-l"><path d="M40 150 Q14 140 18 112" fill="none" stroke="#FFFFFF" stroke-width="16" stroke-linecap="round"></path><circle cx="18" cy="104" r="13" fill="#FFD25E"></circle></g>
+<g class="f-wave"><path d="M220 150 Q248 132 238 100" fill="none" stroke="#FFFFFF" stroke-width="16" stroke-linecap="round"></path><circle cx="238" cy="92" r="13" fill="#FFD25E"></circle></g>
+<path d="M40 70 Q40 34 76 34 L184 34 Q220 34 220 70 L220 238 L202 254 L184 238 L166 254 L148 238 L130 254 L112 238 L94 254 L76 238 L58 254 L40 238 Z" fill="#FFFFFF"></path>
+<path d="M56 74 Q56 50 80 50 L178 50 Q202 50 202 74 L202 104 L56 104 Z" fill="#FFFFFF" opacity="0.18"></path>
+<g class="f-blink"><ellipse cx="102" cy="128" rx="13" ry="16" fill="#15193A"></ellipse><ellipse cx="158" cy="128" rx="13" ry="16" fill="#15193A"></ellipse><circle cx="106" cy="122" r="5" fill="#FFFFFF"></circle><circle cx="162" cy="122" r="5" fill="#FFFFFF"></circle></g>
+<ellipse cx="82" cy="156" rx="12" ry="7" fill="#FF9FB2" opacity="0.8"></ellipse>
+<ellipse cx="178" cy="156" rx="12" ry="7" fill="#FF9FB2" opacity="0.8"></ellipse>
+<path d="M108 158 Q130 182 152 158" fill="none" stroke="#15193A" stroke-width="6" stroke-linecap="round"></path>
+<path d="M76 196 L184 196 M76 214 L150 214" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" opacity="0.6"></path>
+</svg>
+</div>
+<div style="flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 18px">
+<h2 style="margin: 0; font-family: 'Quicksand', 'Nunito', sans-serif; font-weight: 700; font-size: 46px; letter-spacing: -0.02em; line-height: 1.15">Facti está listo para tu próxima factura</h2>
+<p style="margin: 0; font-size: 19px; color: #E4E5FF; max-width: 520px">Creá tu cuenta gratis y conectá tu CUIT. Facti te acompaña en cada paso.</p>
+<a href="#crear" style="align-self: flex-start; background: #FFD25E; color: #15193A; text-decoration: none; font-weight: 800; font-size: 18px; padding: 18px 32px; border-radius: 18px; box-shadow: 0 6px 0 #15193A">Empezar gratis</a>
+</div>
+</div>
+</section>
+
+<footer style="max-width: 1200px; margin: 0 auto; padding: 0 32px 48px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; color: #5A6080; font-size: 14px">
+<span>© 2026 Facti</span>
+<span>Facti es un servicio independiente y no pertenece a ARCA.</span>
+</footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"primary":{"editor":"color","default":"#3B3FD8","options":["#3B3FD8","#13795B","#C2410C","#7C3AED"]},"$preview":{"width":1440,"height":4300}}'>
+class Component extends DCLogic {
+renderVals() {
+return { primary: this.props.primary ?? '#3B3FD8' };
+}
+}
+</script>
+</body>
+</html>
