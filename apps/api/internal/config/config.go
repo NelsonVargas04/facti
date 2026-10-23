@@ -21,6 +21,10 @@ type Config struct {
 	OrigenesWeb []string // vacío = cualquier origen
 	// URL de conexión a Postgres (en producción, la de Supabase).
 	DatabaseURL string
+	// Proyecto de Supabase para validar las sesiones (https://xxxx.supabase.co) y, si el proyecto
+	// todavía firma con el secreto legado (HS256), ese secreto.
+	SupabaseURL       string
+	SupabaseJWTSecret string
 
 	Entorno         arca.Entorno
 	CuitCertificado string
@@ -41,17 +45,20 @@ func Cargar() Config {
 	}
 
 	c := Config{
-		Raiz:            raiz,
-		EnvCargado:      envPath,
-		Puerto:          entero(os.Getenv("API_PORT"), 4000),
-		DatabaseURL:     strings.TrimSpace(os.Getenv("DATABASE_URL")),
-		Entorno:         arca.Entorno(valor("ARCA_ENTORNO", string(arca.Homologacion))),
-		CuitCertificado: os.Getenv("ARCA_CUIT_CERTIFICADO"),
-		CuitEmisor:      os.Getenv("ARCA_CUIT_EMISOR"),
-		PuntoVenta:      entero(os.Getenv("ARCA_PUNTO_VENTA"), 1),
-		CertPath:        enRaiz(raiz, os.Getenv("ARCA_CERT_PATH")),
-		KeyPath:         enRaiz(raiz, os.Getenv("ARCA_KEY_PATH")),
-		CacheDir:        enRaiz(raiz, valor("ARCA_CACHE_DIR", ".cache")),
+		Raiz:        raiz,
+		EnvCargado:  envPath,
+		Puerto:      entero(os.Getenv("API_PORT"), 4000),
+		DatabaseURL: strings.TrimSpace(os.Getenv("DATABASE_URL")),
+		// La web usa NEXT_PUBLIC_SUPABASE_URL; la API acepta la misma variable para no repetirla.
+		SupabaseURL:       strings.TrimSpace(valor("SUPABASE_URL", os.Getenv("NEXT_PUBLIC_SUPABASE_URL"))),
+		SupabaseJWTSecret: strings.TrimSpace(os.Getenv("SUPABASE_JWT_SECRET")),
+		Entorno:           arca.Entorno(valor("ARCA_ENTORNO", string(arca.Homologacion))),
+		CuitCertificado:   os.Getenv("ARCA_CUIT_CERTIFICADO"),
+		CuitEmisor:        os.Getenv("ARCA_CUIT_EMISOR"),
+		PuntoVenta:        entero(os.Getenv("ARCA_PUNTO_VENTA"), 1),
+		CertPath:          enRaiz(raiz, os.Getenv("ARCA_CERT_PATH")),
+		KeyPath:           enRaiz(raiz, os.Getenv("ARCA_KEY_PATH")),
+		CacheDir:          enRaiz(raiz, valor("ARCA_CACHE_DIR", ".cache")),
 	}
 	for _, o := range strings.Split(os.Getenv("WEB_ORIGIN"), ",") {
 		if o = strings.TrimSpace(o); o != "" {

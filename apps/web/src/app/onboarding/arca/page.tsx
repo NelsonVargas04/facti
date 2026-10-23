@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ResumenPerfil } from '@/components/ResumenPerfil';
 import { Facti } from '@/components/Facti';
 import { Stepper } from '@/components/Stepper';
 import { CopiarCuit } from '@/components/CopiarCuit';
@@ -98,11 +99,7 @@ export default function AutorizarArca() {
             <h2 className="text-[18px] font-bold">Lo que sigue: tu punto de venta</h2>
             <p className="text-[15px] text-texto-suave">En el próximo paso creamos juntos un punto de venta de tipo <strong className="text-texto">"Factura electrónica - Monotributo - Web Services"</strong>. Si ARCA ya te habilitó uno, lo detectamos.</p>
           </div>
-          <div className="flex flex-col gap-2.5 rounded-tarjeta bg-superficie p-7 shadow-tarjeta">
-            <div className="flex items-center gap-2 text-sm font-extrabold text-exito-texto"><Tilde />Tu perfil</div>
-            <strong>Fernández Lucía · CUIT 27-31456789-4</strong>
-            <span className="text-[15px] text-texto-suave">Monotributo, categoría C · Servicios</span>
-          </div>
+          <ResumenPerfil />
         </aside>
       </div>
     </>

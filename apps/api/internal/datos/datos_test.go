@@ -39,15 +39,29 @@ func TestContrato(t *testing.T) {
 func probarContrato(t *testing.T, d Datos) {
 	ctx := context.Background()
 	cuit := fmt.Sprintf("99%09d", rand.IntN(1_000_000_000))
+	uuid := func() string {
+		return fmt.Sprintf("%08x-%04x-4%03x-a%03x-%012x", rand.Uint32(), rand.IntN(1<<16), rand.IntN(1<<12), rand.IntN(1<<12), rand.Int64N(1<<48))
+	}
+	usuario := uuid()
 
-	cuenta, err := d.AsegurarCuenta(ctx, cuit, 3)
+	cuenta, err := d.CuentaDeUsuario(ctx, usuario, "lucia@ejemplo.com", 3)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if otra, _ := d.AsegurarCuenta(ctx, cuit, 3); otra.ID != cuenta.ID || cuenta.Plan != PlanGratis {
-		t.Fatalf("AsegurarCuenta tiene que devolver la misma cuenta: %+v %+v", cuenta, otra)
+	if cuenta.Cuit != "" || cuenta.Plan != PlanGratis || cuenta.Email != "lucia@ejemplo.com" || cuenta.PuntoVenta != 3 {
+		t.Fatalf("cuenta nueva: %+v", cuenta)
 	}
-	if c, err := d.ActualizarPerfil(ctx, cuenta.ID, Perfil{Nombre: "FERNÁNDEZ LUCÍA", Condicion: "monotributo", Categoria: "C"}); err != nil || c.Nombre != "FERNÁNDEZ LUCÍA" {
+	if otra, _ := d.CuentaDeUsuario(ctx, usuario, "lucia@nuevo.com", 3); otra.ID != cuenta.ID || otra.Email != "lucia@nuevo.com" {
+		t.Fatalf("el mismo usuario tiene que volver a su cuenta (con el email nuevo): %+v %+v", cuenta, otra)
+	}
+	if c, err := d.AsignarCuit(ctx, cuenta.ID, cuit, Perfil{Nombre: "FERNÁNDEZ LUCÍA", Condicion: "monotributo", Categoria: "C"}); err != nil || c.Cuit != cuit || c.Nombre != "FERNÁNDEZ LUCÍA" {
+		t.Fatalf("asignar CUIT: %+v %v", c, err)
+	}
+	otraCuenta, _ := d.CuentaDeUsuario(ctx, uuid(), "otro@ejemplo.com", 1)
+	if _, err := d.AsignarCuit(ctx, otraCuenta.ID, cuit, Perfil{}); err != ErrCuitEnUso {
+		t.Errorf("dos cuentas no pueden tener el mismo CUIT: %v", err)
+	}
+	if c, err := d.ActualizarPerfil(ctx, cuenta.ID, Perfil{Nombre: "FERNANDEZ LUCIA", Condicion: "monotributo", Categoria: "D"}); err != nil || c.Categoria != "D" || c.Cuit != cuit {
 		t.Fatalf("perfil: %+v %v", c, err)
 	}
 
@@ -99,7 +113,6 @@ func probarContrato(t *testing.T, d Datos) {
 	if g, _ := d.Comprobante(ctx, cuenta.ID, nc.ID); g.Sigla != "NC" || g.Firmado() != -5000 {
 		t.Errorf("nota de crédito: %+v", g)
 	}
-	otraCuenta, _ := d.AsegurarCuenta(ctx, cuit[:10]+"1", 1)
 	if _, err := d.Comprobante(ctx, otraCuenta.ID, f1.ID); err != ErrNoEncontrado {
 		t.Errorf("no tiene que ver comprobantes de otra cuenta: %v", err)
 	}

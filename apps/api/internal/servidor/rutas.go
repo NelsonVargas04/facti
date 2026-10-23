@@ -51,7 +51,7 @@ func (s *Servidor) arcaEstado(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	estado, err := cl.Wsfe.Estado(r.Context())
+	estado, err := cl.WsfeDe(cl.Cfg.CuitCertificado).Estado(r.Context())
 	if err != nil {
 		return err
 	}
@@ -59,12 +59,28 @@ func (s *Servidor) arcaEstado(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func (s *Servidor) arcaPuntosVenta(w http.ResponseWriter, r *http.Request) error {
+// emisor devuelve la cuenta del usuario (que ya tiene que tener el CUIT cargado) y los clientes de ARCA.
+func (s *Servidor) emisor(r *http.Request) (datos.Datos, datos.Cuenta, *ClientesArca, error) {
+	d, c, err := s.cuenta(r)
+	if err != nil {
+		return nil, c, nil, err
+	}
+	if c.Cuit == "" {
+		return nil, c, nil, &errorPedido{
+			estado: http.StatusConflict, codigo: "falta_cuit",
+			mensaje: "Antes de facturar, cargá tu CUIT en el primer paso de la configuración.",
+		}
+	}
 	cl, err := s.arca()
+	return d, c, cl, err
+}
+
+func (s *Servidor) arcaPuntosVenta(w http.ResponseWriter, r *http.Request) error {
+	_, c, cl, err := s.emisor(r)
 	if err != nil {
 		return err
 	}
-	pv, err := cl.Wsfe.PuntosDeVenta(r.Context())
+	pv, err := cl.WsfeDe(c.Cuit).PuntosDeVenta(r.Context())
 	if err != nil {
 		return err
 	}
@@ -77,11 +93,11 @@ func (s *Servidor) arcaCondicionesIva(w http.ResponseWriter, r *http.Request) er
 	if clase != "" && clase != "A" && clase != "B" && clase != "C" && clase != "M" {
 		return pedidoInvalido("clase_invalida", "La clase de comprobante tiene que ser A, B, C o M.")
 	}
-	cl, err := s.arca()
+	_, c, cl, err := s.emisor(r)
 	if err != nil {
 		return err
 	}
-	condiciones, err := cl.Wsfe.CondicionesIvaReceptor(r.Context(), clase)
+	condiciones, err := cl.WsfeDe(c.Cuit).CondicionesIvaReceptor(r.Context(), clase)
 	if err != nil {
 		return err
 	}
@@ -93,6 +109,9 @@ func (s *Servidor) arcaPadron(w http.ResponseWriter, r *http.Request) error {
 	c := r.PathValue("cuit")
 	if !cuit.Validar(c) {
 		return pedidoInvalido("cuit_invalido", "El CUIT "+c+" no es válido")
+	}
+	if _, err := s.usuario(r); err != nil {
+		return err
 	}
 	cl, err := s.arca()
 	if err != nil {
@@ -200,8 +219,8 @@ func (s *Servidor) emitirFactura(w http.ResponseWriter, r *http.Request) error {
 		servicio = &arca.PeriodoServicio{Desde: desde, Hasta: hasta, VencimientoPago: vto}
 	}
 
-	// Antes de pedir el CAE: tiene que haber base para guardarlo y cupo en el plan.
-	d, cuenta, err := s.cuenta(r.Context())
+	// Antes de pedir el CAE: sesión, CUIT cargado, ARCA configurado, base para guardarlo y cupo en el plan.
+	d, cuenta, cl, err := s.emisor(r)
 	if err != nil {
 		return err
 	}
@@ -220,13 +239,10 @@ func (s *Servidor) emitirFactura(w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 
-	cl, err := s.arca()
-	if err != nil {
-		return err
-	}
+	pv := cuenta.PuntoVenta
 	rec := body.Receptor
-	res, err := cl.Wsfe.Emitir(r.Context(), arca.NuevoComprobante{
-		PuntoVenta:             cl.PuntoVenta,
+	res, err := cl.WsfeDe(cuenta.Cuit).Emitir(r.Context(), arca.NuevoComprobante{
+		PuntoVenta:             pv,
 		Tipo:                   arca.FacturaC,
 		Concepto:               body.Concepto,
 		DocTipo:                *rec.DocTipo,
@@ -251,7 +267,7 @@ func (s *Servidor) emitirFactura(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	fechaISO := arca.DeFechaArca(arca.AFechaArca(fecha))
-	cuitEmisor, _ := strconv.ParseInt(cuit.Limpiar(cl.CuitEmisor), 10, 64)
+	cuitEmisor, _ := strconv.ParseInt(cuenta.Cuit, 10, 64)
 	nroDoc, _ := strconv.ParseInt(cuit.Limpiar(rec.DocNro), 10, 64)
 	codAut, _ := strconv.ParseInt(res.CAE, 10, 64)
 	docTipo := *rec.DocTipo
@@ -260,7 +276,7 @@ func (s *Servidor) emitirFactura(w http.ResponseWriter, r *http.Request) error {
 		Aprobado:   true,
 		Letra:      "C",
 		Tipo:       arca.FacturaC,
-		PuntoVenta: cl.PuntoVenta,
+		PuntoVenta: pv,
 		Numero:     res.Numero,
 		CAE:        res.CAE,
 		Total:      total,
@@ -268,7 +284,7 @@ func (s *Servidor) emitirFactura(w http.ResponseWriter, r *http.Request) error {
 		QR: arca.URLDelQR(arca.DatosQR{
 			Fecha:      fechaISO,
 			Cuit:       cuitEmisor,
-			PtoVta:     cl.PuntoVenta,
+			PtoVta:     pv,
 			TipoCmp:    arca.FacturaC,
 			NroCmp:     res.Numero,
 			Importe:    total,
@@ -286,7 +302,7 @@ func (s *Servidor) emitirFactura(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	comp := datos.Comprobante{
-		Tipo: arca.FacturaC, PuntoVenta: cl.PuntoVenta, Numero: res.Numero, Fecha: fechaISO,
+		Tipo: arca.FacturaC, PuntoVenta: pv, Numero: res.Numero, Fecha: fechaISO,
 		Concepto: body.Concepto, Moneda: "PES", Cotizacion: 1, Total: total, Neto: total,
 		CAE: res.CAE, CAEVto: out.VencimientoCAE, QR: out.QR,
 		CondicionVenta: body.CondicionVenta,
@@ -313,7 +329,7 @@ func (s *Servidor) emitirFactura(w http.ResponseWriter, r *http.Request) error {
 		s.log.Error("comprobante autorizado sin guardar", "error", err, "comprobante", string(completo), "respuesta", res.Respuesta)
 		return &errorPedido{
 			estado: http.StatusInternalServerError, codigo: "no_guardado",
-			mensaje: fmt.Sprintf("ARCA autorizó la factura %05d-%08d (CAE %s), pero no pudimos guardarla en Facti. No la vuelvas a emitir: ya es válida.", cl.PuntoVenta, res.Numero, res.CAE),
+			mensaje: fmt.Sprintf("ARCA autorizó la factura %05d-%08d (CAE %s), pero no pudimos guardarla en Facti. No la vuelvas a emitir: ya es válida.", pv, res.Numero, res.CAE),
 			extra:   map[string]any{"factura": out},
 		}
 	}

@@ -13,6 +13,9 @@ import (
 // ErrNoEncontrado se devuelve cuando el registro no existe (o es de otra cuenta).
 var ErrNoEncontrado = errors.New("no encontrado")
 
+// ErrCuitEnUso se devuelve si otra cuenta ya tiene ese CUIT.
+var ErrCuitEnUso = errors.New("el CUIT ya está asociado a otra cuenta")
+
 // Plan de la cuenta.
 type Plan string
 
@@ -30,9 +33,10 @@ const (
 	Cobrada   Cobro = "cobrada"
 )
 
-// Cuenta del emisor. Por ahora hay una sola (la del .env); con login habrá una por usuario.
+// Cuenta del emisor: una por usuario. Cuit queda vacío hasta que lo carga en el onboarding.
 type Cuenta struct {
 	ID                int64     `json:"id"`
+	Email             string    `json:"email"`
 	Cuit              string    `json:"cuit"`
 	Nombre            string    `json:"nombre"`
 	Domicilio         string    `json:"domicilio"`
@@ -181,8 +185,10 @@ type Uso struct {
 
 // Datos es lo que la API necesita guardar y leer.
 type Datos interface {
-	// AsegurarCuenta crea la cuenta del CUIT si no existe y la devuelve.
-	AsegurarCuenta(ctx context.Context, cuit string, puntoVenta int) (Cuenta, error)
+	// CuentaDeUsuario crea la cuenta del usuario la primera vez que entra y la devuelve.
+	CuentaDeUsuario(ctx context.Context, usuarioID, email string, puntoVenta int) (Cuenta, error)
+	// AsignarCuit guarda el CUIT del emisor (y su perfil del padrón). ErrCuitEnUso si ya es de otra cuenta.
+	AsignarCuit(ctx context.Context, cuentaID int64, cuit string, p Perfil) (Cuenta, error)
 	ActualizarPerfil(ctx context.Context, cuentaID int64, p Perfil) (Cuenta, error)
 
 	// GuardarComprobante guarda el comprobante con sus ítems y crea o actualiza el cliente.

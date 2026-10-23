@@ -16,12 +16,28 @@ import (
 	"time"
 
 	"facti/api/internal/arca"
+	"facti/api/internal/auth"
 	"facti/api/internal/datos"
 )
 
 func sinConfigurar() (*ClientesArca, error) {
 	return nil, &ConfiguracionError{Mensaje: "Falta la variable ARCA_CUIT_CERTIFICADO (ver .env.example)"}
 }
+
+// authFalso acepta los tokens "lucia" y "martin" (dos usuarios distintos).
+type authFalso struct{}
+
+func (authFalso) Verificar(_ context.Context, token string) (auth.Usuario, error) {
+	switch token {
+	case "lucia":
+		return auth.Usuario{ID: "11111111-1111-4111-a111-111111111111", Email: "lucia@ejemplo.com"}, nil
+	case "martin":
+		return auth.Usuario{ID: "22222222-2222-4222-a222-222222222222", Email: "martin@ejemplo.com"}, nil
+	}
+	return auth.Usuario{}, auth.ErrSinSesion
+}
+
+var comoLucia = []string{"Authorization", "Bearer lucia"}
 
 func pedir(t *testing.T, h http.Handler, metodo, ruta, cuerpo string, headers ...string) (*http.Response, map[string]any) {
 	t.Helper()
@@ -64,12 +80,42 @@ func TestArcaSinConfiguracionDa503(t *testing.T) {
 }
 
 func TestSinBaseDeDatosDa503(t *testing.T) {
-	h := Nuevo(Opciones{Arca: sinConfigurar, CuitEmisor: "20111111112", PuntoVenta: 3})
+	h := Nuevo(Opciones{Arca: sinConfigurar, Auth: authFalso{}, PuntoVenta: 3})
 	for _, ruta := range []string{"/cuenta", "/resumen", "/comprobantes", "/comprobantes/1", "/clientes"} {
-		res, j := pedir(t, h, "GET", ruta, "")
+		res, j := pedir(t, h, "GET", ruta, "", comoLucia...)
 		if res.StatusCode != 503 || j["error"] != "base_datos" || !strings.Contains(j["mensaje"].(string), "DATABASE_URL") {
 			t.Errorf("%s: se esperaba 503 base_datos, vino %d %v", ruta, res.StatusCode, j)
 		}
+	}
+}
+
+func TestSesion(t *testing.T) {
+	// Sin Supabase configurado nadie puede entrar, y se explica por qué.
+	h := Nuevo(Opciones{Arca: sinConfigurar, Datos: FijarDatos(datos.NuevaMemoria())})
+	if res, j := pedir(t, h, "GET", "/cuenta", "", comoLucia...); res.StatusCode != 503 || !strings.Contains(j["mensaje"].(string), "SUPABASE_URL") {
+		t.Errorf("sin Supabase: %d %v", res.StatusCode, j)
+	}
+	h = Nuevo(Opciones{Arca: sinConfigurar, Datos: FijarDatos(datos.NuevaMemoria()), Auth: authFalso{}})
+	for nombre, headers := range map[string][]string{
+		"sin token":      nil,
+		"token inválido": {"Authorization", "Bearer cualquiera"},
+		"sin Bearer":     {"Authorization", "lucia"},
+	} {
+		for _, ruta := range []string{"/cuenta", "/comprobantes", "/arca/padron/20111111112"} {
+			if res, j := pedir(t, h, "GET", ruta, "", headers...); res.StatusCode != 401 || j["error"] != "sin_sesion" {
+				t.Errorf("%s en %s: se esperaba 401, vino %d %v", nombre, ruta, res.StatusCode, j)
+			}
+		}
+	}
+	// El estado de ARCA es público.
+	if res, _ := pedir(t, h, "GET", "/arca/estado", ""); res.StatusCode == 401 {
+		t.Error("/arca/estado no tiene que pedir sesión")
+	}
+	// La primera vez que entra se crea la cuenta, sin CUIT.
+	res, j := pedir(t, h, "GET", "/cuenta", "", comoLucia...)
+	c, _ := j["cuenta"].(map[string]any)
+	if res.StatusCode != 200 || c["email"] != "lucia@ejemplo.com" || c["cuit"] != "" {
+		t.Errorf("cuenta nueva: %d %v", res.StatusCode, j)
 	}
 }
 
@@ -120,6 +166,14 @@ type arcaSimulado struct {
 func (a *arcaSimulado) clientes(t *testing.T) *ClientesArca {
 	t.Helper()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/padron" {
+			io.WriteString(w, `<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body>`+
+				`<ns2:getPersona_v2Response xmlns:ns2="http://a5.soap.ws.server.puc.sr/"><personaReturn>`+
+				`<datosGenerales><apellido>FERNANDEZ</apellido><nombre>LUCIA</nombre><tipoPersona>FISICA</tipoPersona></datosGenerales>`+
+				`<datosMonotributo><categoriaMonotributo><descripcionCategoria>C</descripcionCategoria></categoriaMonotributo></datosMonotributo>`+
+				`</personaReturn></ns2:getPersona_v2Response></soap:Body></soap:Envelope>`)
+			return
+		}
 		a.pedidos.Add(1)
 		accion := strings.Trim(r.Header.Get("SOAPAction"), `"`)
 		metodo := accion[strings.LastIndex(accion, "/")+1:]
@@ -140,24 +194,28 @@ func (a *arcaSimulado) clientes(t *testing.T) *ClientesArca {
 	// Ticket vigente en la caché de disco, así no hace falta el WSAA.
 	dir := t.TempDir()
 	ta, _ := json.Marshal(arca.TicketAcceso{Token: "T", Sign: "S", Expiracion: time.Now().Add(time.Hour).Format(time.RFC3339)})
-	if err := os.WriteFile(filepath.Join(dir, "ta-homologacion-20111111112-wsfe.json"), ta, 0o600); err != nil {
-		t.Fatal(err)
+	for _, servicio := range []string{"wsfe", "ws_sr_constancia_inscripcion"} {
+		if err := os.WriteFile(filepath.Join(dir, "ta-homologacion-20111111112-"+servicio+".json"), ta, 0o600); err != nil {
+			t.Fatal(err)
+		}
 	}
 	cfg := arca.Config{
 		Entorno: arca.Homologacion, CuitCertificado: "20111111112", CacheDir: dir,
-		Endpoints: &arca.Endpoints{WSFE: srv.URL},
+		Endpoints: &arca.Endpoints{WSFE: srv.URL, Padron: srv.URL + "/padron"},
 	}
-	tickets := arca.NuevaCacheTickets(cfg)
-	return &ClientesArca{
-		Cfg: cfg, Tickets: tickets, Wsfe: arca.NuevoWsfe(cfg, tickets, "20111111112"),
-		CuitEmisor: "20111111112", PuntoVenta: 3,
-	}
+	return &ClientesArca{Cfg: cfg, Tickets: arca.NuevaCacheTickets(cfg)}
 }
 
 type entorno struct {
 	h    http.Handler
 	arca *arcaSimulado
 	mem  *datos.Memoria
+}
+
+// pedir hace el pedido con la sesión de Lucía.
+func (e *entorno) pedir(t *testing.T, metodo, ruta, cuerpo string) (*http.Response, map[string]any) {
+	t.Helper()
+	return pedir(t, e.h, metodo, ruta, cuerpo, comoLucia...)
 }
 
 func nuevoEntorno(t *testing.T, d datos.Datos) *entorno {
@@ -171,10 +229,47 @@ func nuevoEntorno(t *testing.T, d datos.Datos) *entorno {
 	e.h = Nuevo(Opciones{
 		Arca:       func() (*ClientesArca, error) { return cl, nil },
 		Datos:      FijarDatos(d),
-		CuitEmisor: "20111111112", PuntoVenta: 3,
-		Ahora: func() time.Time { return hoy },
+		Auth:       authFalso{},
+		PuntoVenta: 3,
+		Ahora:      func() time.Time { return hoy },
 	})
+	// Lucía completa el onboarding con su CUIT.
+	if res, j := e.pedir(t, "PUT", "/cuenta/cuit", `{"cuit":"20-11111111-2"}`); res.StatusCode != 200 {
+		t.Fatalf("cargar CUIT: %d %v", res.StatusCode, j)
+	}
 	return e
+}
+
+func TestOnboardingCuit(t *testing.T) {
+	e := &entorno{arca: &arcaSimulado{}, mem: datos.NuevaMemoria()}
+	cl := e.arca.clientes(t)
+	e.h = Nuevo(Opciones{Arca: func() (*ClientesArca, error) { return cl, nil }, Datos: FijarDatos(e.mem), Auth: authFalso{}, PuntoVenta: 3})
+
+	// Sin CUIT no se puede facturar.
+	if res, j := e.pedir(t, "POST", "/facturas", facturaLumen); res.StatusCode != 409 || j["error"] != "falta_cuit" {
+		t.Fatalf("emitir sin CUIT: %d %v", res.StatusCode, j)
+	}
+	if res, j := e.pedir(t, "PUT", "/cuenta/cuit", `{"cuit":"20-11111111-3"}`); res.StatusCode != 400 || j["error"] != "cuit_invalido" {
+		t.Errorf("CUIT inválido: %d %v", res.StatusCode, j)
+	}
+	res, j := e.pedir(t, "PUT", "/cuenta/cuit", `{"cuit":"20-11111111-2"}`)
+	c, _ := j["cuenta"].(map[string]any)
+	if res.StatusCode != 200 || c["cuit"] != "20111111112" || c["nombre"] != "FERNANDEZ LUCIA" || c["condicion"] != "monotributo" || j["padron"] != true {
+		t.Fatalf("cargar CUIT: %d %v", res.StatusCode, j)
+	}
+	// Otro usuario no puede usar el mismo CUIT, y no ve los datos de Lucía.
+	if res, j := pedir(t, e.h, "PUT", "/cuenta/cuit", `{"cuit":"20111111112"}`, "Authorization", "Bearer martin"); res.StatusCode != 409 || j["error"] != "cuit_en_uso" {
+		t.Errorf("CUIT en uso: %d %v", res.StatusCode, j)
+	}
+	if res, j := e.pedir(t, "POST", "/facturas", facturaLumen); res.StatusCode != 200 {
+		t.Fatalf("emitir con CUIT: %d %v", res.StatusCode, j)
+	}
+	if _, j := pedir(t, e.h, "GET", "/comprobantes", "", "Authorization", "Bearer martin"); j["total"] != 0.0 {
+		t.Errorf("Martín no tiene que ver las facturas de Lucía: %v", j)
+	}
+	if res, _ := pedir(t, e.h, "GET", "/comprobantes/1", "", "Authorization", "Bearer martin"); res.StatusCode != 404 {
+		t.Errorf("Martín no tiene que poder abrir una factura de Lucía: %d", res.StatusCode)
+	}
 }
 
 const facturaLumen = `{
@@ -191,7 +286,7 @@ func TestEmitirGuardaYSeVeEnTodasLasPantallas(t *testing.T) {
 	e := nuevoEntorno(t, nil)
 
 	// 1. Emitir
-	res, j := pedir(t, e.h, "POST", "/facturas", facturaLumen)
+	res, j := e.pedir(t, "POST", "/facturas", facturaLumen)
 	if res.StatusCode != 200 {
 		t.Fatalf("emisión: %d %v", res.StatusCode, j)
 	}
@@ -204,12 +299,12 @@ func TestEmitirGuardaYSeVeEnTodasLasPantallas(t *testing.T) {
 	}
 	// Una factura a consumidor final anónimo no crea cliente.
 	cf := `{"receptor":{"docTipo":99,"docNro":"0","condicionIvaReceptorId":5},"concepto":1,"fecha":"2026-10-20","items":[{"descripcion":"Taza","cantidad":1,"precioUnitario":15000}]}`
-	if res, j := pedir(t, e.h, "POST", "/facturas", cf); res.StatusCode != 200 || j["numero"] != 2.0 {
+	if res, j := e.pedir(t, "POST", "/facturas", cf); res.StatusCode != 200 || j["numero"] != 2.0 {
 		t.Fatalf("emisión a consumidor final: %d %v", res.StatusCode, j)
 	}
 
 	// 2. Detalle: con ítems, receptor, período y datos del emisor, y sin la respuesta cruda de ARCA.
-	res, j = pedir(t, e.h, "GET", "/comprobantes/1", "")
+	res, j = e.pedir(t, "GET", "/comprobantes/1", "")
 	if res.StatusCode != 200 {
 		t.Fatalf("detalle: %d %v", res.StatusCode, j)
 	}
@@ -233,34 +328,34 @@ func TestEmitirGuardaYSeVeEnTodasLasPantallas(t *testing.T) {
 	}
 
 	// 3. Listado y filtros
-	res, j = pedir(t, e.h, "GET", "/comprobantes?desde=2026-10-01&hasta=2026-10-31", "")
+	res, j = e.pedir(t, "GET", "/comprobantes?desde=2026-10-01&hasta=2026-10-31", "")
 	if res.StatusCode != 200 || j["total"] != 2.0 || j["comprobantes"].([]any)[0].(map[string]any)["numero"] != 2.0 {
 		t.Errorf("listado (más reciente primero): %v", j)
 	}
-	if _, j := pedir(t, e.h, "GET", "/comprobantes?q=lumen", ""); j["total"] != 1.0 {
+	if _, j := e.pedir(t, "GET", "/comprobantes?q=lumen", ""); j["total"] != 1.0 {
 		t.Errorf("búsqueda por cliente: %v", j)
 	}
-	if _, j := pedir(t, e.h, "GET", "/comprobantes?q=00003-00000002", ""); j["total"] != 1.0 {
+	if _, j := e.pedir(t, "GET", "/comprobantes?q=00003-00000002", ""); j["total"] != 1.0 {
 		t.Errorf("búsqueda por número: %v", j)
 	}
-	if res, _ := pedir(t, e.h, "GET", "/comprobantes?desde=12/10/2026", ""); res.StatusCode != 400 {
+	if res, _ := e.pedir(t, "GET", "/comprobantes?desde=12/10/2026", ""); res.StatusCode != 400 {
 		t.Errorf("fecha inválida: %d", res.StatusCode)
 	}
 
 	// 4. Cobro
-	res, j = pedir(t, e.h, "PATCH", "/comprobantes/1/cobro", `{"cobro":"cobrada"}`)
+	res, j = e.pedir(t, "PATCH", "/comprobantes/1/cobro", `{"cobro":"cobrada"}`)
 	if res.StatusCode != 200 || j["cobro"] != "cobrada" || j["cobradaEn"] == nil {
 		t.Errorf("marcar cobrada: %d %v", res.StatusCode, j)
 	}
-	if _, j := pedir(t, e.h, "GET", "/comprobantes?cobro=pendiente", ""); j["total"] != 1.0 {
+	if _, j := e.pedir(t, "GET", "/comprobantes?cobro=pendiente", ""); j["total"] != 1.0 {
 		t.Errorf("filtro pendientes: %v", j)
 	}
-	if res, _ := pedir(t, e.h, "PATCH", "/comprobantes/1/cobro", `{"cobro":"pagada"}`); res.StatusCode != 400 {
+	if res, _ := e.pedir(t, "PATCH", "/comprobantes/1/cobro", `{"cobro":"pagada"}`); res.StatusCode != 400 {
 		t.Errorf("cobro inválido: %d", res.StatusCode)
 	}
 
 	// 5. Clientes: solo Lumen (el consumidor final anónimo no es cliente).
-	_, j = pedir(t, e.h, "GET", "/clientes", "")
+	_, j = e.pedir(t, "GET", "/clientes", "")
 	cls := j["clientes"].([]any)
 	if len(cls) != 1 {
 		t.Fatalf("clientes: %v", j)
@@ -269,12 +364,12 @@ func TestEmitirGuardaYSeVeEnTodasLasPantallas(t *testing.T) {
 	if cl["nombre"] != "ESTUDIO LUMEN SRL" || cl["comprobantes"] != 1.0 || cl["facturado"] != 85000.0 || cl["porCobrar"] != 0.0 {
 		t.Errorf("cliente: %v", cl)
 	}
-	if _, j := pedir(t, e.h, "GET", "/clientes?q=30-50001091", ""); len(j["clientes"].([]any)) != 1 {
+	if _, j := e.pedir(t, "GET", "/clientes?q=30-50001091", ""); len(j["clientes"].([]any)) != 1 {
 		t.Errorf("búsqueda de cliente por CUIT con guiones: %v", j)
 	}
 
 	// 6. Resumen del mes y plan
-	res, j = pedir(t, e.h, "GET", "/resumen", "")
+	res, j = e.pedir(t, "GET", "/resumen", "")
 	if res.StatusCode != 200 {
 		t.Fatalf("resumen: %d %v", res.StatusCode, j)
 	}
@@ -290,12 +385,12 @@ func TestEmitirGuardaYSeVeEnTodasLasPantallas(t *testing.T) {
 	if plan["nombre"] != "gratis" || plan["uso"].(map[string]any)["facturas"] != 2.0 || plan["limites"].(map[string]any)["facturas"] != 10.0 {
 		t.Errorf("plan: %v", plan)
 	}
-	if _, j := pedir(t, e.h, "GET", "/resumen?mes=2026-09", ""); j["delMes"].(map[string]any)["emitidos"] != 0.0 {
+	if _, j := e.pedir(t, "GET", "/resumen?mes=2026-09", ""); j["delMes"].(map[string]any)["emitidos"] != 0.0 {
 		t.Errorf("resumen de septiembre: %v", j)
 	}
 
 	// 7. No existe
-	if res, j := pedir(t, e.h, "GET", "/comprobantes/99", ""); res.StatusCode != 404 || j["error"] != "no_encontrado" {
+	if res, j := e.pedir(t, "GET", "/comprobantes/99", ""); res.StatusCode != 404 || j["error"] != "no_encontrado" {
 		t.Errorf("inexistente: %d %v", res.StatusCode, j)
 	}
 }
@@ -303,16 +398,16 @@ func TestEmitirGuardaYSeVeEnTodasLasPantallas(t *testing.T) {
 func TestLimiteDelPlanGratis(t *testing.T) {
 	e := nuevoEntorno(t, nil)
 	ctx := context.Background()
-	cuenta, _ := e.mem.AsegurarCuenta(ctx, "20111111112", 3)
+	const cuentaLucia int64 = 1 // la creó nuevoEntorno
 	for i := 1; i <= 10; i++ {
 		c := datos.Comprobante{Tipo: arca.FacturaC, PuntoVenta: 3, Numero: int64(i), Fecha: "2026-10-05", Moneda: "PES",
 			Total: 1000, Receptor: datos.Receptor{DocTipo: 99, DocNro: "0"}, Cobro: datos.Pendiente}
-		if err := e.mem.GuardarComprobante(ctx, cuenta.ID, &c); err != nil {
+		if err := e.mem.GuardarComprobante(ctx, cuentaLucia, &c); err != nil {
 			t.Fatal(err)
 		}
 	}
 	e.arca.ultimo.Store(10) // ARCA sigue la numeración de las que ya están guardadas.
-	res, j := pedir(t, e.h, "POST", "/facturas", facturaLumen)
+	res, j := e.pedir(t, "POST", "/facturas", facturaLumen)
 	if res.StatusCode != 403 || j["error"] != "limite_plan" {
 		t.Fatalf("se esperaba 403 por el límite del plan: %d %v", res.StatusCode, j)
 	}
@@ -321,12 +416,12 @@ func TestLimiteDelPlanGratis(t *testing.T) {
 	}
 	// En noviembre se renueva el cupo.
 	nov := strings.Replace(facturaLumen, `"fecha": "2026-10-12"`, `"fecha": "2026-11-02"`, 1)
-	if res, j := pedir(t, e.h, "POST", "/facturas", nov); res.StatusCode != 200 {
+	if res, j := e.pedir(t, "POST", "/facturas", nov); res.StatusCode != 200 {
 		t.Errorf("en el mes siguiente tiene que poder emitir: %d %v", res.StatusCode, j)
 	}
 	// Con Pro no hay límite.
-	e.mem.CambiarPlan(cuenta.ID, datos.PlanPro)
-	if res, j := pedir(t, e.h, "POST", "/facturas", facturaLumen); res.StatusCode != 200 {
+	e.mem.CambiarPlan(cuentaLucia, datos.PlanPro)
+	if res, j := e.pedir(t, "POST", "/facturas", facturaLumen); res.StatusCode != 200 {
 		t.Errorf("Pro no tiene límite: %d %v", res.StatusCode, j)
 	}
 }
@@ -340,7 +435,7 @@ func (datosQueFallan) GuardarComprobante(context.Context, int64, *datos.Comproba
 
 func TestAutorizadaPeroNoGuardada(t *testing.T) {
 	e := nuevoEntorno(t, datosQueFallan{datos.NuevaMemoria()})
-	res, j := pedir(t, e.h, "POST", "/facturas", facturaLumen)
+	res, j := e.pedir(t, "POST", "/facturas", facturaLumen)
 	if res.StatusCode != 500 || j["error"] != "no_guardado" || !strings.Contains(j["mensaje"].(string), "76419283746521") ||
 		!strings.Contains(j["mensaje"].(string), "No la vuelvas a emitir") {
 		t.Fatalf("se esperaba un aviso claro con el CAE: %d %v", res.StatusCode, j)

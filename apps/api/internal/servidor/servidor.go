@@ -17,7 +17,7 @@ import (
 type Servidor struct {
 	arca        ProveedorArca
 	datos       ProveedorDatos
-	cuitEmisor  string
+	auth        Autenticador
 	puntoVenta  int
 	entorno     arca.Entorno
 	origenesWeb []string
@@ -27,9 +27,11 @@ type Servidor struct {
 
 // Opciones para construir el servidor.
 type Opciones struct {
-	Arca        ProveedorArca
-	Datos       ProveedorDatos
-	CuitEmisor  string // emisor de la única cuenta, mientras no haya login
+	Arca  ProveedorArca
+	Datos ProveedorDatos
+	// Auth valida las sesiones de Supabase. Si es nil, las rutas con datos responden 503.
+	Auth Autenticador
+	// Punto de venta con el que arrancan las cuentas nuevas.
 	PuntoVenta  int
 	Entorno     arca.Entorno
 	OrigenesWeb []string // vacío = cualquier origen
@@ -40,8 +42,11 @@ type Opciones struct {
 // Nuevo devuelve el http.Handler con todas las rutas.
 func Nuevo(o Opciones) http.Handler {
 	s := &Servidor{
-		arca: o.Arca, datos: o.Datos, cuitEmisor: o.CuitEmisor, puntoVenta: o.PuntoVenta,
+		arca: o.Arca, datos: o.Datos, auth: o.Auth, puntoVenta: o.PuntoVenta,
 		entorno: o.Entorno, origenesWeb: o.OrigenesWeb, log: o.Log, ahora: o.Ahora,
+	}
+	if s.puntoVenta == 0 {
+		s.puntoVenta = 1
 	}
 	if s.log == nil {
 		s.log = slog.Default()
@@ -57,14 +62,15 @@ func Nuevo(o Opciones) http.Handler {
 	// Rutas que no tocan ARCA: sirven para saber que el server está vivo.
 	mux.HandleFunc("GET /{$}", s.raiz)
 	mux.HandleFunc("GET /salud", s.salud)
-	// Rutas que consultan ARCA. Si falta configuración, responden 503.
+	// Estado de ARCA: no necesita sesión. Si falta configuración, responde 503.
 	mux.Handle("GET /arca/estado", s.ruta(s.arcaEstado))
+	// El resto necesita sesión (401 si no hay) y, según la ruta, ARCA o la base (503 si faltan).
 	mux.Handle("GET /arca/puntos-venta", s.ruta(s.arcaPuntosVenta))
 	mux.Handle("GET /arca/condiciones-iva", s.ruta(s.arcaCondicionesIva))
 	mux.Handle("GET /arca/padron/{cuit}", s.ruta(s.arcaPadron))
 	mux.Handle("POST /facturas", s.ruta(s.emitirFactura))
-	// Rutas que leen y guardan en la base. Si falta DATABASE_URL, responden 503.
 	mux.Handle("GET /cuenta", s.ruta(s.verCuenta))
+	mux.Handle("PUT /cuenta/cuit", s.ruta(s.asignarCuit))
 	mux.Handle("GET /resumen", s.ruta(s.verResumen))
 	mux.Handle("GET /comprobantes", s.ruta(s.listarComprobantes))
 	mux.Handle("GET /comprobantes/{id}", s.ruta(s.verComprobante))
@@ -101,6 +107,8 @@ func (s *Servidor) responderError(w http.ResponseWriter, err error) {
 			cuerpo[k] = v
 		}
 		responderJSON(w, pedido.estado, cuerpo)
+	case errors.Is(err, errSinSesion):
+		responderJSON(w, http.StatusUnauthorized, map[string]any{"error": "sin_sesion", "mensaje": errSinSesion.Error()})
 	case errors.Is(err, datos.ErrNoEncontrado):
 		responderJSON(w, http.StatusNotFound, map[string]any{"error": "no_encontrado", "mensaje": "No encontramos ese comprobante."})
 	case errors.As(err, &conf):
@@ -151,7 +159,7 @@ func (s *Servidor) cors(next http.Handler) http.Handler {
 			h.Set("Access-Control-Allow-Origin", origen)
 			h.Add("Vary", "Origin")
 			if r.Method == http.MethodOptions && r.Header.Get("Access-Control-Request-Method") != "" {
-				h.Set("Access-Control-Allow-Methods", "GET, HEAD, POST, PATCH, OPTIONS")
+				h.Set("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, PATCH, OPTIONS")
 				if pedidos := r.Header.Get("Access-Control-Request-Headers"); pedidos != "" {
 					h.Set("Access-Control-Allow-Headers", pedidos)
 				}

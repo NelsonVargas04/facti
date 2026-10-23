@@ -3,8 +3,10 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { BotonGoogle } from '@/components/BotonGoogle';
 import { Facti } from '@/components/Facti';
 import { FactiWordmark } from '@/components/FactiLogo';
+import { mensajeAuth, supabase, urlDeVuelta } from '@/lib/supabase';
 
 type CampoId = 'nombre' | 'email' | 'clave' | 'terminos';
 type Valores = { nombre: string; email: string; clave: string; terminos: boolean };
@@ -66,17 +68,6 @@ function claseInput(conError: boolean) {
   }`;
 }
 
-function LogoGoogle() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
-      <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z" />
-      <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
-      <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z" />
-      <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z" />
-    </svg>
-  );
-}
-
 function Ojo({ abierto }: { abierto: boolean }) {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -93,23 +84,57 @@ export default function Registro() {
   const [tocados, setTocados] = useState<Partial<Record<CampoId, boolean>>>({});
   const [verClave, setVerClave] = useState(false);
   const [enviando, setEnviando] = useState(false);
+  const [errorGeneral, setErrorGeneral] = useState('');
+  const [revisarEmail, setRevisarEmail] = useState('');
 
   const errores = validar(v);
   const mostrar = (c: CampoId) => (tocados[c] ? errores[c] : undefined);
   const tocar = (c: CampoId) => setTocados((t) => ({ ...t, [c]: true }));
   const claveOk = v.clave.length >= MIN_CLAVE;
 
-  function enviar(e: FormEvent<HTMLFormElement>) {
+  async function enviar(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setErrorGeneral('');
     setTocados({ nombre: true, email: true, clave: true, terminos: true });
     const primero = (['nombre', 'email', 'clave', 'terminos'] as const).find((c) => errores[c]);
     if (primero) {
       document.getElementById(primero)?.focus();
       return;
     }
-    // Todavía no hay backend de cuentas: seguimos al onboarding.
+    const s = supabase();
+    if (!s) {
+      setErrorGeneral('Falta configurar Supabase en el .env (NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY).');
+      return;
+    }
     setEnviando(true);
-    router.push('/onboarding/perfil');
+    const { data, error } = await s.auth.signUp({
+      email: v.email.trim(),
+      password: v.clave,
+      options: { data: { nombre: v.nombre.trim() }, emailRedirectTo: urlDeVuelta('/onboarding/perfil') },
+    });
+    setEnviando(false);
+    if (error) {
+      setErrorGeneral(mensajeAuth(error));
+      return;
+    }
+    // Si el proyecto pide confirmar el email, todavía no hay sesión: hay que abrir el link del email.
+    if (data.session) router.push('/onboarding/perfil');
+    else setRevisarEmail(v.email.trim());
+  }
+
+  if (revisarEmail) {
+    return (
+      <main className="mx-auto flex min-h-screen max-w-[460px] flex-col items-center justify-center gap-4 px-4 text-center">
+        <Facti pose="ok" size={150} animated={false} />
+        <h1 className="text-[28px] font-bold">Revisá tu email</h1>
+        <p className="text-texto-suave">
+          Te mandamos un link a <strong className="text-texto">{revisarEmail}</strong> para confirmar tu cuenta. Abrilo desde este mismo
+          navegador y seguimos con tu CUIT.
+        </p>
+        <p className="text-sm text-texto-tenue">¿No llegó? Fijate en spam o promociones.</p>
+        <Link href="/ingresar" className="font-extrabold text-primario-oscuro underline-offset-2 hover:underline">Ya lo confirmé, iniciar sesión</Link>
+      </main>
+    );
   }
 
   return (
@@ -153,13 +178,12 @@ export default function Registro() {
             <p className="text-texto-suave">Es gratis. Después conectamos tu CUIT con ARCA.</p>
           </div>
 
-          <button
-            type="button"
-            className="btn-lift flex h-[52px] items-center justify-center gap-3 rounded-full border-[1.5px] border-borde bg-white text-base font-extrabold text-texto hover:border-primario"
-          >
-            <LogoGoogle />
-            Continuar con Google
-          </button>
+          <BotonGoogle volver="/onboarding/perfil" onError={setErrorGeneral} />
+          {errorGeneral && (
+            <p role="alert" className="rounded-[14px] bg-error-suave px-4 py-3 text-sm font-bold text-error">
+              {errorGeneral}
+            </p>
+          )}
 
           <div className="flex items-center gap-3 text-sm text-texto-tenue">
             <span className="flex-1 border-t-[1.5px] border-borde" />o con tu email<span className="flex-1 border-t-[1.5px] border-borde" />
@@ -289,7 +313,7 @@ export default function Registro() {
 
           <p className="text-center text-[15px] text-texto-suave">
             ¿Ya tenés cuenta?{' '}
-            <Link href="/app" className="font-extrabold text-primario-oscuro underline-offset-2 hover:underline">
+            <Link href="/ingresar" className="font-extrabold text-primario-oscuro underline-offset-2 hover:underline">
               Iniciá sesión
             </Link>
           </p>

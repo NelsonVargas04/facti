@@ -1,17 +1,20 @@
+import { tokenActual } from '@/lib/supabase';
+
 /** Base del backend (apps/api). Se puede sobreescribir con NEXT_PUBLIC_API_URL. */
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
 export type ErrorApi = { ok: false; estado: number; codigo?: string; mensaje: string; extra?: Record<string, unknown> };
 export type Resultado<T> = { ok: true; dato: T } | ErrorApi;
 
-/** Llama a la API y devuelve el dato o un error con un mensaje para mostrar. Nunca lanza. */
+/** Llama a la API con la sesión del usuario y devuelve el dato o un error para mostrar. Nunca lanza. */
 export async function pedir<T>(ruta: string, init?: RequestInit): Promise<Resultado<T>> {
   let r: Response;
   try {
-    r = await fetch(`${API_URL}${ruta}`, {
-      ...init,
-      headers: init?.body ? { 'Content-Type': 'application/json', ...init.headers } : init?.headers,
-    });
+    const token = await tokenActual();
+    const headers = new Headers(init?.headers);
+    if (init?.body) headers.set('Content-Type', 'application/json');
+    if (token) headers.set('Authorization', `Bearer ${token}`);
+    r = await fetch(`${API_URL}${ruta}`, { ...init, headers });
   } catch {
     return { ok: false, estado: 0, codigo: 'sin_conexion', mensaje: `No se pudo conectar con la API de Facti (${API_URL}). ¿Está levantada?` };
   }
@@ -74,6 +77,8 @@ export function buscarPadron(cuit: string) {
 
 export interface Cuenta {
   id: number;
+  email: string;
+  /** Vacío hasta que lo carga en el primer paso del onboarding. */
   cuit: string;
   nombre: string;
   domicilio: string;
@@ -99,6 +104,11 @@ export interface Plan {
 
 export function verCuenta() {
   return pedir<{ cuenta: Cuenta; plan: Plan }>('/cuenta');
+}
+
+/** Guarda el CUIT del usuario. Si ARCA está conectado, trae su perfil del padrón (padron: true). */
+export function asignarCuit(cuit: string) {
+  return pedir<{ cuenta: Cuenta; plan: Plan; padron: boolean }>('/cuenta/cuit', { method: 'PUT', body: JSON.stringify({ cuit }) });
 }
 
 // ---------- Comprobantes ----------

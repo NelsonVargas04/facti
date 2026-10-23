@@ -59,6 +59,19 @@ Los datos van a Postgres (Supabase en producción, plan gratis para empezar), co
 - Sin login por ahora: una sola cuenta, la del `ARCA_CUIT_EMISOR`. Las tablas ya tienen `cuenta_id`
   para sumar usuarios (posiblemente con Supabase Auth) sin migrar datos.
 
+## 011 — Login con Supabase Auth (Google y email)
+Usamos Supabase Auth porque ya usamos Supabase: maneja Google, email con confirmación,
+recuperación de contraseña y la renovación de sesiones. Facti nunca ve contraseñas.
+- La web inicia sesión con `@supabase/supabase-js` (flujo PKCE) y manda el token a la API en
+  `Authorization: Bearer`. La API lo valida con el JWKS del proyecto (o el secreto HS256 legado):
+  emisor, audiencia `authenticated`, vencimiento y que sea un usuario (no la clave anónima).
+- Una cuenta por usuario (`cuentas.usuario_id`), creada al primer ingreso y sin CUIT. El CUIT se
+  carga en el onboarding y es único: dos cuentas no pueden facturar por el mismo CUIT (más adelante,
+  multi-CUIT para contadores con una tabla aparte).
+- ARCA emite con el CUIT y el punto de venta de cada cuenta. Hay un cliente WSFEv1 por CUIT, reusado,
+  para que el bloqueo por punto de venta y tipo valga entre pedidos.
+- La protección de `/app` en la web es para la experiencia; la seguridad real está en la API.
+
 ## Pendientes a validar en homologación
 - Que el padrón A5 devuelva la categoría de monotributo como esperamos.
 - Códigos de condición frente al IVA del receptor con FEParamGetCondicionIvaReceptor.

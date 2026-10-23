@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -107,25 +108,35 @@ func nulo(s string) any {
 	return s
 }
 
-const columnasCuenta = `id, cuit, nombre, domicilio, condicion, categoria, ingresos_brutos,
+const columnasCuenta = `id, email, coalesce(cuit, ''), nombre, domicilio, condicion, categoria, ingresos_brutos,
 	coalesce(to_char(inicio_actividades, 'YYYY-MM-DD'), ''), punto_venta, plan, creada_en`
 
 func scanCuenta(row pgx.Row) (Cuenta, error) {
 	var c Cuenta
-	err := row.Scan(&c.ID, &c.Cuit, &c.Nombre, &c.Domicilio, &c.Condicion, &c.Categoria, &c.IngresosBrutos,
+	err := row.Scan(&c.ID, &c.Email, &c.Cuit, &c.Nombre, &c.Domicilio, &c.Condicion, &c.Categoria, &c.IngresosBrutos,
 		&c.InicioActividades, &c.PuntoVenta, &c.Plan, &c.CreadaEn)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return c, ErrNoEncontrado
 	}
+	var pg *pgconn.PgError
+	if errors.As(err, &pg) && pg.Code == "23505" { // unique_violation
+		return c, ErrCuitEnUso
+	}
 	return c, err
 }
 
-func (p *Postgres) AsegurarCuenta(ctx context.Context, cuit string, puntoVenta int) (Cuenta, error) {
-	// "on conflict do update" con el mismo valor para que devuelva la fila también si ya existía.
+func (p *Postgres) CuentaDeUsuario(ctx context.Context, usuarioID, email string, puntoVenta int) (Cuenta, error) {
+	// "on conflict do update" para que devuelva la fila también si ya existía (y actualice el email).
 	return scanCuenta(p.pool.QueryRow(ctx, `
-		insert into facti.cuentas (cuit, punto_venta) values ($1, $2)
-		on conflict (cuit) do update set punto_venta = excluded.punto_venta
-		returning `+columnasCuenta, cuit, puntoVenta))
+		insert into facti.cuentas (usuario_id, email, punto_venta) values ($1::text::uuid, $2, $3)
+		on conflict (usuario_id) do update set email = excluded.email
+		returning `+columnasCuenta, usuarioID, email, puntoVenta))
+}
+
+func (p *Postgres) AsignarCuit(ctx context.Context, cuentaID int64, cuit string, pf Perfil) (Cuenta, error) {
+	return scanCuenta(p.pool.QueryRow(ctx, `
+		update facti.cuentas set cuit = $2, nombre = $3, domicilio = $4, condicion = $5, categoria = $6
+		where id = $1 returning `+columnasCuenta, cuentaID, cuit, pf.Nombre, pf.Domicilio, pf.Condicion, pf.Categoria))
 }
 
 func (p *Postgres) ActualizarPerfil(ctx context.Context, cuentaID int64, pf Perfil) (Cuenta, error) {

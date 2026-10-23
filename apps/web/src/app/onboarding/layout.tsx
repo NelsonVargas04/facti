@@ -1,8 +1,10 @@
 import Link from 'next/link';
 import { FactiWordmark } from '@/components/FactiLogo';
+import { RequiereSesion } from '@/components/RequiereSesion';
 
 export default function OnboardingLayout({ children }: { children: React.ReactNode }) {
   return (
+    <RequiereSesion>
     <div className="min-h-screen">
       <header className="mx-auto flex max-w-[1180px] flex-wrap items-center justify-between gap-4 px-8 py-6">
         <Link href="/">
@@ -19,5 +21,6 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
         </p>
       </main>
     </div>
+    </RequiereSesion>
   );
 }

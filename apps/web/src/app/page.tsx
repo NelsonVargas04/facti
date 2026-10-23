@@ -60,7 +60,7 @@ export default function Landing() {
           <a href="#precios" className="transition-colors hover:text-texto">Precios</a>
         </nav>
         <div className="flex items-center gap-3">
-          <Link href="/registro" className="px-4 py-3 text-[15px] font-bold text-texto transition-colors hover:text-primario">Iniciar sesión</Link>
+          <Link href="/ingresar" className="px-4 py-3 text-[15px] font-bold text-texto transition-colors hover:text-primario">Iniciar sesión</Link>
           <Link href="/registro" className="btn-lift rounded-full bg-primario px-6 py-3 text-[15px] font-extrabold text-white shadow-[0_8px_20px_rgba(59,63,216,0.25)] hover:shadow-[0_12px_28px_rgba(59,63,216,0.38)]">
             Empezar gratis
           </Link>

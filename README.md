@@ -107,6 +107,8 @@ El frontend con el diseño de Facti. Abrí `http://localhost:3000`:
 El backend arranca aunque todavía no haya `.env` ni certificado: las rutas de
 salud funcionan siempre, y las de ARCA responden `503` con un mensaje claro
 hasta que completes la configuración. Lee el `.env` de la raíz del repo.
+Todas las rutas, salvo `/salud` y `/arca/estado`, piden la sesión de Supabase
+(`Authorization: Bearer <token>`) y responden `401` sin ella.
 
 | Ruta | Qué hace |
 | --- | --- |
@@ -116,7 +118,8 @@ hasta que completes la configuración. Lee el `.env` de la raíz del repo.
 | `GET /arca/condiciones-iva?clase=C` | Condiciones frente al IVA del receptor (RG 5616) |
 | `GET /arca/padron/{cuit}` | Datos y condición fiscal de un CUIT del padrón |
 | `POST /facturas` | Emite una Factura C, la guarda y devuelve id, CAE, vencimiento y QR |
-| `GET /cuenta` | Datos del emisor (del padrón) y uso del plan en el mes |
+| `GET /cuenta` | Cuenta del usuario (se crea al primer ingreso), perfil del padrón y uso del plan |
+| `PUT /cuenta/cuit` | Guarda el CUIT del usuario y, si ARCA está conectado, trae su perfil del padrón |
 | `GET /resumen?mes=AAAA-MM` | Facturado, por cobrar y cobrado del mes, últimos 12 meses y últimas facturas |
 | `GET /comprobantes` | Listado con filtros `desde`, `hasta`, `q`, `cobro`, `orden`, `limite`, `saltar` |
 | `GET /comprobantes/{id}` | Comprobante con ítems y datos del emisor (para el PDF) |
@@ -138,6 +141,23 @@ La API guarda cuentas, clientes y comprobantes en Postgres. En producción se us
 
 Las tablas se crean solas la primera vez, en el esquema `facti` (no en `public`, así no quedan
 expuestas por la API pública de Supabase). Las migraciones están en `apps/api/internal/datos/migraciones/`.
+
+### Inicio de sesión con Google (Supabase Auth)
+
+La web inicia sesión con Supabase (Google o email y contraseña) y manda el token a la API, que lo
+valida con las claves públicas del proyecto. Cada usuario tiene su cuenta y carga su CUIT en el
+primer paso del onboarding.
+
+1. **Claves en el `.env`**: en Supabase, *Project Settings → API Keys*, copiá la URL del proyecto y la
+   *publishable key* en `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+2. **URLs permitidas**: en *Authentication → URL Configuration*, poné `http://localhost:3000` como
+   *Site URL* y agregá `http://localhost:3000/auth/callback` y `http://localhost:3000/auth/nueva-clave`
+   en *Redirect URLs* (y las de producción cuando las tengas).
+3. **Google**: en [Google Cloud Console](https://console.cloud.google.com/apis/credentials) creá un
+   *ID de cliente de OAuth* de tipo *Aplicación web*, con este URI de redireccionamiento autorizado:
+   `https://<tu-proyecto>.supabase.co/auth/v1/callback`. Después, en Supabase, *Authentication →
+   Sign In / Providers → Google*, activalo y pegá el *Client ID* y el *Client Secret*.
+4. Reiniciá la web y la API (`pnpm dev`).
 
 Para correr los tests de la base contra Postgres (si no, usan una base en memoria):
 

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Facti } from '@/components/Facti';
 import type { ErrorApi } from '@/lib/api';
 
@@ -13,6 +14,10 @@ function textos(e: ErrorApi): { titulo: string; detalle: string } {
       };
     case 'configuracion':
       return { titulo: 'Falta terminar la configuración', detalle: e.mensaje };
+    case 'sin_sesion':
+      return { titulo: 'Tu sesión venció', detalle: 'Volvé a iniciar sesión para seguir.' };
+    case 'falta_cuit':
+      return { titulo: 'Falta tu CUIT', detalle: e.mensaje };
     case 'sin_conexion':
       return { titulo: 'No pudimos hablar con la API de Facti', detalle: `${e.mensaje} Levantala con pnpm dev:api.` };
     default:
@@ -23,6 +28,23 @@ function textos(e: ErrorApi): { titulo: string; detalle: string } {
 /** Panel para cuando una pantalla no puede cargar sus datos. */
 export function AvisoApi({ error, onReintentar, compacto }: { error: ErrorApi; onReintentar?: () => void; compacto?: boolean }) {
   const { titulo, detalle } = textos(error);
+  // Para estos dos casos, la acción útil es ir a otra pantalla, no reintentar.
+  const accion =
+    error.codigo === 'sin_sesion' ? { href: '/ingresar', texto: 'Iniciar sesión' } : error.codigo === 'falta_cuit' ? { href: '/onboarding/perfil', texto: 'Cargar mi CUIT' } : null;
+  if (accion) {
+    return (
+      <div role="alert" className={`flex ${compacto ? 'flex-wrap items-center justify-between rounded-[16px] bg-aviso-suave px-4 py-3 text-sm text-aviso-texto' : 'flex-col items-center px-4 py-12 text-center'} gap-3`}>
+        {!compacto && <Facti pose="senalando" size={130} animated={false} />}
+        <span className={compacto ? '' : 'flex flex-col gap-1'}>
+          {compacto ? <strong>{titulo}. </strong> : <h2 className="text-[20px] font-bold text-texto">{titulo}</h2>}
+          <span className={compacto ? '' : 'text-texto-suave'}>{detalle}</span>
+        </span>
+        <Link href={accion.href} className="btn-lift rounded-full bg-primario px-5 py-2.5 font-extrabold text-white shadow-boton">
+          {accion.texto}
+        </Link>
+      </div>
+    );
+  }
   if (compacto) {
     return (
       <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-[16px] bg-aviso-suave px-4 py-3 text-sm text-aviso-texto">

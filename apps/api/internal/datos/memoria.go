@@ -13,6 +13,7 @@ import (
 type Memoria struct {
 	mu           sync.Mutex
 	cuentas      []Cuenta
+	usuarios     map[string]int64 // usuario de Supabase → id de cuenta
 	clientes     []delaCuenta[Cliente]
 	comprobantes []delaCuenta[Comprobante]
 	ahora        func() time.Time
@@ -23,22 +24,38 @@ type delaCuenta[T any] struct {
 	v        T
 }
 
-func NuevaMemoria() *Memoria { return &Memoria{ahora: time.Now} }
+func NuevaMemoria() *Memoria { return &Memoria{ahora: time.Now, usuarios: map[string]int64{}} }
 
 func (m *Memoria) Cerrar() {}
 
-func (m *Memoria) AsegurarCuenta(_ context.Context, cuit string, puntoVenta int) (Cuenta, error) {
+func (m *Memoria) CuentaDeUsuario(_ context.Context, usuarioID, email string, puntoVenta int) (Cuenta, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	for i := range m.cuentas {
-		if m.cuentas[i].Cuit == cuit {
-			m.cuentas[i].PuntoVenta = puntoVenta
-			return m.cuentas[i], nil
+	if id, ok := m.usuarios[usuarioID]; ok {
+		c := &m.cuentas[id-1]
+		c.Email = email
+		return *c, nil
+	}
+	c := Cuenta{ID: int64(len(m.cuentas) + 1), Email: email, PuntoVenta: puntoVenta, Plan: PlanGratis, CreadaEn: m.ahora()}
+	m.cuentas = append(m.cuentas, c)
+	m.usuarios[usuarioID] = c.ID
+	return c, nil
+}
+
+func (m *Memoria) AsignarCuit(_ context.Context, cuentaID int64, cuit string, p Perfil) (Cuenta, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, c := range m.cuentas {
+		if c.Cuit == cuit && c.ID != cuentaID {
+			return Cuenta{}, ErrCuitEnUso
 		}
 	}
-	c := Cuenta{ID: int64(len(m.cuentas) + 1), Cuit: cuit, PuntoVenta: puntoVenta, Plan: PlanGratis, CreadaEn: m.ahora()}
-	m.cuentas = append(m.cuentas, c)
-	return c, nil
+	if cuentaID < 1 || int(cuentaID) > len(m.cuentas) {
+		return Cuenta{}, ErrNoEncontrado
+	}
+	c := &m.cuentas[cuentaID-1]
+	c.Cuit, c.Nombre, c.Domicilio, c.Condicion, c.Categoria = cuit, p.Nombre, p.Domicilio, p.Condicion, p.Categoria
+	return *c, nil
 }
 
 func (m *Memoria) ActualizarPerfil(_ context.Context, cuentaID int64, p Perfil) (Cuenta, error) {

@@ -2,6 +2,7 @@ package servidor
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -25,7 +26,7 @@ func (s *Servidor) planDe(r *http.Request, d datos.Datos, c datos.Cuenta) (map[s
 // completarPerfil trae nombre, domicilio y condición del emisor desde el padrón la primera vez.
 // Si ARCA no está configurado o no responde, sigue sin perfil (se intenta de nuevo la próxima vez).
 func (s *Servidor) completarPerfil(r *http.Request, d datos.Datos, c datos.Cuenta) datos.Cuenta {
-	if c.Nombre != "" {
+	if c.Nombre != "" || c.Cuit == "" {
 		return c
 	}
 	cl, err := s.arca()
@@ -48,7 +49,7 @@ func (s *Servidor) completarPerfil(r *http.Request, d datos.Datos, c datos.Cuent
 }
 
 func (s *Servidor) verCuenta(w http.ResponseWriter, r *http.Request) error {
-	d, c, err := s.cuenta(r.Context())
+	d, c, err := s.cuenta(r)
 	if err != nil {
 		return err
 	}
@@ -58,6 +59,46 @@ func (s *Servidor) verCuenta(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 	responderJSON(w, http.StatusOK, map[string]any{"cuenta": c, "plan": plan})
+	return nil
+}
+
+// asignarCuit guarda el CUIT del usuario (primer paso del onboarding). Si ARCA está configurado,
+// trae del padrón el nombre, el domicilio y la condición fiscal; si no, guarda solo el CUIT.
+func (s *Servidor) asignarCuit(w http.ResponseWriter, r *http.Request) error {
+	var body struct {
+		Cuit string `json:"cuit"`
+	}
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<10)).Decode(&body); err != nil || !cuit.Validar(body.Cuit) {
+		return pedidoInvalido("cuit_invalido", "Revisá el CUIT: tiene que tener 11 números y un dígito verificador válido.")
+	}
+	d, c, err := s.cuenta(r)
+	if err != nil {
+		return err
+	}
+	nuevo := cuit.Limpiar(body.Cuit)
+
+	var perfil datos.Perfil
+	padron := false
+	if cl, err := s.arca(); err == nil {
+		p, err := arca.ConsultarPadron(r.Context(), cl.Cfg, cl.Tickets, nuevo)
+		if err != nil {
+			return err
+		}
+		perfil = datos.Perfil{Nombre: p.Nombre, Domicilio: p.Domicilio, Condicion: string(p.Condicion), Categoria: p.CategoriaMonotributo}
+		padron = true
+	}
+	act, err := d.AsignarCuit(r.Context(), c.ID, nuevo, perfil)
+	if errors.Is(err, datos.ErrCuitEnUso) {
+		return &errorPedido{estado: http.StatusConflict, codigo: "cuit_en_uso", mensaje: "Ese CUIT ya está asociado a otra cuenta de Facti."}
+	}
+	if err != nil {
+		return &BaseDatosError{Mensaje: err.Error()}
+	}
+	plan, err := s.planDe(r, d, act)
+	if err != nil {
+		return err
+	}
+	responderJSON(w, http.StatusOK, map[string]any{"cuenta": act, "plan": plan, "padron": padron})
 	return nil
 }
 
@@ -72,7 +113,7 @@ func (s *Servidor) verResumen(w http.ResponseWriter, r *http.Request) error {
 		}
 		ref = t
 	}
-	d, c, err := s.cuenta(r.Context())
+	d, c, err := s.cuenta(r)
 	if err != nil {
 		return err
 	}
@@ -133,7 +174,7 @@ func (s *Servidor) listarComprobantes(w http.ResponseWriter, r *http.Request) er
 	}
 	f.Limite, _ = strconv.Atoi(q.Get("limite"))
 	f.Saltar, _ = strconv.Atoi(q.Get("saltar"))
-	d, c, err := s.cuenta(r.Context())
+	d, c, err := s.cuenta(r)
 	if err != nil {
 		return err
 	}
@@ -159,7 +200,7 @@ func (s *Servidor) verComprobante(w http.ResponseWriter, r *http.Request) error 
 	if err != nil {
 		return err
 	}
-	d, c, err := s.cuenta(r.Context())
+	d, c, err := s.cuenta(r)
 	if err != nil {
 		return err
 	}
@@ -183,7 +224,7 @@ func (s *Servidor) marcarCobro(w http.ResponseWriter, r *http.Request) error {
 		(body.Cobro != datos.Pendiente && body.Cobro != datos.Cobrada) {
 		return pedidoInvalido("cobro_invalido", "El cobro tiene que ser pendiente o cobrada.")
 	}
-	d, c, err := s.cuenta(r.Context())
+	d, c, err := s.cuenta(r)
 	if err != nil {
 		return err
 	}
@@ -196,7 +237,7 @@ func (s *Servidor) marcarCobro(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (s *Servidor) listarClientes(w http.ResponseWriter, r *http.Request) error {
-	d, c, err := s.cuenta(r.Context())
+	d, c, err := s.cuenta(r)
 	if err != nil {
 		return err
 	}

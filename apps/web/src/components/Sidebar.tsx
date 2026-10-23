@@ -1,11 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { FactiWordmark } from '@/components/FactiLogo';
 import { Icon, type IconName } from '@/components/Icon';
 import { verCuenta } from '@/lib/api';
 import { formatearCuit } from '@/lib/formato';
+import { cerrarSesion, useSesion } from '@/lib/sesion';
 import { useApi } from '@/lib/useApi';
 
 interface Item {
@@ -25,7 +26,10 @@ const ITEMS: Item[] = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const cuenta = useApi(verCuenta, []);
+  const sesion = useSesion();
+  const email = sesion.estado === 'con_sesion' ? sesion.sesion.user.email : undefined;
 
   return (
     <aside className="flex max-w-[280px] flex-1 basis-[240px] flex-col gap-[22px] border-r border-[#E6EAF2] bg-superficie px-[18px] py-6">
@@ -60,14 +64,26 @@ export function Sidebar() {
         })}
       </nav>
 
-      {cuenta.dato && (
-        <div className="mt-auto flex flex-col gap-1 rounded-[18px] bg-fondo px-4 py-3.5 text-[13px] text-texto-suave">
-          <strong className="text-sm text-texto">{cuenta.dato.cuenta.nombre || 'Tu cuenta'}</strong>
+      <div className="mt-auto flex flex-col gap-1 rounded-[18px] bg-fondo px-4 py-3.5 text-[13px] text-texto-suave">
+        <strong className="truncate text-sm text-texto">{cuenta.dato?.cuenta.nombre || email || 'Tu cuenta'}</strong>
+        {cuenta.dato?.cuenta.cuit ? (
           <span>
             CUIT {formatearCuit(cuenta.dato.cuenta.cuit)} · Punto de venta {String(cuenta.dato.cuenta.puntoVenta).padStart(4, '0')}
           </span>
-        </div>
-      )}
+        ) : (
+          cuenta.dato && <Link href="/onboarding/perfil" className="font-extrabold text-primario-oscuro">Cargar mi CUIT</Link>
+        )}
+        <button
+          type="button"
+          onClick={async () => {
+            await cerrarSesion();
+            router.replace('/ingresar');
+          }}
+          className="mt-1.5 self-start font-extrabold text-texto-suave underline-offset-2 hover:text-texto hover:underline"
+        >
+          Cerrar sesión
+        </button>
+      </div>
     </aside>
   );
 }

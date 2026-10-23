@@ -24,6 +24,9 @@ func main() {
 		uso()
 	}
 	cfg := config.Cargar()
+	if cfg.CuitEmisor == "" {
+		salir(fmt.Errorf("falta la variable ARCA_CUIT_EMISOR en .env (ver .env.example)"))
+	}
 	cl, err := servidor.ConstruirClientes(cfg)
 	if err != nil {
 		salir(err)

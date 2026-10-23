@@ -2,9 +2,13 @@ package servidor
 
 import (
 	"context"
+	"errors"
+	"net/http"
+	"strings"
 	"sync"
 	"time"
 
+	"facti/api/internal/auth"
 	"facti/api/internal/datos"
 )
 
@@ -48,17 +52,42 @@ func FijarDatos(d datos.Datos) ProveedorDatos {
 	return func(context.Context) (datos.Datos, error) { return d, nil }
 }
 
-// cuenta devuelve la base y la cuenta del emisor configurado.
-// Por ahora hay un solo emisor (el del .env); con login va a salir de la sesión.
-func (s *Servidor) cuenta(ctx context.Context) (datos.Datos, datos.Cuenta, error) {
-	if s.cuitEmisor == "" {
-		return nil, datos.Cuenta{}, &ConfiguracionError{Mensaje: "Falta la variable ARCA_CUIT_EMISOR (ver .env.example)"}
+// Autenticador valida el token de sesión que manda la web (Supabase Auth).
+type Autenticador interface {
+	Verificar(ctx context.Context, token string) (auth.Usuario, error)
+}
+
+// errSinSesion se traduce a HTTP 401.
+var errSinSesion = errors.New("Iniciá sesión para seguir.")
+
+// usuario lee y valida el token "Authorization: Bearer ..." del pedido.
+func (s *Servidor) usuario(r *http.Request) (auth.Usuario, error) {
+	if s.auth == nil {
+		return auth.Usuario{}, &ConfiguracionError{Mensaje: "Falta la variable NEXT_PUBLIC_SUPABASE_URL (la URL del proyecto de Supabase, ver .env.example)"}
 	}
-	d, err := s.datos(ctx)
+	token, ok := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer ")
+	if !ok || strings.TrimSpace(token) == "" {
+		return auth.Usuario{}, errSinSesion
+	}
+	u, err := s.auth.Verificar(r.Context(), strings.TrimSpace(token))
+	if err != nil {
+		s.log.Info("sesión rechazada", "motivo", err)
+		return auth.Usuario{}, errSinSesion
+	}
+	return u, nil
+}
+
+// cuenta devuelve la base y la cuenta del usuario que hace el pedido (la crea la primera vez).
+func (s *Servidor) cuenta(r *http.Request) (datos.Datos, datos.Cuenta, error) {
+	u, err := s.usuario(r)
 	if err != nil {
 		return nil, datos.Cuenta{}, err
 	}
-	c, err := d.AsegurarCuenta(ctx, s.cuitEmisor, s.puntoVenta)
+	d, err := s.datos(r.Context())
+	if err != nil {
+		return nil, datos.Cuenta{}, err
+	}
+	c, err := d.CuentaDeUsuario(r.Context(), u.ID, u.Email, s.puntoVenta)
 	if err != nil {
 		return nil, datos.Cuenta{}, &BaseDatosError{Mensaje: "No se pudo leer la cuenta: " + err.Error()}
 	}
