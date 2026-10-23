@@ -29,18 +29,18 @@ const SOSPECHAS = [
 
 const PASOS = [
   {
-    bg: '#ECEDFF', fg: '#2A2DB0', n: 'PASO 1', titulo: 'Conectá tu CUIT',
-    texto: 'Te guiamos pantalla por pantalla para autorizar a Facti en ARCA y crear tu punto de venta. Sin certificados ni términos raros.',
+    bg: '#ECEDFF', fg: '#2A2DB0', n: 1, titulo: 'Conectá tu CUIT', chip: 'Una sola vez',
+    texto: (<>Desde ARCA autorizás a Facti a facturar por vos, con nuestra guía paso a paso. <strong className="font-bold text-texto">Tu clave fiscal nunca pasa por Facti</strong>.</>),
     icon: (<><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" /><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" /></>),
   },
   {
-    bg: '#FFF3D1', fg: '#8A5A00', n: 'PASO 2', titulo: 'Facturá sin pensar',
-    texto: 'Escribís el CUIT del cliente y Facti completa sus datos desde el padrón de ARCA y elige el tipo de factura correcto. Vos solo ponés el monto.',
+    bg: '#FFF3D1', fg: '#8A5A00', n: 2, titulo: 'Facturá en segundos', chip: 'Menos de 1 minuto',
+    texto: (<>Ponés el CUIT de tu cliente y Facti trae sus datos y <strong className="font-bold text-texto">elige si es A, B o C</strong>. Vos solo cargás el monto.</>),
     icon: (<><path d="M6 3h9l4 4v14H6z" /><path d="M14 3v5h5M9 13h7M9 17h5" /></>),
   },
   {
-    bg: '#D7F5E6', fg: '#0E5C38', n: 'PASO 3', titulo: 'Cobrá y relajate',
-    texto: 'ARCA autoriza la factura con su CAE y le llega al cliente con su QR. Vos ves qué está cobrado, qué falta y cuánto te queda de tu categoría.',
+    bg: '#D7F5E6', fg: '#0E5C38', n: 3, titulo: 'Cobrá tranquilo', chip: 'Al instante',
+    texto: (<>ARCA la autoriza con CAE y QR y se la mandás al cliente. <strong className="font-bold text-texto">Ves qué te pagaron y qué falta</strong>.</>),
     icon: (<><path d="M4 19V5M4 19h16" /><path d="M8 15l4-4 3 3 5-6" /></>),
   },
 ];
@@ -166,20 +166,33 @@ export default function Landing() {
           <h2 className="text-[44px] font-bold">Así de fácil funciona</h2>
           <p className="max-w-[620px] text-[19px] text-texto-suave">Conectás tu CUIT con ARCA una sola vez y después facturás desde la compu o el celular.</p>
         </Reveal>
-        <div className="grid items-stretch gap-6 [grid-template-columns:repeat(auto-fit,minmax(280px,1fr))]">
+        <ol className="grid items-stretch gap-6 md:grid-cols-3">
           {PASOS.map((p, i) => (
-            <Reveal key={p.n} delay={i * 90} className="h-full">
-              <div className="card-hover flex h-full flex-col gap-3.5 rounded-tarjeta-lg bg-white p-8 shadow-[0_10px_30px_rgba(21,25,58,0.07)]">
-                <div className="flex h-14 w-14 items-center justify-center rounded-[18px]" style={{ background: p.bg, color: p.fg }}>
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{p.icon}</svg>
+            <Reveal as="li" key={p.n} delay={i * 90} className="relative h-full">
+              <div className="card-hover flex h-full flex-col gap-4 rounded-tarjeta-lg bg-white p-7 shadow-[0_10px_30px_rgba(21,25,58,0.07)]">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="relative flex h-14 w-14 flex-none items-center justify-center rounded-[18px]" style={{ background: p.bg, color: p.fg }}>
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{p.icon}</svg>
+                    <span className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-texto font-display text-[13px] font-bold text-white ring-[3px] ring-white">
+                      {p.n}
+                    </span>
+                  </div>
+                  <span className="rounded-full px-3 py-1 text-[13px] font-extrabold" style={{ background: p.bg, color: p.fg }}>{p.chip}</span>
                 </div>
-                <div className="text-[13px] font-extrabold tracking-[0.06em] text-texto-tenue">{p.n}</div>
-                <h3 className="text-[24px] font-bold">{p.titulo}</h3>
-                <p className="text-texto-suave">{p.texto}</p>
+                <h3 className="text-[23px] font-bold leading-tight">
+                  <span className="sr-only">Paso {p.n}: </span>
+                  {p.titulo}
+                </h3>
+                <p className="text-[16px] leading-[1.6] text-texto-suave">{p.texto}</p>
               </div>
+              {i < PASOS.length - 1 && (
+                <span aria-hidden="true" className="absolute -right-[21px] top-1/2 z-10 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white text-primario shadow-chip md:flex">
+                  <Flecha />
+                </span>
+              )}
             </Reveal>
           ))}
-        </div>
+        </ol>
       </section>
 
       {/* Comprobantes */}
