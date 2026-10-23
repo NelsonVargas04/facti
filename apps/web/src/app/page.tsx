@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Facti } from '@/components/Facti';
 import { FactiWordmark } from '@/components/FactiLogo';
+import { MuestraComprobantes } from '@/components/MuestraComprobantes';
 import { Reveal } from '@/components/Reveal';
 
 function Flecha() {
@@ -42,15 +43,6 @@ const PASOS = [
     texto: 'ARCA autoriza la factura con su CAE y le llega al cliente con su QR. Vos ves qué está cobrado, qué falta y cuánto te queda de tu categoría.',
     icon: (<><path d="M4 19V5M4 19h16" /><path d="M8 15l4-4 3 3 5-6" /></>),
   },
-];
-
-const COMPROBANTES = [
-  { letra: 'A', bg: 'bg-primario', fg: 'text-white', nombre: 'Factura A', desc: 'Entre responsables inscriptos' },
-  { letra: 'B', bg: 'bg-primario', fg: 'text-white', nombre: 'Factura B', desc: 'A consumidores finales' },
-  { letra: 'C', bg: 'bg-primario', fg: 'text-white', nombre: 'Factura C', desc: 'Para monotributistas' },
-  { letra: 'M', bg: 'bg-primario', fg: 'text-white', nombre: 'Factura M', desc: 'Inscriptos con observaciones' },
-  { letra: 'E', bg: 'bg-acento', fg: 'text-texto', nombre: 'Factura E', desc: 'Para exportaciones' },
-  { letra: 'NC', bg: 'bg-exito-suave', fg: 'text-exito-texto', nombre: 'Notas de crédito y débito', desc: 'Para corregir o anular', small: true },
 ];
 
 export default function Landing() {
@@ -191,28 +183,14 @@ export default function Landing() {
       </section>
 
       {/* Comprobantes */}
-      <section id="comprobantes" className="mx-auto flex max-w-[1200px] flex-col gap-11 px-8 pb-28 pt-10">
+      <section id="comprobantes" className="mx-auto flex max-w-[1200px] flex-col gap-11 px-4 pb-28 pt-10 sm:px-8">
         <Reveal className="flex flex-col items-center gap-3 text-center">
-          <h2 className="text-[44px] font-bold">Todos los comprobantes que necesitás</h2>
+          <h2 className="text-[clamp(32px,5vw,44px)] font-bold leading-tight">Todos los comprobantes que necesitás</h2>
           <p className="max-w-[620px] text-[19px] text-texto-suave">Seas monotributista, responsable inscripto o exportador, Facti te muestra solo los que te corresponden.</p>
         </Reveal>
-        <div className="grid items-stretch gap-5 [grid-template-columns:repeat(auto-fit,minmax(250px,1fr))]">
-          {COMPROBANTES.map((c, i) => (
-            <Reveal key={c.nombre} delay={i * 60} className="h-full">
-              <div className="card-hover relative flex h-full items-center gap-[18px] rounded-[20px] bg-white px-7 py-6">
-                <span className="absolute left-[-11px] top-1/2 -mt-[11px] h-[22px] w-[22px] rounded-full bg-fondo" />
-                <span className="absolute right-[-11px] top-1/2 -mt-[11px] h-[22px] w-[22px] rounded-full bg-fondo" />
-                <span className={`flex h-[58px] w-[58px] flex-none items-center justify-center rounded-[16px] font-mono font-bold ${c.bg} ${c.fg} ${c.small ? 'text-[22px]' : 'text-[28px]'}`}>
-                  {c.letra}
-                </span>
-                <span className="border-l-2 border-dashed border-borde pl-[18px]">
-                  <strong className="block text-[18px]">{c.nombre}</strong>
-                  <span className="text-[15px] text-texto-suave">{c.desc}</span>
-                </span>
-              </div>
-            </Reveal>
-          ))}
-        </div>
+        <Reveal delay={80}>
+          <MuestraComprobantes />
+        </Reveal>
       </section>
 
       {/* Monotributo */}

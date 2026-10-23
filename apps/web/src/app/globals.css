@@ -66,6 +66,23 @@
   }
 }
 
+/* Vista previa de comprobantes en la landing: entra suave al cambiar de tipo. */
+@media (prefers-reduced-motion: no-preference) {
+  .muestra-entrar {
+    animation: muestraEntrar 0.35s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+  }
+}
+@keyframes muestraEntrar {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* ===== Animaciones de la mascota Facti =====
    Una sola pose animada por pantalla; todo se apaga con prefers-reduced-motion. */
 @media (prefers-reduced-motion: no-preference) {
