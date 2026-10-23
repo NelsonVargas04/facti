@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { Girando, Numero } from '@/components/Animado';
 import { AvisoApi } from '@/components/AvisoApi';
 import { ChipCobro, colorTipo, TablaSkeleton } from '@/components/TablaFacturas';
 import { listarComprobantes, marcarCobro, verResumen, type Cobro, type ErrorApi } from '@/lib/api';
@@ -57,14 +58,14 @@ export default function Cobros() {
       <div style={{ animationDelay: '80ms' }} className="aparece grid gap-[18px] [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
         {r ? (
           <>
-            <div className="card-hover flex flex-col gap-1 rounded-tarjeta bg-superficie px-6 py-5 shadow-tarjeta">
+            <div className="entra card-hover flex flex-col gap-1 rounded-tarjeta bg-superficie px-6 py-5 shadow-tarjeta">
               <span className="text-[13px] font-extrabold tracking-[0.06em] text-texto-tenue">POR COBRAR</span>
-              <span className="font-display text-[30px] font-bold tabular-nums">{pesos(r.porCobrar.total)}</span>
+              <span className="font-display text-[30px] font-bold tabular-nums"><Numero valor={r.porCobrar.total} formato={pesos} /></span>
               <span className="text-sm text-texto-suave">{r.porCobrar.facturas} {r.porCobrar.facturas === 1 ? 'factura pendiente' : 'facturas pendientes'}</span>
             </div>
-            <div className="card-hover flex flex-col gap-1 rounded-tarjeta bg-superficie px-6 py-5 shadow-tarjeta">
+            <div style={{ '--i': 1 } as React.CSSProperties} className="entra card-hover flex flex-col gap-1 rounded-tarjeta bg-superficie px-6 py-5 shadow-tarjeta">
               <span className="text-[13px] font-extrabold tracking-[0.06em] text-texto-tenue">COBRADO ESTE MES</span>
-              <span className="font-display text-[30px] font-bold tabular-nums">{pesos(r.delMes.cobrado)}</span>
+              <span className="font-display text-[30px] font-bold tabular-nums"><Numero valor={r.delMes.cobrado} formato={pesos} /></span>
               <span className="text-sm text-texto-suave">{r.delMes.cobradas} {r.delMes.cobradas === 1 ? 'factura cobrada' : 'facturas cobradas'}</span>
             </div>
           </>
@@ -95,7 +96,7 @@ export default function Cobros() {
         ) : !lista.dato ? (
           <TablaSkeleton filas={4} />
         ) : filas.length > 0 ? (
-          <div className="overflow-x-auto">
+          <div key={filtro} className="entra overflow-x-auto">
             <table className="w-full min-w-[720px] border-collapse text-[15px]">
               <thead>
                 <tr className="text-xs tracking-[0.06em] text-texto-tenue">
@@ -107,7 +108,7 @@ export default function Cobros() {
                   <th className={`${th} text-right`}>ACCIÓN</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="cascada">
                 {filas.map((f) => (
                   <tr key={f.id} className="border-b border-[#F0F2F7] transition-colors last:border-0 hover:bg-fondo">
                     <td className={`${td} text-center`}><span className={`inline-flex h-8 min-w-[34px] items-center justify-center rounded-[10px] px-2 text-[13px] font-extrabold ${colorTipo(f.sigla)}`}>{f.sigla}</span></td>
@@ -121,7 +122,7 @@ export default function Cobros() {
                       {f.cobro === 'pendiente' ? (
                         <button type="button" disabled={marcando === f.id} onClick={() => marcar(f.id, 'cobrada')} className="btn-lift inline-flex h-9 items-center gap-1.5 rounded-full bg-exito px-3.5 text-sm font-extrabold text-white disabled:opacity-60">
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
-                          {marcando === f.id ? 'Guardando…' : 'Marcar cobrada'}
+                          {marcando === f.id ? (<><Girando size={14} />Guardando…</>) : 'Marcar cobrada'}
                         </button>
                       ) : (
                         <span className="inline-flex items-center gap-2">

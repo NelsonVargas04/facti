@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { Numero } from '@/components/Animado';
 import { AvisoApi } from '@/components/AvisoApi';
 import { Facti } from '@/components/Facti';
 import { TablaFacturas, TablaSkeleton } from '@/components/TablaFacturas';
@@ -30,10 +31,10 @@ export default function Inicio() {
 
   const stats = r
     ? [
-        { label: `FACTURADO EN ${mes.toUpperCase()}`, valor: pesos(r.delMes.facturado), nota: plural(r.delMes.emitidos, 'comprobante emitido', 'comprobantes emitidos') },
-        { label: 'POR COBRAR', valor: pesos(r.porCobrar.total), nota: plural(r.porCobrar.facturas, 'factura pendiente', 'facturas pendientes') },
-        { label: `COBRADO EN ${mes.toUpperCase()}`, valor: pesos(r.delMes.cobrado), nota: plural(r.delMes.cobradas, 'factura cobrada', 'facturas cobradas') },
-        { label: 'ÚLTIMOS 12 MESES', valor: pesos(r.ultimos12Meses.facturado), nota: 'Lo que cuenta para tu categoría' },
+        { label: `FACTURADO EN ${mes.toUpperCase()}`, valor: r.delMes.facturado, nota: plural(r.delMes.emitidos, 'comprobante emitido', 'comprobantes emitidos') },
+        { label: 'POR COBRAR', valor: r.porCobrar.total, nota: plural(r.porCobrar.facturas, 'factura pendiente', 'facturas pendientes') },
+        { label: `COBRADO EN ${mes.toUpperCase()}`, valor: r.delMes.cobrado, nota: plural(r.delMes.cobradas, 'factura cobrada', 'facturas cobradas') },
+        { label: 'ÚLTIMOS 12 MESES', valor: r.ultimos12Meses.facturado, nota: 'Lo que cuenta para tu categoría' },
       ]
     : [];
 
@@ -46,7 +47,7 @@ export default function Inicio() {
           <p className="text-texto-suave">{r ? `Este es el resumen de ${mes}.` : 'Tu resumen del mes.'}</p>
         </div>
         {r && (
-          <div className="flex items-center gap-1">
+          <div className="entra flex items-center gap-1">
             <div className="f-pop max-w-[300px] rounded-[20px_20px_6px_20px] bg-white px-4 py-3 text-[15px] font-bold shadow-[0_8px_20px_rgba(21,25,58,0.08)]">
               {r.delMes.emitidos === 0 && pendientes === 0 ? (
                 <>Todavía no emitiste facturas este mes. <Link href="/app/facturas/nueva" className="text-primario-oscuro underline">¿Hacemos la primera?</Link></>
@@ -65,12 +66,12 @@ export default function Inicio() {
 
       {/* Stat cards */}
       {(r || resumen.estado === 'cargando') && (
-        <div className="grid gap-[18px] [grid-template-columns:repeat(auto-fit,minmax(210px,1fr))]">
+        <div className={`grid gap-[18px] [grid-template-columns:repeat(auto-fit,minmax(210px,1fr))] ${r ? 'cascada' : ''}`}>
           {r
-            ? stats.map((s, i) => (
-                <div key={s.label} style={{ animationDelay: `${60 + i * 60}ms` }} className="aparece card-hover flex flex-col gap-1.5 rounded-tarjeta bg-superficie px-6 py-[22px] shadow-tarjeta">
+            ? stats.map((s) => (
+                <div key={s.label} className="card-hover flex flex-col gap-1.5 rounded-tarjeta bg-superficie px-6 py-[22px] shadow-tarjeta">
                   <span className="text-[13px] font-extrabold tracking-[0.06em] text-texto-tenue">{s.label}</span>
-                  <span className="font-display text-[32px] font-bold tabular-nums">{s.valor}</span>
+                  <span className="font-display text-[32px] font-bold tabular-nums"><Numero valor={s.valor} formato={pesos} /></span>
                   <span className="text-sm text-texto-suave">{s.nota}</span>
                 </div>
               ))
@@ -106,7 +107,7 @@ export default function Inicio() {
           ) : r.ultimas.length > 0 ? (
             <TablaFacturas rows={r.ultimas} />
           ) : (
-            <div className="flex flex-col items-center gap-3 py-10 text-center">
+            <div className="entra flex flex-col items-center gap-3 py-10 text-center">
               <Facti pose="factura" size={120} animated={false} />
               <p className="max-w-[340px] text-texto-suave">Cuando emitas tu primera factura, la vas a ver acá.</p>
               <Link href="/app/facturas/nueva" className="btn-lift rounded-full bg-primario px-6 py-3 font-extrabold text-white shadow-boton">Emitir factura</Link>
@@ -115,13 +116,19 @@ export default function Inicio() {
         </section>
 
         <aside className="flex min-w-0 flex-1 basis-[280px] flex-col gap-[18px]">
-          {r ? <UsoPlan plan={r.plan} /> : <div className="skeleton h-[230px] rounded-tarjeta" />}
+          {r ? (
+            <div className="entra" style={{ '--i': 2 } as React.CSSProperties}>
+              <UsoPlan plan={r.plan} />
+            </div>
+          ) : (
+            <div className="skeleton h-[230px] rounded-tarjeta" />
+          )}
           <div className="flex flex-col gap-2 rounded-tarjeta bg-superficie p-[22px] shadow-tarjeta">
             <h2 className="text-[20px] font-bold">Estado de ARCA</h2>
             {arca.estado === 'cargando' ? (
               <span className="text-sm text-texto-suave">Consultando…</span>
             ) : arcaOk ? (
-              <span className="flex items-center gap-2 font-bold text-exito-texto"><span className="h-2.5 w-2.5 rounded-full bg-exito" />Funcionando normal</span>
+              <span className="entra flex items-center gap-2 font-bold text-exito-texto"><span className="h-2.5 w-2.5 rounded-full bg-exito" />Funcionando normal</span>
             ) : arca.estado === 'error' && arca.error.codigo === 'configuracion' ? (
               <>
                 <span className="flex items-center gap-2 font-bold text-aviso-texto"><span className="h-2.5 w-2.5 rounded-full bg-[#E0A100]" />Falta conectar Facti con ARCA</span>

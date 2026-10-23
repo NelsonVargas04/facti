@@ -154,7 +154,7 @@ export default function PerfilFiscal() {
 
           {/* Resultado del padrón */}
           {cuenta && (
-            <div className="grid gap-3.5 rounded-[18px] bg-fondo p-5 [grid-template-columns:repeat(auto-fit,minmax(190px,1fr))]">
+            <div key={cuenta.cuit} className="entra grid gap-3.5 rounded-[18px] bg-fondo p-5 [grid-template-columns:repeat(auto-fit,minmax(190px,1fr))]">
               <div className="col-span-full flex items-center gap-2 text-sm font-extrabold text-exito-texto">
                 <Tilde />
                 {cuenta.nombre ? 'Encontramos tus datos en el padrón de ARCA' : 'Guardamos tu CUIT. Tus datos se completan cuando conectes Facti con ARCA.'}

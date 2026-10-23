@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { Numero } from '@/components/Animado';
 import { AvisoApi } from '@/components/AvisoApi';
 import { Facti } from '@/components/Facti';
 import { TablaSkeleton } from '@/components/TablaFacturas';
@@ -36,14 +37,14 @@ export default function Clientes() {
 
       {/* Stats */}
       {lista.dato && !qDemorado && (
-        <div style={{ animationDelay: '80ms' }} className="aparece grid gap-[18px] [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
+        <div className="cascada grid gap-[18px] [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
           <div className="card-hover flex flex-col gap-1 rounded-tarjeta bg-superficie px-6 py-5 shadow-tarjeta">
             <span className="text-[13px] font-extrabold tracking-[0.06em] text-texto-tenue">CLIENTES</span>
-            <span className="font-display text-[30px] font-bold">{clientes.length}</span>
+            <span className="font-display text-[30px] font-bold tabular-nums"><Numero valor={clientes.length} formato={String} /></span>
           </div>
           <div className="card-hover flex flex-col gap-1 rounded-tarjeta bg-superficie px-6 py-5 shadow-tarjeta">
             <span className="text-[13px] font-extrabold tracking-[0.06em] text-texto-tenue">COMPROBANTES EMITIDOS</span>
-            <span className="font-display text-[30px] font-bold">{totalComprobantes}</span>
+            <span className="font-display text-[30px] font-bold tabular-nums"><Numero valor={totalComprobantes} formato={String} /></span>
           </div>
         </div>
       )}
@@ -73,7 +74,7 @@ export default function Clientes() {
                   <th className={`${th} text-right`}>POR COBRAR</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="cascada" key={qDemorado}>
                 {clientes.map((c) => (
                   <tr key={c.id} className="border-b border-[#F0F2F7] transition-colors last:border-0 hover:bg-fondo">
                     <td className={`${td}`}>
@@ -97,7 +98,7 @@ export default function Clientes() {
         ) : qDemorado ? (
           <p className="py-10 text-center text-texto-suave">No encontramos clientes con esa búsqueda.</p>
         ) : (
-          <div className="flex flex-col items-center gap-3 py-10 text-center">
+          <div className="entra flex flex-col items-center gap-3 py-10 text-center">
             <Facti pose="buscando" size={130} animated={false} />
             <h2 className="text-[20px] font-bold">Todavía no tenés clientes</h2>
             <p className="max-w-[380px] text-texto-suave">Cuando le hagas una factura a alguien con CUIT o DNI, lo guardamos acá con todo lo que le facturaste.</p>

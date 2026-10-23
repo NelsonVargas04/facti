@@ -3,6 +3,7 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Girando } from '@/components/Animado';
 import { BotonGoogle } from '@/components/BotonGoogle';
 import { Facti } from '@/components/Facti';
 import { FactiWordmark } from '@/components/FactiLogo';
@@ -25,7 +26,7 @@ function validar(v: Valores): Partial<Record<CampoId, string>> {
 function MensajeError({ id, children }: { id: string; children?: string }) {
   if (!children) return null;
   return (
-    <p id={id} className="flex items-center gap-1.5 text-[13px] font-semibold text-error">
+    <p id={id} className="aviso-entra flex items-center gap-1.5 text-[13px] font-semibold text-error">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true" className="flex-none">
         <circle cx="12" cy="12" r="9" />
         <path d="M12 7.5v5.5M12 16.5v.01" />
@@ -138,7 +139,7 @@ export default function Registro() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col lg:flex-row">
+    <div className="pagina-entra flex min-h-screen flex-col lg:flex-row">
       {/* Panel índigo: solo en pantallas anchas */}
       <aside className="relative hidden flex-1 flex-col gap-7 overflow-hidden bg-primario px-14 py-12 text-white lg:flex">
         <Link href="/" className="flex items-center gap-2.5 text-white">
@@ -180,7 +181,7 @@ export default function Registro() {
 
           <BotonGoogle volver="/onboarding/perfil" onError={setErrorGeneral} />
           {errorGeneral && (
-            <p role="alert" className="rounded-[14px] bg-error-suave px-4 py-3 text-sm font-bold text-error">
+            <p role="alert" className="aviso-entra rounded-[14px] bg-error-suave px-4 py-3 text-sm font-bold text-error">
               {errorGeneral}
             </p>
           )}
@@ -307,7 +308,7 @@ export default function Registro() {
               disabled={enviando}
               className="btn-lift flex h-[54px] items-center justify-center gap-2 rounded-full bg-primario text-[17px] font-extrabold text-white shadow-boton hover:shadow-[0_14px_30px_rgba(59,63,216,0.4)] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primario disabled:cursor-wait disabled:opacity-80"
             >
-              {enviando ? 'Creando tu cuenta…' : 'Crear cuenta'}
+              {enviando ? (<><Girando />Creando tu cuenta…</>) : 'Crear cuenta'}
             </button>
           </form>
 

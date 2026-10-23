@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { BackLink } from '@/components/BackLink';
 import { Facti } from '@/components/Facti';
 import { Select } from '@/components/Select';
+import { Girando } from '@/components/Animado';
 import { AvisoApi } from '@/components/AvisoApi';
 import { buscarPadron, emitirFactura, verCuenta, COND_IVA_RECEPTOR, type ErrorApi, type PadronDatos } from '@/lib/api';
 import { hoyAR, rangoMes } from '@/lib/formato';
@@ -97,7 +98,7 @@ let proximoId = 3;
 function Aviso({ res }: { res: ErrorApi }) {
   if (res.codigo === 'configuracion') {
     return (
-      <div role="alert" className="flex flex-col gap-1 rounded-[14px] bg-aviso-suave px-4 py-3 text-sm font-bold text-aviso-texto">
+      <div role="alert" className="aviso-entra flex flex-col gap-1 rounded-[14px] bg-aviso-suave px-4 py-3 text-sm font-bold text-aviso-texto">
         <span>Todavía no conectaste Facti con ARCA. {res.mensaje}</span>
         <Link href="/onboarding/arca" className="font-extrabold text-primario-oscuro underline">Conectar ahora</Link>
       </div>
@@ -106,16 +107,16 @@ function Aviso({ res }: { res: ErrorApi }) {
   if (res.codigo === 'base_datos' || res.codigo === 'sin_conexion') return <AvisoApi error={res} compacto />;
   if (res.codigo === 'limite_plan') {
     return (
-      <div role="alert" className="flex flex-col gap-1 rounded-[14px] bg-aviso-suave px-4 py-3 text-sm font-bold text-aviso-texto">
+      <div role="alert" className="aviso-entra flex flex-col gap-1 rounded-[14px] bg-aviso-suave px-4 py-3 text-sm font-bold text-aviso-texto">
         <span>{res.mensaje}</span>
         <Link href="/app/plan" className="font-extrabold text-primario-oscuro underline">Ver el plan Pro</Link>
       </div>
     );
   }
   if (res.estado === 501) {
-    return <div role="alert" className="rounded-[14px] bg-aviso-suave px-4 py-3 text-sm font-bold text-aviso-texto">{res.mensaje}</div>;
+    return <div role="alert" className="aviso-entra rounded-[14px] bg-aviso-suave px-4 py-3 text-sm font-bold text-aviso-texto">{res.mensaje}</div>;
   }
-  return <div role="alert" className="rounded-[14px] bg-[#FDE8EA] px-4 py-3 text-sm font-bold text-[#B4232B]">{res.mensaje}</div>;
+  return <div role="alert" className="aviso-entra rounded-[14px] bg-[#FDE8EA] px-4 py-3 text-sm font-bold text-[#B4232B]">{res.mensaje}</div>;
 }
 
 export default function NuevaFactura() {
@@ -448,7 +449,7 @@ export default function NuevaFactura() {
             </div>
             {emitirMsg && <Aviso res={emitirMsg} />}
             <button type="button" onClick={emitir} disabled={emitiendo || yaAutorizada} className="btn-lift flex h-[54px] items-center justify-center gap-2 rounded-full bg-primario text-[17px] font-extrabold text-white shadow-boton disabled:opacity-60">
-              {emitiendo ? 'Emitiendo…' : `Emitir y enviar Factura ${tipo}`}
+              {emitiendo ? (<><Girando />Emitiendo en ARCA…</>) : `Emitir y enviar Factura ${tipo}`}
             </button>
             <button type="button" className="btn-lift h-[50px] rounded-full border-[1.5px] border-borde bg-white text-base font-extrabold text-texto">Guardar borrador</button>
           </div>

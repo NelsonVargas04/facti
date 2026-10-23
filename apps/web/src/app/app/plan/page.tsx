@@ -47,7 +47,9 @@ export default function PlanPro() {
       {/* Consumo actual */}
       <div style={{ animationDelay: '90ms' }} className="aparece">
         {cuenta.dato ? (
-          <ConsumoPlan plan={cuenta.dato.plan} />
+          <div className="entra">
+            <ConsumoPlan plan={cuenta.dato.plan} />
+          </div>
         ) : cuenta.estado === 'error' ? (
           <AvisoApi error={cuenta.error} onReintentar={cuenta.recargar} compacto />
         ) : (

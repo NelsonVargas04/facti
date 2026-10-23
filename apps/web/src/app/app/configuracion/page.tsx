@@ -47,7 +47,7 @@ export default function Configuracion() {
       {cuenta.estado === 'error' && !c && <AvisoApi error={cuenta.error} onReintentar={cuenta.recargar} />}
 
       {c ? (
-        <div style={{ animationDelay: '80ms' }} className="aparece grid items-start gap-6 [grid-template-columns:repeat(auto-fit,minmax(320px,1fr))]">
+        <div className="cascada grid items-start gap-6 [grid-template-columns:repeat(auto-fit,minmax(320px,1fr))]">
           <Tarjeta titulo="Perfil fiscal">
             <Dato k="Nombre" v={c.nombre} />
             <Dato k="CUIT" v={formatearCuit(c.cuit)} />

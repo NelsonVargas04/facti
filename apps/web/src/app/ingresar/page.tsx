@@ -3,6 +3,7 @@
 import { Suspense, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Girando } from '@/components/Animado';
 import { BotonGoogle } from '@/components/BotonGoogle';
 import { Facti } from '@/components/Facti';
 import { FactiWordmark } from '@/components/FactiLogo';
@@ -72,7 +73,7 @@ function Ingresar() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-[420px] flex-col justify-center gap-6 px-4 py-10">
+    <main className="pagina-entra mx-auto flex min-h-screen w-full max-w-[420px] flex-col justify-center gap-6 px-4 py-10">
       <div className="flex items-center justify-between">
         <Link href="/" aria-label="Volver al inicio de Facti">
           <FactiWordmark size={32} />
@@ -105,11 +106,11 @@ function Ingresar() {
           <input id="clave" type="password" autoComplete="current-password" value={clave} onChange={(e) => setClave(e.target.value)} className={inputCls} />
         </div>
 
-        {error && <p role="alert" className="rounded-[14px] bg-error-suave px-4 py-3 text-sm font-bold text-error">{error}</p>}
-        {aviso && <p role="status" className="rounded-[14px] bg-exito-suave px-4 py-3 text-sm font-bold text-exito-texto">{aviso}</p>}
+        {error && <p role="alert" className="aviso-entra rounded-[14px] bg-error-suave px-4 py-3 text-sm font-bold text-error">{error}</p>}
+        {aviso && <p role="status" className="aviso-entra rounded-[14px] bg-exito-suave px-4 py-3 text-sm font-bold text-exito-texto">{aviso}</p>}
 
-        <button type="submit" disabled={enviando} className="btn-lift flex h-[54px] items-center justify-center rounded-full bg-primario text-[17px] font-extrabold text-white shadow-boton disabled:cursor-wait disabled:opacity-80">
-          {enviando ? 'Entrando…' : 'Iniciar sesión'}
+        <button type="submit" disabled={enviando} className="btn-lift flex h-[54px] items-center justify-center gap-2 rounded-full bg-primario text-[17px] font-extrabold text-white shadow-boton disabled:cursor-wait disabled:opacity-80">
+          {enviando ? (<><Girando />Entrando…</>) : 'Iniciar sesión'}
         </button>
       </form>
 

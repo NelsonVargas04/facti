@@ -125,7 +125,8 @@ export default function Facturas() {
           <>
             {lista.estado === 'error' && <div className="mb-3"><AvisoApi error={lista.error} onReintentar={lista.recargar} compacto /></div>}
             <div className={lista.estado === 'cargando' ? 'opacity-60 transition-opacity' : 'transition-opacity'}>
-              <TablaFacturas rows={visibles} />
+              {/* La key cambia con el resultado: las filas nuevas entran en cascada al filtrar o cambiar de página. */}
+              <TablaFacturas key={visibles.map((v) => v.id).join(',')} rows={visibles} />
             </div>
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
               <span className="text-sm text-texto-tenue">Mostrando {desde}–{hasta} de {total}</span>

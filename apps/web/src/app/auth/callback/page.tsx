@@ -63,14 +63,14 @@ function Callback() {
   }, [params, router]);
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-[440px] flex-col items-center justify-center gap-4 px-4 text-center">
+    <main className="pagina-entra mx-auto flex min-h-screen max-w-[440px] flex-col items-center justify-center gap-4 px-4 text-center">
       {error ? (
-        <>
+        <div key="error" className="entra flex flex-col items-center gap-4">
           <Facti pose="pensando" size={140} animated={false} />
           <h1 className="text-[24px] font-bold">No pudimos iniciar tu sesión</h1>
           <p role="alert" className="text-texto-suave">{error}</p>
           <Link href="/ingresar" className="btn-lift rounded-full bg-primario px-6 py-3 font-extrabold text-white shadow-boton">Volver a intentar</Link>
-        </>
+        </div>
       ) : (
         <>
           <Facti pose="buscando" size={140} animated />

@@ -81,7 +81,7 @@ export function TablaFacturas({ rows }: { rows: Comprobante[] }) {
             <th className={`${th} w-10`} aria-label="Ver" />
           </tr>
         </thead>
-        <tbody>
+        <tbody className="cascada">
           {rows.map((f) => {
             const total = totalFirmado(f);
             const ir = () => router.push(`/app/facturas/${f.id}`);

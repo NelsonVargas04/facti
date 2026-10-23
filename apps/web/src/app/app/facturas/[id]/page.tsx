@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { Girando } from '@/components/Animado';
 import { AvisoApi } from '@/components/AvisoApi';
 import { BackLink } from '@/components/BackLink';
 import { Facti } from '@/components/Facti';
@@ -91,7 +92,7 @@ export default function DetalleFactura() {
             </div>
           ) : (
             <div className="rounded-tarjeta-lg bg-[#E4E8F1] p-4 sm:p-7">
-              <div className="mx-auto max-w-[794px] overflow-hidden rounded-[8px] bg-white shadow-[0_14px_44px_rgba(21,25,58,0.22)]">
+              <div className="entra mx-auto max-w-[794px] overflow-hidden rounded-[8px] bg-white shadow-[0_14px_44px_rgba(21,25,58,0.22)]">
                 <EscalarComprobante>
                   <ComprobanteC datos={datos} />
                 </EscalarComprobante>
@@ -124,7 +125,10 @@ export default function DetalleFactura() {
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm text-texto-tenue">Cobro</span>
-              <ChipCobro estado={f.cobro} />
+              {/* key: el chip vuelve a entrar cuando cambia el estado del cobro */}
+              <span key={f.cobro} className="entra">
+                <ChipCobro estado={f.cobro} />
+              </span>
             </div>
             {f.cobro !== '' && (
               <button
@@ -135,7 +139,7 @@ export default function DetalleFactura() {
                   f.cobro === 'cobrada' ? 'border-[1.5px] border-borde bg-white text-texto' : 'bg-exito text-white'
                 }`}
               >
-                {f.cobro === 'cobrada' ? 'Marcar como pendiente' : (<><Ic><path d="M5 12.5l4.5 4.5L19 7.5" /></Ic>Marcar como cobrada</>)}
+                {cambiando ? (<><Girando />Guardando…</>) : f.cobro === 'cobrada' ? 'Marcar como pendiente' : (<><Ic><path d="M5 12.5l4.5 4.5L19 7.5" /></Ic>Marcar como cobrada</>)}
               </button>
             )}
             {errCobro && <AvisoApi error={errCobro} compacto />}
