@@ -10,11 +10,15 @@ import (
 	"time"
 
 	"facti/api/internal/arca"
+	"facti/api/internal/datos"
 )
 
 // Servidor HTTP de la API.
 type Servidor struct {
 	arca        ProveedorArca
+	datos       ProveedorDatos
+	cuitEmisor  string
+	puntoVenta  int
 	entorno     arca.Entorno
 	origenesWeb []string
 	log         *slog.Logger
@@ -24,16 +28,29 @@ type Servidor struct {
 // Opciones para construir el servidor.
 type Opciones struct {
 	Arca        ProveedorArca
+	Datos       ProveedorDatos
+	CuitEmisor  string // emisor de la única cuenta, mientras no haya login
+	PuntoVenta  int
 	Entorno     arca.Entorno
 	OrigenesWeb []string // vacío = cualquier origen
 	Log         *slog.Logger
+	Ahora       func() time.Time // para tests
 }
 
 // Nuevo devuelve el http.Handler con todas las rutas.
 func Nuevo(o Opciones) http.Handler {
-	s := &Servidor{arca: o.Arca, entorno: o.Entorno, origenesWeb: o.OrigenesWeb, log: o.Log, ahora: time.Now}
+	s := &Servidor{
+		arca: o.Arca, datos: o.Datos, cuitEmisor: o.CuitEmisor, puntoVenta: o.PuntoVenta,
+		entorno: o.Entorno, origenesWeb: o.OrigenesWeb, log: o.Log, ahora: o.Ahora,
+	}
 	if s.log == nil {
 		s.log = slog.Default()
+	}
+	if s.ahora == nil {
+		s.ahora = time.Now
+	}
+	if s.datos == nil {
+		s.datos = DatosPerezosos("")
 	}
 
 	mux := http.NewServeMux()
@@ -46,6 +63,13 @@ func Nuevo(o Opciones) http.Handler {
 	mux.Handle("GET /arca/condiciones-iva", s.ruta(s.arcaCondicionesIva))
 	mux.Handle("GET /arca/padron/{cuit}", s.ruta(s.arcaPadron))
 	mux.Handle("POST /facturas", s.ruta(s.emitirFactura))
+	// Rutas que leen y guardan en la base. Si falta DATABASE_URL, responden 503.
+	mux.Handle("GET /cuenta", s.ruta(s.verCuenta))
+	mux.Handle("GET /resumen", s.ruta(s.verResumen))
+	mux.Handle("GET /comprobantes", s.ruta(s.listarComprobantes))
+	mux.Handle("GET /comprobantes/{id}", s.ruta(s.verComprobante))
+	mux.Handle("PATCH /comprobantes/{id}/cobro", s.ruta(s.marcarCobro))
+	mux.Handle("GET /clientes", s.ruta(s.listarClientes))
 
 	return s.registrar(s.cors(mux))
 }
@@ -65,15 +89,25 @@ func (s *Servidor) ruta(h manejador) http.Handler {
 func (s *Servidor) responderError(w http.ResponseWriter, err error) {
 	var (
 		conf         *ConfiguracionError
+		base         *BaseDatosError
 		sinRespuesta *arca.SinRespuestaError
 		errArca      *arca.Error
 		pedido       *errorPedido
 	)
 	switch {
 	case errors.As(err, &pedido):
-		responderJSON(w, pedido.estado, map[string]any{"error": pedido.codigo, "mensaje": pedido.mensaje})
+		cuerpo := map[string]any{"error": pedido.codigo, "mensaje": pedido.mensaje}
+		for k, v := range pedido.extra {
+			cuerpo[k] = v
+		}
+		responderJSON(w, pedido.estado, cuerpo)
+	case errors.Is(err, datos.ErrNoEncontrado):
+		responderJSON(w, http.StatusNotFound, map[string]any{"error": "no_encontrado", "mensaje": "No encontramos ese comprobante."})
 	case errors.As(err, &conf):
 		responderJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "configuracion", "mensaje": conf.Mensaje})
+	case errors.As(err, &base):
+		s.log.Error("base de datos", "error", err)
+		responderJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "base_datos", "mensaje": base.Mensaje})
 	case errors.As(err, &sinRespuesta):
 		responderJSON(w, http.StatusGatewayTimeout, map[string]any{"error": "arca_sin_respuesta", "mensaje": sinRespuesta.Mensaje})
 	case errors.As(err, &errArca):
@@ -93,6 +127,7 @@ type errorPedido struct {
 	estado  int
 	codigo  string
 	mensaje string
+	extra   map[string]any // campos adicionales en la respuesta
 }
 
 func (e *errorPedido) Error() string { return e.mensaje }
@@ -116,7 +151,7 @@ func (s *Servidor) cors(next http.Handler) http.Handler {
 			h.Set("Access-Control-Allow-Origin", origen)
 			h.Add("Vary", "Origin")
 			if r.Method == http.MethodOptions && r.Header.Get("Access-Control-Request-Method") != "" {
-				h.Set("Access-Control-Allow-Methods", "GET, HEAD, POST, OPTIONS")
+				h.Set("Access-Control-Allow-Methods", "GET, HEAD, POST, PATCH, OPTIONS")
 				if pedidos := r.Header.Get("Access-Control-Request-Headers"); pedidos != "" {
 					h.Set("Access-Control-Allow-Headers", pedidos)
 				}

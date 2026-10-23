@@ -19,6 +19,8 @@ type Config struct {
 	EnvCargado  string // ruta del .env leído, o "" si no había
 	Puerto      int
 	OrigenesWeb []string // vacío = cualquier origen
+	// URL de conexión a Postgres (en producción, la de Supabase).
+	DatabaseURL string
 
 	Entorno         arca.Entorno
 	CuitCertificado string
@@ -42,6 +44,7 @@ func Cargar() Config {
 		Raiz:            raiz,
 		EnvCargado:      envPath,
 		Puerto:          entero(os.Getenv("API_PORT"), 4000),
+		DatabaseURL:     strings.TrimSpace(os.Getenv("DATABASE_URL")),
 		Entorno:         arca.Entorno(valor("ARCA_ENTORNO", string(arca.Homologacion))),
 		CuitCertificado: os.Getenv("ARCA_CUIT_CERTIFICADO"),
 		CuitEmisor:      os.Getenv("ARCA_CUIT_EMISOR"),

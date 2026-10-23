@@ -47,10 +47,12 @@ function Semaforo({ ok }: { ok: boolean }) {
 export default function EstadoPage() {
   const [salud, setSalud] = useState<Estado<Salud>>({ cargando: true });
   const [arca, setArca] = useState<Estado<EstadoArca>>({ cargando: true });
+  const [base, setBase] = useState<Estado<{ cuenta: { cuit: string } }>>({ cargando: true });
 
   useEffect(() => {
     traer<Salud>('/salud').then(setSalud);
     traer<EstadoArca>('/arca/estado').then(setArca);
+    traer<{ cuenta: { cuit: string } }>('/cuenta').then(setBase);
   }, []);
 
   return (
@@ -97,6 +99,15 @@ export default function EstadoPage() {
             <li>Autenticación: <strong>{arca.dato.servidores.auth}</strong></li>
           </ul>
         )}
+      </div>
+
+      <div className="card" style={{ marginTop: '1.2rem' }}>
+        <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          {!base.cargando && <Semaforo ok={!base.error} />} Base de datos (Supabase)
+        </h3>
+        {base.cargando && <p style={{ color: 'var(--gris-suave)' }}>Consultando…</p>}
+        {!base.cargando && base.error && <p style={{ color: 'var(--gris-suave)' }}>{base.error}</p>}
+        {!base.cargando && base.dato && <p>Conectada. Cuenta del CUIT <strong>{base.dato.cuenta.cuit}</strong>.</p>}
       </div>
     </main>
   );

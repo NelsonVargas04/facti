@@ -46,6 +46,19 @@ vía `next/font`. Estilo soft UI con tokens CSS (sin framework de CSS por ahora)
 La web corre en el puerto 3000 y la API en el 4000; la API habilita CORS para la web.
 El navegador habla con la API por HTTP (`NEXT_PUBLIC_API_URL`).
 
+## 010 — Base de datos: Postgres en Supabase
+Los datos van a Postgres (Supabase en producción, plan gratis para empezar), con `pgx` desde la API.
+- Todo vive en el esquema `facti`, no en `public`: Supabase expone `public` por su Data API y no
+  queremos que las tablas sean accesibles con la clave anónima. La web nunca habla con Supabase directo.
+- Migraciones SQL embebidas en el binario; se aplican al conectarse, con un lock para que no corran dos a la vez.
+- Si la URL usa el pooler en modo transacción (puerto 6543), se usa el protocolo simple (sin sentencias preparadas).
+- Antes de pedir el CAE se verifica que haya base y cupo en el plan. Si ARCA autoriza y después falla
+  el guardado, la API responde `no_guardado` con el CAE (para no reemitir) y deja todo en el log.
+- Se guarda la respuesta original de ARCA de cada comprobante (10 años) y una copia del receptor tal como
+  quedó en la factura; los clientes se crean o actualizan solos al facturar.
+- Sin login por ahora: una sola cuenta, la del `ARCA_CUIT_EMISOR`. Las tablas ya tienen `cuenta_id`
+  para sumar usuarios (posiblemente con Supabase Auth) sin migrar datos.
+
 ## Pendientes a validar en homologación
 - Que el padrón A5 devuelva la categoría de monotributo como esperamos.
 - Códigos de condición frente al IVA del receptor con FEParamGetCondicionIvaReceptor.

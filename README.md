@@ -27,6 +27,7 @@ apps/
     internal/servidor/  rutas, CORS y manejo de errores
     internal/cuit/      validación de CUIT
     internal/config/    lectura del .env
+    internal/datos/     base de datos: Postgres (Supabase) y una versión en memoria para tests
   web/      Frontend (Next.js) con el diseño de Facti — puerto 3000
 packages/
   shared/   Validación de CUIT y parámetros normativos con fecha de vigencia (TS, para la web)
@@ -41,7 +42,7 @@ Próxima carpeta: `apps/mobile` (Expo).
 
 - Node.js 20.6 o superior
 - pnpm 9 o superior (`npm i -g pnpm` o `corepack enable`)
-- Go 1.24 o superior (`winget install GoLang.Go` en Windows, o desde https://go.dev/dl)
+- Go 1.25 o superior (`winget install GoLang.Go` en Windows, o desde https://go.dev/dl)
 - CUIT con clave fiscal nivel 3 (para el certificado de homologación)
 
 ## Primeros pasos
@@ -114,10 +115,35 @@ hasta que completes la configuración. Lee el `.env` de la raíz del repo.
 | `GET /arca/puntos-venta` | Puntos de venta Web Services del emisor |
 | `GET /arca/condiciones-iva?clase=C` | Condiciones frente al IVA del receptor (RG 5616) |
 | `GET /arca/padron/{cuit}` | Datos y condición fiscal de un CUIT del padrón |
-| `POST /facturas` | Emite una Factura C y devuelve CAE, vencimiento y QR |
+| `POST /facturas` | Emite una Factura C, la guarda y devuelve id, CAE, vencimiento y QR |
+| `GET /cuenta` | Datos del emisor (del padrón) y uso del plan en el mes |
+| `GET /resumen?mes=AAAA-MM` | Facturado, por cobrar y cobrado del mes, últimos 12 meses y últimas facturas |
+| `GET /comprobantes` | Listado con filtros `desde`, `hasta`, `q`, `cobro`, `orden`, `limite`, `saltar` |
+| `GET /comprobantes/{id}` | Comprobante con ítems y datos del emisor (para el PDF) |
+| `PATCH /comprobantes/{id}/cobro` | Marca la factura como `cobrada` o `pendiente` |
+| `GET /clientes?q=` | Clientes (se guardan solos al facturar) con lo facturado y lo pendiente |
 
-Errores: `400` datos inválidos · `422` ARCA rechazó el comprobante · `502` error de ARCA ·
-`503` falta configuración · `504` ARCA no respondió.
+Errores: `400` datos inválidos · `403` se terminó el cupo del plan · `404` no existe ·
+`422` ARCA rechazó el comprobante · `500 no_guardado` ARCA autorizó pero no se pudo guardar (no reintentar) ·
+`502` error de ARCA · `503` falta configuración o base de datos · `504` ARCA no respondió.
+
+### Base de datos (Supabase)
+
+La API guarda cuentas, clientes y comprobantes en Postgres. En producción se usa Supabase:
+
+1. Creá un proyecto en [supabase.com](https://supabase.com) (el plan gratis alcanza para empezar).
+2. En **Project Settings → Database → Connection string → URI**, copiá la URL (Session pooler) y
+   reemplazá `[YOUR-PASSWORD]` por la contraseña de la base.
+3. Pegala en `DATABASE_URL` del `.env` de la raíz y reiniciá la API.
+
+Las tablas se crean solas la primera vez, en el esquema `facti` (no en `public`, así no quedan
+expuestas por la API pública de Supabase). Las migraciones están en `apps/api/internal/datos/migraciones/`.
+
+Para correr los tests de la base contra Postgres (si no, usan una base en memoria):
+
+```bash
+TEST_DATABASE_URL="postgresql://..." go test ./internal/datos/
+```
 
 ## Reglas del proyecto
 

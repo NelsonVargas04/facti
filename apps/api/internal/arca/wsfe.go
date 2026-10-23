@@ -66,7 +66,14 @@ type ResultadoCAE struct {
 	VencimientoCAE string // AAAAMMDD
 	Observaciones  []Detalle
 	Errores        []Detalle
+	// Respuesta de ARCA tal como llegó (XML), para guardarla junto al comprobante.
+	Respuesta string
 }
+
+// crudo guarda el XML original de la respuesta de un método.
+type crudo struct{ xml []byte }
+
+func (c *crudo) guardarCrudo(b []byte) { c.xml = append([]byte(nil), b...) }
 
 // EstadoServidores según FEDummy.
 type EstadoServidores struct {
@@ -105,6 +112,8 @@ type ComprobanteConsultado struct {
 	FchVto          string  `xml:"FchVto" json:"fchVto"`
 	PtoVta          int     `xml:"PtoVta" json:"ptoVta"`
 	CbteTipo        int     `xml:"CbteTipo" json:"cbteTipo"`
+	// XML original de FECompConsultar.
+	Respuesta string `xml:"-" json:"-"`
 }
 
 type errXML struct {
@@ -194,6 +203,9 @@ func (w *Wsfe) llamar(ctx context.Context, metodo, interior string, conAuth bool
 	envuelto := append(append([]byte("<r>"), resp.Resultado.Interior...), "</r>"...)
 	if err := xmlUnmarshal(envuelto, out); err != nil {
 		return &Error{Mensaje: "Respuesta inválida de " + metodo + ": " + err.Error(), Servicio: "WSFEv1"}
+	}
+	if c, ok := out.(interface{ guardarCrudo([]byte) }); ok {
+		c.guardarCrudo([]byte("<" + metodo + "Result>" + string(resp.Resultado.Interior) + "</" + metodo + "Result>"))
 	}
 	return nil
 }
@@ -292,6 +304,7 @@ func (w *Wsfe) CondicionesIvaReceptor(ctx context.Context, claseComprobante stri
 func (w *Wsfe) Consultar(ctx context.Context, puntoVenta, tipo int, numero int64) (*ComprobanteConsultado, error) {
 	var r struct {
 		conErrores
+		crudo
 		ResultGet *ComprobanteConsultado `xml:"ResultGet"`
 	}
 	interior := fmt.Sprintf(
@@ -306,6 +319,9 @@ func (w *Wsfe) Consultar(ctx context.Context, puntoVenta, tipo int, numero int64
 	}
 	if err := r.lanzar("FECompConsultar"); err != nil {
 		return nil, err
+	}
+	if r.ResultGet != nil {
+		r.ResultGet.Respuesta = string(r.xml)
 	}
 	return r.ResultGet, nil
 }
@@ -356,6 +372,7 @@ func (w *Wsfe) emitirSinBloqueo(ctx context.Context, c NuevoComprobante) (Result
 			VencimientoCAE: strings.TrimSpace(existente.FchVto),
 			Observaciones:  []Detalle{},
 			Errores:        []Detalle{},
+			Respuesta:      existente.Respuesta,
 		}, nil
 	}
 	return ResultadoCAE{}, err
@@ -363,6 +380,7 @@ func (w *Wsfe) emitirSinBloqueo(ctx context.Context, c NuevoComprobante) (Result
 
 type respuestaCAE struct {
 	conErrores
+	crudo
 	FeDetResp struct {
 		Det []struct {
 			Resultado     string `xml:"Resultado"`
@@ -376,7 +394,7 @@ type respuestaCAE struct {
 }
 
 func (r respuestaCAE) resultado(numero int64) ResultadoCAE {
-	res := ResultadoCAE{Numero: numero, Errores: r.detalles(), Observaciones: []Detalle{}}
+	res := ResultadoCAE{Numero: numero, Errores: r.detalles(), Observaciones: []Detalle{}, Respuesta: string(r.xml)}
 	if len(r.FeDetResp.Det) == 0 {
 		return res
 	}

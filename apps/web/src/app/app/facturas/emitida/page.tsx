@@ -1,73 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { AvisoApi } from '@/components/AvisoApi';
 import { Facti } from '@/components/Facti';
-import { ComprobanteC, type DatosComprobanteC } from '@/components/ComprobanteC';
-
-interface Receptor {
-  cuit: string;
-  nombre: string;
-  condicionIva: string;
-  domicilio: string;
-  condicionVenta: string;
-}
-interface FacturaGuardada {
-  letra: string;
-  puntoVenta: number;
-  numero: number;
-  cae: string;
-  vencimientoCae?: string; // AAAA-MM-DD
-  total: number;
-  fecha: string; // AAAA-MM-DD
-  qr: string;
-  clienteNombre: string;
-  receptor?: Receptor;
-  periodo?: { desde: string; hasta: string; vtoPago: string } | null;
-  items?: { descripcion: string; cantidad: number; unidad?: string; precioUnitario: number }[];
-}
-
-// Emisor: perfil fijo por ahora (hasta tener el perfil real del usuario).
-const EMISOR = {
-  razonSocial: 'FERNÁNDEZ LUCÍA',
-  domicilio: 'Av. Rivadavia 5100, Piso 3 B - CABA',
-  cuit: '27314567894',
-  ingresosBrutos: '27314567894',
-  inicioActividades: '01/03/2019',
-};
-
-const DEMO: FacturaGuardada = {
-  letra: 'C',
-  puntoVenta: 3,
-  numero: 128,
-  cae: '76419283746521',
-  vencimientoCae: '2026-10-22',
-  total: 85000,
-  fecha: '2026-10-12',
-  qr: 'https://www.arca.gob.ar/fe/qr/?p=ejemplo',
-  clienteNombre: 'Estudio Lumen SRL',
-  receptor: {
-    cuit: '30715896327',
-    nombre: 'ESTUDIO LUMEN SRL',
-    condicionIva: 'IVA Responsable Inscripto',
-    domicilio: 'Av. Corrientes 1234 - CABA',
-    condicionVenta: 'Transferencia bancaria',
-  },
-  periodo: { desde: '01/10/2026', hasta: '31/10/2026', vtoPago: '24/10/2026' },
-  items: [
-    { descripcion: 'Diseño de logo e identidad', cantidad: 1, unidad: 'unidades', precioUnitario: 70000 },
-    { descripcion: 'Adaptación para redes', cantidad: 3, unidad: 'unidades', precioUnitario: 5000 },
-  ],
-};
-
-const nro = (pv: number, n: number) => `${String(pv).padStart(5, '0')}-${String(n).padStart(8, '0')}`;
-function fecha(iso?: string) {
-  if (!iso) return '—';
-  if (iso.includes('/')) return iso;
-  const [y, m, d] = iso.split('-');
-  return `${d}/${m}/${y}`;
-}
-const pesos = (n: number) => '$' + n.toLocaleString('es-AR', { minimumFractionDigits: 2 });
+import { ComprobanteC } from '@/components/ComprobanteC';
+import { verComprobante } from '@/lib/api';
+import { datosComprobante, nombreCliente } from '@/lib/comprobante';
+import { fecha, numeroComprobante, pesos } from '@/lib/formato';
+import { useApi } from '@/lib/useApi';
 
 function Ic({ children }: { children: React.ReactNode }) {
   return (
@@ -77,20 +19,34 @@ function Ic({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function FacturaEmitida() {
-  const [f, setF] = useState<FacturaGuardada>(DEMO);
+// useSearchParams necesita un Suspense alrededor en Next.js.
+export default function FacturaEmitidaPagina() {
+  return (
+    <Suspense fallback={<div className="skeleton h-[560px] rounded-tarjeta-lg" />}>
+      <FacturaEmitida />
+    </Suspense>
+  );
+}
+
+function FacturaEmitida() {
+  const id = useSearchParams().get('id') ?? '';
+  const det = useApi(() => verComprobante(id), [id]);
   const [copiado, setCopiado] = useState(false);
 
-  useEffect(() => {
-    const raw = sessionStorage.getItem('facti:ultima-factura');
-    if (raw) {
-      try {
-        setF({ ...DEMO, ...(JSON.parse(raw) as FacturaGuardada) });
-      } catch {
-        /* usamos el demo */
-      }
-    }
-  }, []);
+  if (!id || (det.estado === 'error' && det.error.estado === 404)) {
+    return (
+      <div className="flex flex-col items-center gap-3 py-16 text-center">
+        <Facti pose="pensando" size={150} />
+        <h1 className="text-[22px] font-bold">No encontramos esa factura</h1>
+        <Link href="/app/facturas" className="btn-lift rounded-full bg-primario px-6 py-3 font-extrabold text-white shadow-boton">Ver mis facturas</Link>
+      </div>
+    );
+  }
+  if (det.estado === 'error' && !det.dato) return <AvisoApi error={det.error} onReintentar={det.recargar} />;
+  if (!det.dato) return <div aria-busy="true" className="skeleton h-[560px] rounded-tarjeta-lg" />;
+
+  const { comprobante: f, emisor } = det.dato;
+  const datos = datosComprobante(f, emisor);
 
   async function copiarLink() {
     try {
@@ -102,32 +58,13 @@ export default function FacturaEmitida() {
     }
   }
 
-  const datos: DatosComprobanteC = {
-    emisor: EMISOR,
-    puntoVenta: f.puntoVenta,
-    numero: f.numero,
-    fechaEmision: fecha(f.fecha),
-    periodo: f.periodo ?? undefined,
-    receptor: f.receptor ?? {
-      cuit: '',
-      nombre: f.clienteNombre,
-      condicionIva: 'Consumidor Final',
-      domicilio: '—',
-      condicionVenta: 'Contado',
-    },
-    items: f.items ?? [{ descripcion: 'Servicios', cantidad: 1, precioUnitario: f.total }],
-    cae: f.cae,
-    caeVto: fecha(f.vencimientoCae),
-    qrUrl: f.qr,
-  };
-
   const DATOS: [string, string][] = [
-    ['Comprobante', `Factura ${f.letra} ${nro(f.puntoVenta, f.numero)}`],
-    ['Total', pesos(f.total)],
-    ['Cliente', f.clienteNombre],
+    ['Comprobante', `Factura ${f.sigla} ${numeroComprobante(f.puntoVenta, f.numero)}`],
+    ['Total', pesos(f.total, true)],
+    ['Cliente', nombreCliente(f)],
     ['Fecha de emisión', fecha(f.fecha)],
     ['CAE', f.cae],
-    ['Vencimiento del CAE', fecha(f.vencimientoCae)],
+    ['Vencimiento del CAE', fecha(f.caeVto)],
   ];
 
   return (
@@ -140,7 +77,7 @@ export default function FacturaEmitida() {
             <div className="flex flex-col gap-1.5 text-exito-texto">
               <span className="flex items-center gap-1.5 text-sm font-extrabold"><Ic><path d="M5 12.5l4.5 4.5L19 7.5" /></Ic>Autorizada por ARCA</span>
               <h1 className="text-[32px] font-bold leading-tight text-texto">¡Listo! Tu factura ya es válida</h1>
-              <span className="text-[15px] text-exito-texto">Y ya se la mandé a tu cliente por email.</span>
+              <span className="text-[15px] text-exito-texto">Ya quedó guardada. Descargala o compartila con tu cliente.</span>
             </div>
           </div>
 
@@ -172,7 +109,7 @@ export default function FacturaEmitida() {
           <section className="flex flex-col gap-3.5 rounded-tarjeta bg-superficie p-7 shadow-tarjeta">
             <h2 className="text-[20px] font-bold">¿Qué querés hacer ahora?</h2>
             <div className="flex flex-wrap gap-3">
-              <Link href="/app" className="flex-1 basis-[200px] rounded-[16px] bg-fondo p-4 transition-colors hover:bg-primario-suave">
+              <Link href={`/app/facturas/${f.id}`} className="flex-1 basis-[200px] rounded-[16px] bg-fondo p-4 transition-colors hover:bg-primario-suave">
                 <strong className="block">Registrar el cobro</strong>
                 <span className="text-sm text-texto-suave">Cuando te paguen, marcala como cobrada</span>
               </Link>

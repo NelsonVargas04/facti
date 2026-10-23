@@ -1,10 +1,13 @@
 'use client';
 
+import { AvisoApi } from '@/components/AvisoApi';
 import { BackLink } from '@/components/BackLink';
 import { Facti } from '@/components/Facti';
 import { Icon } from '@/components/Icon';
 import { ConsumoPlan } from '@/components/UsoPlan';
+import { verCuenta } from '@/lib/api';
 import { PLAN_DEMO } from '@/lib/plan-demo';
+import { useApi } from '@/lib/useApi';
 
 type Valor = string | boolean;
 const BENEFICIOS: { f: string; gratis: Valor; pro: Valor }[] = [
@@ -24,6 +27,7 @@ function Celda({ v, pro }: { v: Valor; pro?: boolean }) {
 }
 
 export default function PlanPro() {
+  const cuenta = useApi(verCuenta, []);
   return (
     <>
       <div className="aparece">
@@ -42,7 +46,13 @@ export default function PlanPro() {
 
       {/* Consumo actual */}
       <div style={{ animationDelay: '90ms' }} className="aparece">
-        <ConsumoPlan />
+        {cuenta.dato ? (
+          <ConsumoPlan plan={cuenta.dato.plan} />
+        ) : cuenta.estado === 'error' ? (
+          <AvisoApi error={cuenta.error} onReintentar={cuenta.recargar} compacto />
+        ) : (
+          <div className="skeleton h-[150px] rounded-tarjeta" />
+        )}
       </div>
 
       <div className="flex flex-wrap items-stretch gap-6">

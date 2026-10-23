@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"facti/api/internal/config"
+	"facti/api/internal/cuit"
 	"facti/api/internal/servidor"
 )
 
@@ -25,6 +26,9 @@ func main() {
 	} else {
 		log.Warn("no se encontró .env: copiá .env.example a .env en la raíz del repo para conectar con ARCA")
 	}
+	if cfg.DatabaseURL == "" {
+		log.Warn("falta DATABASE_URL: las facturas, clientes y cobros no se pueden guardar ni leer")
+	}
 	if cfg.Entorno == "produccion" {
 		log.Warn("ATENCIÓN: ARCA en PRODUCCIÓN. Los comprobantes son reales.")
 	}
@@ -33,6 +37,9 @@ func main() {
 		Addr: fmt.Sprintf(":%d", cfg.Puerto),
 		Handler: servidor.Nuevo(servidor.Opciones{
 			Arca:        servidor.ClientesPerezosos(cfg),
+			Datos:       servidor.DatosPerezosos(cfg.DatabaseURL),
+			CuitEmisor:  cuit.Limpiar(cfg.CuitEmisor),
+			PuntoVenta:  cfg.PuntoVenta,
 			Entorno:     cfg.Entorno,
 			OrigenesWeb: cfg.OrigenesWeb,
 			Log:         log,

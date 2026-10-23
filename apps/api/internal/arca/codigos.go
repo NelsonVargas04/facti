@@ -100,3 +100,37 @@ func LetraDeTipo(tipo int) string {
 }
 
 func esTipoC(tipo int) bool { return LetraDeTipo(tipo) == "C" }
+
+// FacturaE es el tipo de comprobante de la Factura de exportación (WSFEX).
+const FacturaE = 19
+
+// EsNotaCredito indica si el tipo es una nota de crédito A, B, C o M.
+func EsNotaCredito(tipo int) bool {
+	switch tipo {
+	case NotaCreditoA, NotaCreditoB, NotaCreditoC, NotaCreditoM:
+		return true
+	}
+	return false
+}
+
+// EsNotaDebito indica si el tipo es una nota de débito A, B, C o M.
+func EsNotaDebito(tipo int) bool {
+	switch tipo {
+	case NotaDebitoA, NotaDebitoB, NotaDebitoC, NotaDebitoM:
+		return true
+	}
+	return false
+}
+
+// Sigla corta para mostrar en la app: A, B, C, M, E, NC o ND.
+func Sigla(tipo int) string {
+	switch {
+	case tipo == FacturaE:
+		return "E"
+	case EsNotaCredito(tipo):
+		return "NC"
+	case EsNotaDebito(tipo):
+		return "ND"
+	}
+	return LetraDeTipo(tipo)
+}

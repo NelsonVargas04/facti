@@ -1,9 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import type { FacturaRow } from '@/lib/facturas-demo';
-
-export type { FacturaRow };
+import type { Cobro, Comprobante } from '@/lib/api';
+import { nombreCliente } from '@/lib/comprobante';
+import { fechaCorta, importe, numeroComprobante } from '@/lib/formato';
 
 function colorTipo(t: string): string {
   if (t === 'E') return 'bg-acento text-texto';
@@ -28,17 +28,16 @@ function Estado({ tono, children }: { tono: Tono; children: React.ReactNode }) {
   );
 }
 
-function ChipArca({ estado }: { estado: FacturaRow['arca'] }) {
-  if (estado === 'Autorizada') return <Estado tono="ok">Autorizada</Estado>;
-  if (estado === 'En espera') return <Estado tono="warn">En espera</Estado>;
-  return <Estado tono="err">Rechazada</Estado>;
-}
-
-function ChipCobro({ estado }: { estado: FacturaRow['cobro'] }) {
-  if (estado === 'Cobrada') return <Estado tono="ok">Cobrada</Estado>;
-  if (estado === 'Pendiente') return <Estado tono="warn">Pendiente</Estado>;
+export function ChipCobro({ estado }: { estado: Cobro }) {
+  if (estado === 'cobrada') return <Estado tono="ok">Cobrada</Estado>;
+  if (estado === 'pendiente') return <Estado tono="warn">Pendiente</Estado>;
   return <span className="text-texto-tenue">—</span>;
 }
+
+export { colorTipo };
+
+/** Total con signo: las notas de crédito se muestran en negativo. */
+export const totalFirmado = (c: Comprobante) => (c.sigla === 'NC' ? -c.total : c.total);
 
 /** Placeholder animado mientras cargan las facturas. */
 export function TablaSkeleton({ filas = 5 }: { filas?: number }) {
@@ -65,7 +64,7 @@ export function TablaSkeleton({ filas = 5 }: { filas?: number }) {
 const th = 'border-b-2 border-[#EDF0F6] px-4 pb-3 font-extrabold';
 const td = 'px-4 py-4 align-middle';
 
-export function TablaFacturas({ rows }: { rows: FacturaRow[] }) {
+export function TablaFacturas({ rows }: { rows: Comprobante[] }) {
   const router = useRouter();
   return (
     <div className="overflow-x-auto">
@@ -83,20 +82,26 @@ export function TablaFacturas({ rows }: { rows: FacturaRow[] }) {
           </tr>
         </thead>
         <tbody>
-          {rows.map((f) => (
+          {rows.map((f) => {
+            const total = totalFirmado(f);
+            const ir = () => router.push(`/app/facturas/${f.id}`);
+            return (
             <tr
-              key={f.num}
-              onClick={() => router.push(`/app/facturas/${f.num}`)}
-              className="group cursor-pointer border-b border-[#F0F2F7] transition-colors last:border-0 hover:bg-fondo"
+              key={f.id}
+              onClick={ir}
+              onKeyDown={(e) => e.key === 'Enter' && ir()}
+              tabIndex={0}
+              aria-label={`Ver ${f.sigla} ${numeroComprobante(f.puntoVenta, f.numero)}`}
+              className="group cursor-pointer border-b border-[#F0F2F7] transition-colors last:border-0 hover:bg-fondo focus-visible:bg-fondo focus-visible:outline-none"
             >
               <td className={`${td} text-center`}>
-                <span className={`inline-flex h-8 min-w-[34px] items-center justify-center rounded-[10px] px-2 text-[13px] font-extrabold ${colorTipo(f.tipo)}`}>{f.tipo}</span>
+                <span className={`inline-flex h-8 min-w-[34px] items-center justify-center rounded-[10px] px-2 text-[13px] font-extrabold ${colorTipo(f.sigla)}`}>{f.sigla}</span>
               </td>
-              <td className={`${td} whitespace-nowrap tabular-nums text-texto-suave`}>{f.num}</td>
-              <td className={`${td} font-bold`}>{f.cliente}</td>
-              <td className={`${td} whitespace-nowrap text-center tabular-nums text-texto-suave`}>{f.fecha}</td>
-              <td className={`${td} whitespace-nowrap text-right font-extrabold tabular-nums ${f.total.startsWith('-') ? 'text-[#B4232B]' : ''}`}>{f.total}</td>
-              <td className={`${td} text-center`}><ChipArca estado={f.arca} /></td>
+              <td className={`${td} whitespace-nowrap tabular-nums text-texto-suave`}>{numeroComprobante(f.puntoVenta, f.numero)}</td>
+              <td className={`${td} font-bold`}>{nombreCliente(f)}</td>
+              <td className={`${td} whitespace-nowrap text-center tabular-nums text-texto-suave`}>{fechaCorta(f.fecha)}</td>
+              <td className={`${td} whitespace-nowrap text-right font-extrabold tabular-nums ${total < 0 ? 'text-[#B4232B]' : ''}`}>{importe(total, f.moneda)}</td>
+              <td className={`${td} text-center`}><Estado tono="ok">Autorizada</Estado></td>
               <td className={`${td} text-center`}><ChipCobro estado={f.cobro} /></td>
               <td className={`${td} text-center text-texto-tenue`}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="opacity-0 transition-opacity group-hover:opacity-100">
@@ -104,7 +109,8 @@ export function TablaFacturas({ rows }: { rows: FacturaRow[] }) {
                 </svg>
               </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>

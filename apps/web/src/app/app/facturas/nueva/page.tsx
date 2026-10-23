@@ -6,7 +6,10 @@ import { useRouter } from 'next/navigation';
 import { BackLink } from '@/components/BackLink';
 import { Facti } from '@/components/Facti';
 import { Select } from '@/components/Select';
-import { buscarPadron, emitirFactura, COND_IVA_RECEPTOR, type PadronDatos, type Resultado } from '@/lib/api';
+import { AvisoApi } from '@/components/AvisoApi';
+import { buscarPadron, emitirFactura, verCuenta, COND_IVA_RECEPTOR, type ErrorApi, type PadronDatos } from '@/lib/api';
+import { hoyAR, rangoMes } from '@/lib/formato';
+import { useApi } from '@/lib/useApi';
 
 type Tipo = 'C' | 'E';
 interface Item {
@@ -32,6 +35,16 @@ function isoFecha(ddmmyyyy: string): string {
   if (!d || !m || !y) return '';
   return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
 }
+/** AAAA-MM-DD → dd/mm/aaaa */
+const ddmmyyyy = (iso: string) => iso.split('-').reverse().join('/');
+/** Fechas iniciales: hoy, el mes en curso como período y vencimiento a 10 días. */
+function fechasIniciales() {
+  const hoy = hoyAR();
+  const { desde, hasta } = rangoMes(hoy);
+  const vence = new Date(`${hoy}T12:00:00Z`);
+  vence.setUTCDate(vence.getUTCDate() + 10);
+  return { hoy: ddmmyyyy(hoy), desde: ddmmyyyy(desde), hasta: ddmmyyyy(hasta), vence: ddmmyyyy(vence.toISOString().slice(0, 10)) };
+}
 
 const COND_LABEL: Record<PadronDatos['condicion'], string> = {
   responsable_inscripto: 'Responsable Inscripto',
@@ -39,13 +52,6 @@ const COND_LABEL: Record<PadronDatos['condicion'], string> = {
   exento: 'Exento',
   consumidor_final: 'Consumidor final',
   no_alcanzado: 'No alcanzado',
-};
-const COND_IVA_COMPROBANTE: Record<PadronDatos['condicion'], string> = {
-  responsable_inscripto: 'IVA Responsable Inscripto',
-  monotributo: 'Responsable Monotributo',
-  exento: 'IVA Exento',
-  consumidor_final: 'Consumidor Final',
-  no_alcanzado: 'IVA No Alcanzado',
 };
 
 const TIPOS: { id: Tipo | 'A' | 'B' | 'M'; letra: string; nombre: string; hab: boolean; nota: string; detalle: string }[] = [
@@ -88,19 +94,28 @@ const labelCls = 'flex flex-col gap-2 text-sm font-bold';
 
 let proximoId = 3;
 
-function Aviso({ res }: { res: Extract<Resultado<unknown>, { ok: false }> }) {
-  if (res.estado === 503) {
+function Aviso({ res }: { res: ErrorApi }) {
+  if (res.codigo === 'configuracion') {
     return (
-      <div className="flex flex-col gap-1 rounded-[14px] bg-aviso-suave px-4 py-3 text-sm font-bold text-aviso-texto">
-        <span>Todavía no conectaste Facti con ARCA.</span>
+      <div role="alert" className="flex flex-col gap-1 rounded-[14px] bg-aviso-suave px-4 py-3 text-sm font-bold text-aviso-texto">
+        <span>Todavía no conectaste Facti con ARCA. {res.mensaje}</span>
         <Link href="/onboarding/arca" className="font-extrabold text-primario-oscuro underline">Conectar ahora</Link>
       </div>
     );
   }
-  if (res.estado === 501) {
-    return <div className="rounded-[14px] bg-aviso-suave px-4 py-3 text-sm font-bold text-aviso-texto">{res.mensaje}</div>;
+  if (res.codigo === 'base_datos' || res.codigo === 'sin_conexion') return <AvisoApi error={res} compacto />;
+  if (res.codigo === 'limite_plan') {
+    return (
+      <div role="alert" className="flex flex-col gap-1 rounded-[14px] bg-aviso-suave px-4 py-3 text-sm font-bold text-aviso-texto">
+        <span>{res.mensaje}</span>
+        <Link href="/app/plan" className="font-extrabold text-primario-oscuro underline">Ver el plan Pro</Link>
+      </div>
+    );
   }
-  return <div className="rounded-[14px] bg-[#FDE8EA] px-4 py-3 text-sm font-bold text-[#B4232B]">{res.mensaje}</div>;
+  if (res.estado === 501) {
+    return <div role="alert" className="rounded-[14px] bg-aviso-suave px-4 py-3 text-sm font-bold text-aviso-texto">{res.mensaje}</div>;
+  }
+  return <div role="alert" className="rounded-[14px] bg-[#FDE8EA] px-4 py-3 text-sm font-bold text-[#B4232B]">{res.mensaje}</div>;
 }
 
 export default function NuevaFactura() {
@@ -109,11 +124,14 @@ export default function NuevaFactura() {
   const [incluyeServicio, setIncluyeServicio] = useState(true);
 
   // Receptor nacional (C)
+  const cuenta = useApi(verCuenta, []);
+  const puntoVenta = cuenta.dato ? String(cuenta.dato.cuenta.puntoVenta).padStart(4, '0') : '…';
+  const [iniciales] = useState(fechasIniciales);
   const [docTipo, setDocTipo] = useState(80);
-  const [cuit, setCuit] = useState('30-71589632-7');
+  const [cuit, setCuit] = useState('');
   const [padron, setPadron] = useState<PadronDatos | null>(null);
   const [buscando, setBuscando] = useState(false);
-  const [padronMsg, setPadronMsg] = useState<Extract<Resultado<unknown>, { ok: false }> | null>(null);
+  const [padronMsg, setPadronMsg] = useState<ErrorApi | null>(null);
   const [condicionVenta, setCondicionVenta] = useState('Transferencia bancaria');
 
   // Receptor del exterior (E)
@@ -125,19 +143,17 @@ export default function NuevaFactura() {
   const [formaPago, setFormaPago] = useState('Transferencia');
   const [incoterms, setIncoterms] = useState('No aplica (servicios)');
 
-  const [email, setEmail] = useState('admin@estudiolumen.com.ar');
-  const [fecha, setFecha] = useState('14/10/2026');
-  const [desde, setDesde] = useState('01/10/2026');
-  const [hasta, setHasta] = useState('31/10/2026');
-  const [vence, setVence] = useState('24/10/2026');
+  const [email, setEmail] = useState('');
+  const [fecha, setFecha] = useState(iniciales.hoy);
+  const [desde, setDesde] = useState(iniciales.desde);
+  const [hasta, setHasta] = useState(iniciales.hasta);
+  const [vence, setVence] = useState(iniciales.vence);
 
-  const [items, setItems] = useState<Item[]>([
-    { id: 1, desc: 'Diseño de logo e identidad', cant: '1', unidad: 'unidades', precio: '70.000,00' },
-    { id: 2, desc: 'Adaptación para redes', cant: '3', unidad: 'unidades', precio: '5.000,00' },
-  ]);
+  const [items, setItems] = useState<Item[]>([{ id: 1, desc: '', cant: '1', unidad: 'unidades', precio: '' }]);
 
   const [emitiendo, setEmitiendo] = useState(false);
-  const [emitirMsg, setEmitirMsg] = useState<Extract<Resultado<unknown>, { ok: false }> | null>(null);
+  const [emitirMsg, setEmitirMsg] = useState<ErrorApi | null>(null);
+  const [yaAutorizada, setYaAutorizada] = useState(false);
 
   const total = useMemo(() => items.reduce((acc, it) => acc + parseNum(it.cant) * parseNum(it.precio), 0), [items]);
   const conServicio = incluyeServicio;
@@ -170,39 +186,43 @@ export default function NuevaFactura() {
       setEmitirMsg({ ok: false, estado: 501, mensaje: 'La Factura E (exportación) se emite con el web service WSFEX de ARCA, que estamos integrando. Es parte del plan Pro.' });
       return;
     }
+    if (!esCF && !padron && cuit.replace(/\D/g, '').length < 7) {
+      setEmitirMsg({ ok: false, estado: 400, mensaje: 'Cargá el CUIT o DNI de tu cliente (o elegí Consumidor final).' });
+      return;
+    }
+    if (items.some((it) => !it.desc.trim() || parseNum(it.precio) <= 0)) {
+      setEmitirMsg({ ok: false, estado: 400, mensaje: 'Completá la descripción y el precio de cada ítem.' });
+      return;
+    }
     setEmitiendo(true);
     const receptor = esCF
-      ? { docTipo: 99, docNro: '0', condicionIvaReceptorId: 5 }
+      ? { docTipo: 99, docNro: '0', condicionIvaReceptorId: 5, nombre: 'Consumidor final', condicion: 'consumidor_final', email }
       : padron
-        ? { docTipo, docNro: padron.cuit.replace(/\D/g, ''), condicionIvaReceptorId: COND_IVA_RECEPTOR[padron.condicion] }
-        : { docTipo, docNro: cuit.replace(/\D/g, ''), condicionIvaReceptorId: 5 };
-    const req = {
+        ? {
+            docTipo,
+            docNro: padron.cuit.replace(/\D/g, ''),
+            condicionIvaReceptorId: COND_IVA_RECEPTOR[padron.condicion],
+            nombre: padron.nombre,
+            condicion: padron.condicion,
+            domicilio: padron.domicilio,
+            email,
+          }
+        : { docTipo, docNro: cuit.replace(/\D/g, ''), condicionIvaReceptorId: 5, condicion: 'consumidor_final', email };
+    const res = await emitirFactura({
       receptor,
-      concepto: (incluyeServicio ? 2 : 1) as 1 | 2 | 3,
+      concepto: incluyeServicio ? 2 : 1,
       fecha: isoFecha(fecha),
+      condicionVenta,
       periodoServicio: conServicio ? { desde: isoFecha(desde), hasta: isoFecha(hasta), vencimientoPago: isoFecha(vence) } : undefined,
       items: items.map((it) => ({ descripcion: it.desc, cantidad: parseNum(it.cant), unidad: it.unidad, precioUnitario: parseNum(it.precio) })),
-    };
-    const res = await emitirFactura(req);
+    });
     setEmitiendo(false);
     if (res.ok) {
-      sessionStorage.setItem(
-        'facti:ultima-factura',
-        JSON.stringify({
-          ...res.dato,
-          clienteNombre: esCF ? 'Consumidor final' : padron?.nombre ?? 'Consumidor final',
-          receptor: {
-            cuit: esCF ? '' : padron?.cuit ?? cuit,
-            nombre: esCF ? 'Consumidor final' : padron?.nombre ?? 'Consumidor final',
-            condicionIva: esCF ? 'Consumidor Final' : padron ? COND_IVA_COMPROBANTE[padron.condicion] : 'Consumidor Final',
-            domicilio: padron?.domicilio ?? '—',
-            condicionVenta,
-          },
-          periodo: conServicio ? { desde, hasta, vtoPago: vence } : null,
-          items: req.items,
-        }),
-      );
-      router.push('/app/facturas/emitida');
+      router.push(`/app/facturas/emitida?id=${res.dato.id}`);
+    } else if (res.codigo === 'no_guardado') {
+      // ARCA ya la autorizó: no hay que reintentar. Mostramos el aviso y bloqueamos el botón.
+      setEmitirMsg(res);
+      setYaAutorizada(true);
     } else {
       setEmitirMsg(res);
     }
@@ -218,7 +238,7 @@ export default function NuevaFactura() {
         </div>
         <span className="inline-flex items-center gap-2.5 rounded-input bg-primario-suave px-4 py-2.5 font-extrabold text-primario-oscuro">
           <span className="rounded-lg bg-primario px-2.5 py-0.5 text-white">{tipo}</span>
-          {esE ? 'Factura E · Exportación' : 'Factura C · Punto de venta 0003'}
+          {esE ? 'Factura E · Exportación' : `Factura C · Punto de venta ${puntoVenta}`}
         </span>
       </div>
 
@@ -427,7 +447,7 @@ export default function NuevaFactura() {
               <span className="font-display text-[32px] font-bold">{fmt(total, simboloMoneda)}</span>
             </div>
             {emitirMsg && <Aviso res={emitirMsg} />}
-            <button type="button" onClick={emitir} disabled={emitiendo} className="btn-lift flex h-[54px] items-center justify-center gap-2 rounded-full bg-primario text-[17px] font-extrabold text-white shadow-boton disabled:opacity-60">
+            <button type="button" onClick={emitir} disabled={emitiendo || yaAutorizada} className="btn-lift flex h-[54px] items-center justify-center gap-2 rounded-full bg-primario text-[17px] font-extrabold text-white shadow-boton disabled:opacity-60">
               {emitiendo ? 'Emitiendo…' : `Emitir y enviar Factura ${tipo}`}
             </button>
             <button type="button" className="btn-lift h-[50px] rounded-full border-[1.5px] border-borde bg-white text-base font-extrabold text-texto">Guardar borrador</button>

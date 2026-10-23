@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { FactiWordmark } from '@/components/FactiLogo';
 import { Icon, type IconName } from '@/components/Icon';
+import { verCuenta } from '@/lib/api';
+import { formatearCuit } from '@/lib/formato';
+import { useApi } from '@/lib/useApi';
 
 interface Item {
   href: string;
@@ -22,6 +25,7 @@ const ITEMS: Item[] = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const cuenta = useApi(verCuenta, []);
 
   return (
     <aside className="flex max-w-[280px] flex-1 basis-[240px] flex-col gap-[22px] border-r border-[#E6EAF2] bg-superficie px-[18px] py-6">
@@ -56,12 +60,14 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="mt-auto flex flex-col gap-1 rounded-[18px] bg-exito-suave px-4 py-3.5 text-[13px] text-exito-texto">
-        <strong className="flex items-center gap-2 text-sm">
-          <span className="h-[9px] w-[9px] rounded-full bg-exito" />Conectado a ARCA
-        </strong>
-        <span>CUIT 27-31456789-4 · Punto de venta 0003</span>
-      </div>
+      {cuenta.dato && (
+        <div className="mt-auto flex flex-col gap-1 rounded-[18px] bg-fondo px-4 py-3.5 text-[13px] text-texto-suave">
+          <strong className="text-sm text-texto">{cuenta.dato.cuenta.nombre || 'Tu cuenta'}</strong>
+          <span>
+            CUIT {formatearCuit(cuenta.dato.cuenta.cuit)} · Punto de venta {String(cuenta.dato.cuenta.puntoVenta).padStart(4, '0')}
+          </span>
+        </div>
+      )}
     </aside>
   );
 }

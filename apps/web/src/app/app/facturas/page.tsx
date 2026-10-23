@@ -2,12 +2,16 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { AvisoApi } from '@/components/AvisoApi';
 import { Facti } from '@/components/Facti';
 import { Select } from '@/components/Select';
-import { TablaFacturas } from '@/components/TablaFacturas';
-import { FACTURAS_DEMO, montoDe } from '@/lib/facturas-demo';
+import { TablaFacturas, TablaSkeleton } from '@/components/TablaFacturas';
+import { listarComprobantes, type Cobro } from '@/lib/api';
+import { hoyAR, rangoMes } from '@/lib/formato';
+import { useApi, useDemorado } from '@/lib/useApi';
 
 type Filtro = 'todas' | 'cobradas' | 'pendientes';
+const COBRO: Record<Filtro, Cobro> = { todas: '', cobradas: 'cobrada', pendientes: 'pendiente' };
 const ORDENES = [
   { value: 'reciente', label: 'Más reciente' },
   { value: 'antigua', label: 'Más antigua' },
@@ -31,30 +35,19 @@ const PERIODOS = [
   { value: 'todas', label: 'Todo el historial' },
 ];
 
-// Demo: las fechas vienen como dd/mm; asumimos el año y tomamos como referencia la factura más reciente.
-const ANIO_DEMO = 2026;
-const fechaDe = (f: { fecha: string }) => {
-  const [d, m] = f.fecha.split('/').map(Number);
-  return new Date(ANIO_DEMO, (m ?? 1) - 1, d ?? 1);
-};
-const REF = FACTURAS_DEMO.reduce((max, f) => (fechaDe(f) > max ? fechaDe(f) : max), new Date(0));
-function enPeriodo(f: { fecha: string }, periodo: string): boolean {
-  if (periodo === 'todas') return true;
-  const d = fechaDe(f);
-  if (periodo === 'mes') return d.getMonth() === REF.getMonth() && d.getFullYear() === REF.getFullYear();
-  if (periodo === 'mespasado') {
-    const r = new Date(REF.getFullYear(), REF.getMonth() - 1, 1);
-    return d.getMonth() === r.getMonth() && d.getFullYear() === r.getFullYear();
+/** Rango de fechas del período elegido, en hora de Argentina. */
+function rangoDe(periodo: string): { desde?: string; hasta?: string } {
+  const hoy = hoyAR();
+  switch (periodo) {
+    case 'mes': return rangoMes(hoy);
+    case 'mespasado': return rangoMes(hoy, -1);
+    case 'trim': return { desde: rangoMes(hoy, -2).desde, hasta: rangoMes(hoy).hasta };
+    case 'anio': return { desde: `${hoy.slice(0, 4)}-01-01`, hasta: `${hoy.slice(0, 4)}-12-31` };
+    default: return {};
   }
-  if (periodo === 'trim') {
-    const lim = new Date(REF.getFullYear(), REF.getMonth() - 2, 1);
-    return d >= lim && d <= REF;
-  }
-  if (periodo === 'anio') return d.getFullYear() === REF.getFullYear();
-  return true;
 }
 
-const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const POR_PAGINA = 10;
 
 export default function Facturas() {
   const [q, setQ] = useState('');
@@ -62,44 +55,23 @@ export default function Facturas() {
   const [periodo, setPeriodo] = useState('mes');
   const [orden, setOrden] = useState('reciente');
   const [pagina, setPagina] = useState(1);
-  const POR_PAGINA = 6;
+  const qDemorado = useDemorado(q.trim());
 
-  const filtradas = useMemo(() => {
-    const n = norm(q.trim());
-    return FACTURAS_DEMO.filter((f) => {
-      if (!enPeriodo(f, periodo)) return false;
-      if (filtro === 'cobradas' && f.cobro !== 'Cobrada') return false;
-      if (filtro === 'pendientes' && f.cobro !== 'Pendiente') return false;
-      if (!n) return true;
-      return norm(f.cliente).includes(n) || f.num.includes(n);
-    });
-  }, [q, filtro, periodo]);
+  useEffect(() => setPagina(1), [qDemorado, filtro, orden, periodo]);
 
-  const ordenadas = useMemo(() => {
-    const arr = [...filtradas];
-    const fechaKey = (f: (typeof arr)[number]) => {
-      const [d, m] = f.fecha.split('/').map(Number);
-      return (m ?? 0) * 100 + (d ?? 0);
-    };
-    const montoKey = (f: (typeof arr)[number]) => montoDe(f.total) * (f.total.startsWith('-') ? -1 : 1);
-    switch (orden) {
-      case 'antigua': arr.sort((a, b) => fechaKey(a) - fechaKey(b)); break;
-      case 'cliente': arr.sort((a, b) => a.cliente.localeCompare(b.cliente, 'es')); break;
-      case 'numero': arr.sort((a, b) => a.num.localeCompare(b.num)); break;
-      case 'mayor': arr.sort((a, b) => montoKey(b) - montoKey(a)); break;
-      case 'menor': arr.sort((a, b) => montoKey(a) - montoKey(b)); break;
-      default: arr.sort((a, b) => fechaKey(b) - fechaKey(a)); // más reciente
-    }
-    return arr;
-  }, [filtradas, orden]);
+  const filtroApi = useMemo(
+    () => ({ ...rangoDe(periodo), q: qDemorado, cobro: COBRO[filtro], orden, limite: POR_PAGINA, saltar: (pagina - 1) * POR_PAGINA }),
+    [periodo, qDemorado, filtro, orden, pagina],
+  );
+  const lista = useApi(() => listarComprobantes(filtroApi), [filtroApi]);
 
-  useEffect(() => setPagina(1), [q, filtro, orden, periodo]);
-
-  const totalPaginas = Math.max(1, Math.ceil(ordenadas.length / POR_PAGINA));
+  const total = lista.dato?.total ?? 0;
+  const visibles = lista.dato?.comprobantes ?? [];
+  const totalPaginas = Math.max(1, Math.ceil(total / POR_PAGINA));
   const paginaActual = Math.min(pagina, totalPaginas);
-  const visibles = ordenadas.slice((paginaActual - 1) * POR_PAGINA, paginaActual * POR_PAGINA);
-  const desde = filtradas.length ? (paginaActual - 1) * POR_PAGINA + 1 : 0;
-  const hasta = Math.min(paginaActual * POR_PAGINA, filtradas.length);
+  const desde = total ? (paginaActual - 1) * POR_PAGINA + 1 : 0;
+  const hasta = Math.min(paginaActual * POR_PAGINA, total);
+  const hayFiltros = qDemorado !== '' || filtro !== 'todas' || periodo !== 'todas';
 
   return (
     <>
@@ -144,12 +116,19 @@ export default function Facturas() {
       </div>
 
       {/* Tabla / vacío */}
-      <section style={{ animationDelay: '160ms' }} className="aparece rounded-tarjeta bg-superficie p-6 shadow-tarjeta">
-        {filtradas.length > 0 ? (
+      <section style={{ animationDelay: '160ms' }} aria-busy={lista.estado === 'cargando'} className="aparece rounded-tarjeta bg-superficie p-6 shadow-tarjeta">
+        {lista.estado === 'error' && !lista.dato ? (
+          <AvisoApi error={lista.error} onReintentar={lista.recargar} />
+        ) : !lista.dato ? (
+          <TablaSkeleton filas={6} />
+        ) : total > 0 ? (
           <>
-            <TablaFacturas rows={visibles} />
+            {lista.estado === 'error' && <div className="mb-3"><AvisoApi error={lista.error} onReintentar={lista.recargar} compacto /></div>}
+            <div className={lista.estado === 'cargando' ? 'opacity-60 transition-opacity' : 'transition-opacity'}>
+              <TablaFacturas rows={visibles} />
+            </div>
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-              <span className="text-sm text-texto-tenue">Mostrando {desde}–{hasta} de {filtradas.length}</span>
+              <span className="text-sm text-texto-tenue">Mostrando {desde}–{hasta} de {total}</span>
               {totalPaginas > 1 && (
                 <div className="flex items-center gap-1">
                   <button type="button" onClick={() => setPagina((p) => Math.max(1, p - 1))} disabled={paginaActual === 1} aria-label="Página anterior" className="flex h-9 w-9 items-center justify-center rounded-[10px] border-[1.5px] border-borde text-texto-suave transition-colors hover:border-primario hover:text-primario disabled:opacity-40">
@@ -172,8 +151,13 @@ export default function Facturas() {
         ) : (
           <div className="flex flex-col items-center gap-3 py-12 text-center">
             <Facti pose="durmiendo" size={150} animated />
-            <h2 className="text-[20px] font-bold">No encontramos facturas</h2>
-            <p className="max-w-[360px] text-texto-suave">Probá con otra búsqueda o cambiá el filtro. Cuando emitas una, va a aparecer acá.</p>
+            <h2 className="text-[20px] font-bold">{hayFiltros ? 'No encontramos facturas' : 'Todavía no emitiste facturas'}</h2>
+            <p className="max-w-[360px] text-texto-suave">
+              {hayFiltros ? 'Probá con otra búsqueda o cambiá el período o el estado.' : 'Cuando emitas la primera, va a aparecer acá.'}
+            </p>
+            {!hayFiltros && (
+              <Link href="/app/facturas/nueva" className="btn-lift rounded-full bg-primario px-6 py-3 font-extrabold text-white shadow-boton">Emitir factura</Link>
+            )}
           </div>
         )}
       </section>

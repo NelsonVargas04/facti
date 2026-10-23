@@ -64,9 +64,9 @@ CAEA de contingencia, FCE MiPyME (WSFECred), constatación de comprobantes (WSCD
 - Pantallas diseñadas: landing, crear cuenta, perfil fiscal, autorizar en ARCA, inicio, emitir factura, factura emitida, pagos de monotributo, y PDFs de Factura A, C y E.
 
 ## Estructura del repo
-- Monorepo con pnpm workspaces, Node >= 20.6 y Go >= 1.24.
-- `apps/api`: **backend en Go** (`net/http`, módulo `facti/api`). `internal/arca` (WSAA, WSFEv1, padrón A5, QR, códigos), `internal/servidor` (rutas, CORS, errores), `internal/cuit`, `internal/config` (lee el `.env` de la raíz). `cmd/api` es el server y `cmd/arca` las pruebas manuales (`pnpm arca:probar|padron|factura-c`). Tests con `go test ./...`.
-- `apps/web`: Next.js (App Router), puerto 3000. Habla con la API por `NEXT_PUBLIC_API_URL` (por defecto http://localhost:4000).
+- Monorepo con pnpm workspaces, Node >= 20.6 y Go >= 1.25.
+- `apps/api`: **backend en Go** (`net/http`, módulo `facti/api`). `internal/arca` (WSAA, WSFEv1, padrón A5, QR, códigos), `internal/servidor` (rutas, CORS, errores), `internal/cuit`, `internal/config` (lee el `.env` de la raíz), `internal/datos` (Postgres/Supabase con pgx en el esquema `facti`, migraciones embebidas en `migraciones/`; `Memoria` implementa la misma interfaz para tests y `TestContrato` prueba las dos). Por ahora hay una sola cuenta (la de `ARCA_CUIT_EMISOR`); el login queda para después. `cmd/api` es el server y `cmd/arca` las pruebas manuales (`pnpm arca:probar|padron|factura-c`). Tests con `go test ./...`.
+- `apps/web`: Next.js (App Router), puerto 3000. Habla con la API por `NEXT_PUBLIC_API_URL` (por defecto http://localhost:4000) con `lib/api.ts` y el hook `lib/useApi.ts`; los errores se muestran con `components/AvisoApi`. Solo los pagos de monotributo siguen con datos de ejemplo.
 - `packages/shared`: validación de CUIT y parámetros normativos con vigencia (TS, para la web).
 - `packages/arca` y `scripts`: versión anterior en TypeScript, queda como referencia. Los cambios nuevos de ARCA van en Go.
 - `pnpm dev` levanta web y API juntas; `pnpm test` corre vitest y go test.

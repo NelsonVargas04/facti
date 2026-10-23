@@ -1,13 +1,18 @@
 package servidor
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
+	"math"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"facti/api/internal/arca"
 	"facti/api/internal/cuit"
+	"facti/api/internal/datos"
 )
 
 func (s *Servidor) raiz(w http.ResponseWriter, _ *http.Request) {
@@ -21,6 +26,12 @@ func (s *Servidor) raiz(w http.ResponseWriter, _ *http.Request) {
 			"GET /arca/condiciones-iva?clase=C",
 			"GET /arca/padron/{cuit}",
 			"POST /facturas",
+			"GET /cuenta",
+			"GET /resumen?mes=AAAA-MM",
+			"GET /comprobantes?desde=&hasta=&q=&cobro=&orden=&limite=&saltar=",
+			"GET /comprobantes/{id}",
+			"PATCH /comprobantes/{id}/cobro",
+			"GET /clientes?q=",
 		},
 	})
 }
@@ -102,9 +113,15 @@ type nuevaFactura struct {
 		DocTipo                *int   `json:"docTipo"`
 		DocNro                 string `json:"docNro"`
 		CondicionIvaReceptorID *int   `json:"condicionIvaReceptorId"`
+		// Datos para guardar el cliente y armar el PDF (los trae el padrón en la web).
+		Nombre    string `json:"nombre"`
+		Condicion string `json:"condicion"`
+		Domicilio string `json:"domicilio"`
+		Email     string `json:"email"`
 	} `json:"receptor"`
 	Concepto        int    `json:"concepto"`
 	Fecha           string `json:"fecha"` // AAAA-MM-DD
+	CondicionVenta  string `json:"condicionVenta"`
 	PeriodoServicio *struct {
 		Desde           string `json:"desde"`
 		Hasta           string `json:"hasta"`
@@ -113,11 +130,13 @@ type nuevaFactura struct {
 	Items []struct {
 		Descripcion    string   `json:"descripcion"`
 		Cantidad       *float64 `json:"cantidad"`
+		Unidad         string   `json:"unidad"`
 		PrecioUnitario *float64 `json:"precioUnitario"`
 	} `json:"items"`
 }
 
 type facturaEmitida struct {
+	ID             int64          `json:"id"`
 	Aprobado       bool           `json:"aprobado"`
 	Letra          string         `json:"letra"`
 	Tipo           int            `json:"tipo"`
@@ -151,9 +170,16 @@ func (s *Servidor) emitirFactura(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	total := 0.0
-	for _, it := range body.Items {
-		total += *it.Cantidad * *it.PrecioUnitario
+	items := make([]datos.Item, len(body.Items))
+	for i, it := range body.Items {
+		sub := math.Round(*it.Cantidad**it.PrecioUnitario*100) / 100
+		total += sub
+		items[i] = datos.Item{
+			Descripcion: strings.TrimSpace(it.Descripcion), Cantidad: *it.Cantidad, Unidad: it.Unidad,
+			PrecioUnitario: *it.PrecioUnitario, Subtotal: sub,
+		}
 	}
+	total = math.Round(total*100) / 100
 	if total <= 0 {
 		return pedidoInvalido("total_invalido", "El total debe ser mayor a cero.")
 	}
@@ -172,6 +198,26 @@ func (s *Servidor) emitirFactura(w http.ResponseWriter, r *http.Request) error {
 			return pedidoInvalido("fecha_invalida", "Las fechas del período tienen que tener el formato AAAA-MM-DD.")
 		}
 		servicio = &arca.PeriodoServicio{Desde: desde, Hasta: hasta, VencimientoPago: vto}
+	}
+
+	// Antes de pedir el CAE: tiene que haber base para guardarlo y cupo en el plan.
+	d, cuenta, err := s.cuenta(r.Context())
+	if err != nil {
+		return err
+	}
+	if lim := limitesDe(cuenta.Plan); lim != nil {
+		desde, hasta := mes(fecha.In(arca.HoraArgentina))
+		uso, err := d.Uso(r.Context(), cuenta.ID, desde, hasta)
+		if err != nil {
+			return &BaseDatosError{Mensaje: err.Error()}
+		}
+		if uso.Facturas >= lim.Facturas {
+			return &errorPedido{
+				estado: http.StatusForbidden, codigo: "limite_plan",
+				mensaje: fmt.Sprintf("Ya emitiste las %d facturas de tu plan Gratis este mes. Pasate a Pro para seguir facturando.", lim.Facturas),
+				extra:   map[string]any{"uso": uso, "limites": lim},
+			}
+		}
 	}
 
 	cl, err := s.arca()
@@ -238,6 +284,40 @@ func (s *Servidor) emitirFactura(w http.ResponseWriter, r *http.Request) error {
 	if res.VencimientoCAE != "" {
 		out.VencimientoCAE = arca.DeFechaArca(res.VencimientoCAE)
 	}
+
+	comp := datos.Comprobante{
+		Tipo: arca.FacturaC, PuntoVenta: cl.PuntoVenta, Numero: res.Numero, Fecha: fechaISO,
+		Concepto: body.Concepto, Moneda: "PES", Cotizacion: 1, Total: total, Neto: total,
+		CAE: res.CAE, CAEVto: out.VencimientoCAE, QR: out.QR,
+		CondicionVenta: body.CondicionVenta,
+		Receptor: datos.Receptor{
+			DocTipo: docTipo, DocNro: cuit.Limpiar(rec.DocNro), Nombre: strings.TrimSpace(rec.Nombre),
+			CondicionIvaID: *rec.CondicionIvaReceptorID, Condicion: rec.Condicion,
+			Domicilio: strings.TrimSpace(rec.Domicilio), Email: strings.TrimSpace(rec.Email),
+		},
+		Cobro: datos.Pendiente, Items: items, Respuesta: res.Respuesta,
+	}
+	if comp.Receptor.DocNro == "" {
+		comp.Receptor.DocNro = "0"
+	}
+	if servicio != nil {
+		p := body.PeriodoServicio
+		comp.Periodo = &datos.Periodo{Desde: p.Desde, Hasta: p.Hasta, VtoPago: p.VencimientoPago}
+	}
+	// Usa un contexto propio: si el navegador cortó el pedido, el comprobante igual se guarda.
+	ctxGuardar, cancelar := context.WithTimeout(context.WithoutCancel(r.Context()), 20*time.Second)
+	defer cancelar()
+	if err := d.GuardarComprobante(ctxGuardar, cuenta.ID, &comp); err != nil {
+		// ARCA ya lo autorizó: se deja todo en el log para poder cargarlo a mano y se avisa claro.
+		completo, _ := json.Marshal(comp)
+		s.log.Error("comprobante autorizado sin guardar", "error", err, "comprobante", string(completo), "respuesta", res.Respuesta)
+		return &errorPedido{
+			estado: http.StatusInternalServerError, codigo: "no_guardado",
+			mensaje: fmt.Sprintf("ARCA autorizó la factura %05d-%08d (CAE %s), pero no pudimos guardarla en Facti. No la vuelvas a emitir: ya es válida.", cl.PuntoVenta, res.Numero, res.CAE),
+			extra:   map[string]any{"factura": out},
+		}
+	}
+	out.ID = comp.ID
 	responderJSON(w, http.StatusOK, out)
 	return nil
 }
