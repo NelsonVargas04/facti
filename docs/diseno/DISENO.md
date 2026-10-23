@@ -23,6 +23,7 @@ usar como referencia visual y de contenido, no copiar el código tal cual) y la 
 | `aviso-suave` / `aviso-texto` | `#FFF3D1` / `#6B4600` | Vencimientos, pendientes |
 | `exito-suave` / `exito-texto` | `#D7F5E6` / `#0E5C38` | "Autorizada por ARCA", cobrada |
 | `exito` | `#1E9E63` | Puntos y tildes de estado |
+| `error` / `error-suave` | `#B42344` / `#FDECEF` | Errores de formulario (borde, mensaje y anillo de foco) |
 | `facti-cuerpo` | `#7B7FF2` | Solo la mascota |
 
 ## Tipografía

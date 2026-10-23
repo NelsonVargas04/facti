@@ -17,6 +17,8 @@
   --color-exito-suave: #d7f5e6;
   --color-exito-texto: #0e5c38;
   --color-exito: #1e9e63;
+  --color-error: #b42344;
+  --color-error-suave: #fdecef;
   --color-facti: #7b7ff2;
   --color-rosa: #ff9fb2;
 
@@ -52,6 +54,15 @@
     font-family: var(--font-display);
     font-weight: 700;
     letter-spacing: -0.02em;
+  }
+  /* El autocompletado del navegador pinta los inputs de celeste: lo dejamos blanco como el resto. */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--color-texto);
+    -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+    caret-color: var(--color-texto);
+    transition: background-color 9999s ease-out;
   }
 }
 
