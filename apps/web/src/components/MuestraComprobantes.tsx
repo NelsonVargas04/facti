@@ -189,7 +189,7 @@ function VistaPrevia({ m }: { m: Muestra }) {
 
   const linea = 'border-[#1F2433]';
   return (
-    <div className="flex flex-col gap-2 bg-white p-4 font-sans text-[11px] leading-[1.4] text-[#1F2433] sm:p-5 sm:text-[12px]">
+    <div className="flex h-full flex-col gap-2 bg-white p-4 font-sans text-[11px] leading-[1.4] text-[#1F2433] sm:p-5 sm:text-[12px]">
       <div className={`border ${linea} py-1 text-center text-[11px] font-extrabold tracking-[0.08em]`}>ORIGINAL</div>
 
       {/* Cabecera: emisor | letra | comprobante */}
@@ -240,6 +240,9 @@ function VistaPrevia({ m }: { m: Muestra }) {
           {m.leyenda.texto}
         </p>
       )}
+
+      {/* Como en el comprobante oficial, los totales y el CAE van al pie */}
+      <div className="flex-1" />
 
       {/* Totales */}
       <div className="flex justify-end">
@@ -299,7 +302,7 @@ export function MuestraComprobantes() {
   }
 
   return (
-    <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-10">
+    <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:items-stretch lg:gap-10">
       {/* Lista de comprobantes */}
       <div
         role="tablist"
@@ -340,25 +343,27 @@ export function MuestraComprobantes() {
       </div>
 
       {/* Vista previa */}
-      <div id="vista-comprobante" role="tabpanel" aria-labelledby={`tab-${m.id}`} className="flex flex-col gap-4 lg:sticky lg:top-6">
+      {/* En pantallas anchas la vista previa se estira hasta el alto de la lista */}
+      <div id="vista-comprobante" role="tabpanel" aria-labelledby={`tab-${m.id}`} className="flex flex-col gap-4">
         <p className="text-[16px] text-texto-suave lg:hidden">{m.cuando}</p>
-        <div className="relative pt-4">
-          <span className="absolute right-3 top-0 z-10 rotate-2 rounded-full bg-acento px-4 py-1.5 text-[13px] font-extrabold text-texto shadow-chip sm:right-6 sm:text-[14px]">
+        <div className="relative mt-4 flex flex-1 flex-col lg:mt-0">
+          <span className="absolute -top-4 right-3 z-10 rotate-2 rounded-full bg-acento px-4 py-1.5 text-[13px] font-extrabold text-texto shadow-chip sm:right-6 sm:text-[14px]">
             {m.diferencia}
           </span>
-          <div key={m.id} className="muestra-entrar overflow-hidden rounded-[18px] shadow-tarjeta-lg ring-1 ring-borde">
+          <div key={m.id} className="muestra-entrar flex-1 overflow-hidden rounded-[20px] shadow-tarjeta-lg ring-1 ring-borde">
             <VistaPrevia m={m} />
           </div>
         </div>
-        <p className="flex items-start gap-2 text-[15px] text-texto-suave">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1E9E63" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="mt-0.5 flex-none">
-            <path d="M5 12.5l4.5 4.5L19 7.5" />
-          </svg>
-          <span>
-            <strong className="text-texto">Facti elige el comprobante solo</strong> según tu condición y la de tu cliente en el padrón de ARCA. Vos no tenés que acordarte de nada.
-          </span>
-        </p>
       </div>
+
+      <p className="flex items-start gap-2 text-[15px] text-texto-suave lg:col-span-2 lg:justify-center">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1E9E63" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="mt-0.5 flex-none">
+          <path d="M5 12.5l4.5 4.5L19 7.5" />
+        </svg>
+        <span>
+          <strong className="text-texto">Facti elige el comprobante solo</strong> según tu condición y la de tu cliente en el padrón de ARCA. Vos no tenés que acordarte de nada.
+        </span>
+      </p>
     </div>
   );
 }
