@@ -49,27 +49,29 @@ export default function Landing() {
   return (
     <div className="overflow-hidden text-[17px] leading-relaxed">
       {/* Header */}
-      <header className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-5 px-8 py-7">
-        <Link href="/" aria-label="Facti inicio" className="btn-lift">
-          <FactiWordmark size={38} />
+      <header className="mx-auto flex max-w-[1200px] items-center justify-between gap-5 px-4 py-5 sm:px-8 sm:py-7">
+        <Link href="/" aria-label="Facti inicio" className="btn-lift flex-none">
+          {/* En celular va solo el ícono, para que entren los dos botones en un renglón. */}
+          <FactiWordmark size={38} textClass="hidden text-texto min-[420px]:inline" />
         </Link>
-        <nav aria-label="Principal" className="flex flex-wrap gap-7 text-[15px] font-semibold text-texto-suave">
+        {/* En celular el menú se oculta: las secciones están a un scroll y el encabezado queda en un renglón. */}
+        <nav aria-label="Principal" className="hidden gap-7 text-[15px] font-semibold text-texto-suave md:flex">
           <a href="#como" className="transition-colors hover:text-texto">Cómo funciona</a>
           <a href="#comprobantes" className="transition-colors hover:text-texto">Comprobantes</a>
           <a href="#monotributo" className="transition-colors hover:text-texto">Monotributo</a>
           <a href="#precios" className="transition-colors hover:text-texto">Precios</a>
         </nav>
-        <div className="flex items-center gap-3">
-          <Link href="/ingresar" className="px-4 py-3 text-[15px] font-bold text-texto transition-colors hover:text-primario">Iniciar sesión</Link>
-          <Link href="/registro" className="btn-lift rounded-full bg-primario px-6 py-3 text-[15px] font-extrabold text-white shadow-[0_8px_20px_rgba(59,63,216,0.25)] hover:shadow-[0_12px_28px_rgba(59,63,216,0.38)]">
+        <div className="flex items-center gap-1 sm:gap-3">
+          <Link href="/ingresar" className="whitespace-nowrap px-3 py-3 text-[15px] font-bold text-texto transition-colors hover:text-primario sm:px-4">Iniciar sesión</Link>
+          <Link href="/registro" className="btn-lift whitespace-nowrap rounded-full bg-primario px-5 py-3 text-[15px] font-extrabold text-white shadow-[0_8px_20px_rgba(59,63,216,0.25)] hover:shadow-[0_12px_28px_rgba(59,63,216,0.38)] sm:px-6">
             Empezar gratis
           </Link>
         </div>
       </header>
 
       {/* Hero */}
-      <section id="inicio" className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-14 px-8 pb-24 pt-12">
-        <Reveal className="flex min-w-0 flex-1 basis-[520px] flex-col gap-7">
+      <section id="inicio" className="mx-auto grid max-w-[1200px] items-center gap-12 px-4 pb-20 pt-6 sm:px-8 sm:pt-12 lg:grid-cols-[1.25fr_1fr] lg:gap-8 lg:pb-24">
+        <Reveal className="flex min-w-0 flex-col gap-7">
           <div className="flex flex-wrap gap-2.5">
             {[
               { dot: '#1E9E63', rot: '-2deg', t: 'Facturas A, B, C y E' },
@@ -82,16 +84,16 @@ export default function Landing() {
               </span>
             ))}
           </div>
-          <h1 className="text-[clamp(44px,6vw,68px)] font-bold leading-[1.12]">
+          <h1 className="text-[clamp(40px,4.6vw,62px)] font-bold leading-[1.12]">
             ¿Facturar en{' '}
-            <span className="inline-block -rotate-2 rounded-full bg-white px-6 pb-1.5 text-primario shadow-[0_10px_30px_rgba(21,25,58,0.10)]">ARCA</span>{' '}
+            <span className="inline-block -rotate-2 rounded-full bg-white px-[0.35em] pb-1.5 text-primario shadow-[0_10px_30px_rgba(21,25,58,0.10)]">ARCA</span>{' '}
             te complica?
             <br />
-            <span style={{ background: 'linear-gradient(transparent 58%, #FFD25E 58%, #FFD25E 92%, transparent 92%)' }} className="px-1.5">
+            <span style={{ background: 'linear-gradient(transparent 58%, #FFD25E 58%, #FFD25E 92%, transparent 92%)' }} className="px-1.5 sm:whitespace-nowrap">
               Facti lo hace simple.
             </span>
           </h1>
-          <p className="max-w-[560px] text-[20px] text-texto-suave">
+          <p className="max-w-[560px] text-[18px] text-texto-suave sm:text-[20px]">
             Emití facturas electrónicas en un par de clics, conectadas directo con ARCA, y tené tu{' '}
             <strong className="text-texto">categoría de monotributo siempre bajo control</strong>. Sin pantallas confusas ni planillas.
           </p>
@@ -106,8 +108,11 @@ export default function Landing() {
         </Reveal>
 
         {/* Composición de la derecha */}
-        <Reveal delay={140} className="relative flex min-h-[540px] min-w-0 flex-1 basis-[440px] items-center justify-center">
-          <div className="absolute left-0 top-2.5 flex w-[330px] -rotate-[4deg] flex-col gap-3.5 rounded-[24px] bg-white p-6 shadow-tarjeta-lg">
+        {/* Composición de la derecha. La factura va adelante (z-20) para que nunca se tape el monto;
+            la tarjeta de monotributo asoma por detrás, más abajo. En celular se oculta: esa info
+            tiene su propia sección más abajo. */}
+        <Reveal delay={140} className="relative mx-auto flex min-h-[470px] w-full min-w-0 max-w-[560px] items-center justify-center sm:min-h-[580px]">
+          <div className="absolute left-0 top-2.5 z-20 flex w-[min(330px,88%)] -rotate-[4deg] flex-col gap-3.5 rounded-[24px] bg-white p-6 shadow-tarjeta-lg">
             <div className="flex items-center justify-between">
               <span className="rounded-full bg-primario-suave px-3 py-1.5 text-[13px] font-extrabold text-primario-oscuro">Factura C</span>
               <span className="text-[13px] font-semibold text-texto-tenue">N° 00003-00000128</span>
@@ -126,19 +131,19 @@ export default function Landing() {
             </div>
           </div>
 
-          <div className="absolute right-0 top-10 flex w-[230px] rotate-3 flex-col gap-2.5 rounded-[22px] bg-white p-5 shadow-tarjeta-lg">
+          <div className="absolute -right-4 top-[330px] z-10 hidden w-[230px] rotate-3 flex-col gap-2.5 rounded-[22px] bg-white p-5 shadow-tarjeta-lg sm:flex">
             <div className="text-xs font-extrabold tracking-[0.06em] text-texto-tenue">MONOTRIBUTO</div>
             <div className="font-display text-[22px] font-bold">Categoría D</div>
             <div className="h-3 overflow-hidden rounded-full bg-[#ECEFF5]"><div className="h-full w-[68%] rounded-full bg-primario" /></div>
             <div className="text-[13px] text-texto-suave">68% del tope anual</div>
           </div>
 
-          <div className="relative top-20">
+          <div className="relative top-24 z-30 origin-bottom scale-[0.78] sm:top-32 sm:-translate-x-20 sm:scale-100">
             <Facti pose="saludo" size={260} animated />
           </div>
 
-          <div className="absolute bottom-[-10px] left-1/2 -translate-x-1/2 -rotate-2">
-            <div className="f-pop whitespace-nowrap rounded-full bg-exito-suave px-6 py-3.5 text-[17px] font-extrabold text-exito-texto shadow-tarjeta-lg">
+          <div className="absolute bottom-[-10px] left-1/2 z-30 w-max max-w-full -translate-x-1/2 -rotate-2">
+            <div className="f-pop rounded-full bg-exito-suave px-5 py-3 text-center text-[15px] font-extrabold text-exito-texto shadow-tarjeta-lg sm:px-6 sm:py-3.5 sm:text-[17px]">
               ¡Factura autorizada y enviada al cliente!
             </div>
           </div>
@@ -146,8 +151,8 @@ export default function Landing() {
       </section>
 
       {/* ¿Te suena? */}
-      <section className="mx-auto flex max-w-[1100px] flex-col items-center gap-10 px-8 pb-24 pt-10">
-        <Reveal as="h2" className="text-center text-[44px] font-bold">¿Te suena?</Reveal>
+      <section className="mx-auto flex max-w-[1100px] flex-col items-center gap-10 px-4 pb-20 pt-10 sm:px-8 sm:pb-24">
+        <Reveal as="h2" className="text-center text-[clamp(32px,5vw,44px)] font-bold leading-tight">¿Te suena?</Reveal>
         <div className="flex flex-wrap justify-center gap-5">
           {SOSPECHAS.map((s, i) => (
             <Reveal key={s.texto} delay={i * 80} className="max-w-[500px] flex-1 basis-[440px]">
@@ -161,10 +166,10 @@ export default function Landing() {
       </section>
 
       {/* Así de fácil funciona */}
-      <section id="como" className="mx-auto flex max-w-[1200px] flex-col gap-12 px-8 pb-24 pt-10">
+      <section id="como" className="mx-auto flex max-w-[1200px] flex-col gap-12 px-4 pb-20 pt-10 sm:px-8 sm:pb-24">
         <Reveal className="flex flex-col items-center gap-3 text-center">
-          <h2 className="text-[44px] font-bold">Así de fácil funciona</h2>
-          <p className="max-w-[620px] text-[19px] text-texto-suave">Conectás tu CUIT con ARCA una sola vez y después facturás desde la compu o el celular.</p>
+          <h2 className="text-[clamp(32px,5vw,44px)] font-bold leading-tight">Así de fácil funciona</h2>
+          <p className="max-w-[620px] text-[17px] text-texto-suave sm:text-[19px]">Conectás tu CUIT con ARCA una sola vez y después facturás desde la compu o el celular.</p>
         </Reveal>
         <ol className="grid items-stretch gap-6 md:grid-cols-3">
           {PASOS.map((p, i) => (
@@ -199,7 +204,7 @@ export default function Landing() {
       <section id="comprobantes" className="mx-auto flex max-w-[1200px] flex-col gap-11 px-4 pb-28 pt-10 sm:px-8">
         <Reveal className="flex flex-col items-center gap-3 text-center">
           <h2 className="text-[clamp(32px,5vw,44px)] font-bold leading-tight">Todos los comprobantes que necesitás</h2>
-          <p className="max-w-[620px] text-[19px] text-texto-suave">Seas monotributista, responsable inscripto o exportador, Facti te muestra solo los que te corresponden.</p>
+          <p className="max-w-[620px] text-[17px] text-texto-suave sm:text-[19px]">Seas monotributista, responsable inscripto o exportador, Facti te muestra solo los que te corresponden.</p>
         </Reveal>
         <Reveal delay={80}>
           <MuestraComprobantes />
@@ -207,14 +212,14 @@ export default function Landing() {
       </section>
 
       {/* Monotributo */}
-      <section id="monotributo" className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-14 px-8 pb-28 pt-10">
+      <section id="monotributo" className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-14 px-4 pb-20 pt-10 sm:px-8 sm:pb-28">
         <Reveal className="flex min-w-0 flex-1 basis-[460px] flex-col gap-5">
           <span className="self-start rounded-xl bg-aviso-suave px-4 py-[7px] text-sm font-extrabold text-aviso-texto">Para monotributistas</span>
-          <h2 className="text-[44px] font-bold leading-[1.15]">
+          <h2 className="text-balance text-[clamp(32px,5vw,44px)] font-bold leading-[1.15]">
             Facti cuida tu categoría{' '}
-            <span style={{ fontFamily: 'var(--font-caveat), cursive' }} className="text-[54px] text-primario">como si fuera suya</span>
+            <span style={{ fontFamily: 'var(--font-caveat), cursive' }} className="text-[1.22em] text-primario">como si fuera suya</span>
           </h2>
-          <p className="text-[19px] text-texto-suave">Como Facti hace tus facturas, ya sabe cuánto facturaste. Te avisa antes de que te pases del tope y te recuerda cuándo recategorizarte, con los números listos.</p>
+          <p className="text-[17px] text-texto-suave sm:text-[19px]">Como Facti hace tus facturas, ya sabe cuánto facturaste. Te avisa antes de que te pases del tope y te recuerda cuándo recategorizarte, con los números listos.</p>
           <div className="flex flex-col gap-3 font-bold">
             {['Facturación de los últimos 12 meses', 'Alerta cuando te acercás al tope', 'Recordatorio de recategorización'].map((t) => (
               <span key={t} className="flex items-center gap-2.5"><Tilde />{t}</span>
@@ -241,54 +246,53 @@ export default function Landing() {
       </section>
 
       {/* Precios */}
-      <section id="precios" className="mx-auto flex max-w-[1000px] flex-col gap-11 px-8 pb-28 pt-10">
+      <section id="precios" className="mx-auto flex max-w-[1000px] flex-col gap-11 px-4 pb-20 pt-10 sm:px-8 sm:pb-28">
         <Reveal className="flex flex-col items-center gap-3 text-center">
-          <h2 className="text-[44px] font-bold">Empezá gratis</h2>
-          <p className="text-[19px] text-texto-suave">Pasate a Pro cuando lo necesites.</p>
+          <h2 className="text-[clamp(32px,5vw,44px)] font-bold leading-tight">Empezá gratis</h2>
+          <p className="text-[17px] text-texto-suave sm:text-[19px]">Pasate a Pro cuando lo necesites.</p>
         </Reveal>
-        <div className="grid items-stretch gap-6 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]">
+        <div className="grid items-stretch gap-6 [grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr))]">
           <Reveal className="h-full">
-            <div className="card-hover flex h-full flex-col gap-[18px] rounded-tarjeta-lg bg-white p-9 shadow-[0_10px_30px_rgba(21,25,58,0.07)]">
+            <div className="card-hover flex h-full flex-col gap-[18px] rounded-tarjeta-lg bg-white p-7 shadow sm:p-9-[0_10px_30px_rgba(21,25,58,0.07)]">
               <h3 className="text-[26px] font-bold">Gratis</h3>
               <div className="font-display text-[44px] font-bold">$0</div>
-              <div className="flex flex-col gap-2.5 text-texto-suave">
-                <span>10 facturas A, B y C por mes</span>
-                <span>1 Factura E por mes</span>
-                <span>Panel de monotributo</span>
-              </div>
-              <Link href="/registro" className="btn-lift mt-auto rounded-[16px] border-2 border-texto bg-white px-4 py-4 text-center font-extrabold text-texto hover:bg-texto hover:text-white">Crear cuenta</Link>
+              <ul className="flex flex-col gap-2.5 text-texto-suave">
+                {['10 facturas A, B y C por mes', '1 Factura E por mes', 'Panel de monotributo'].map((t) => (
+                  <li key={t} className="flex items-center gap-2.5"><Tilde size={18} />{t}</li>
+                ))}
+              </ul>
+              <Link href="/registro" className="btn-lift mt-auto rounded-full border-2 border-texto bg-white px-4 py-4 text-center font-extrabold text-texto hover:bg-texto hover:text-white">Crear cuenta</Link>
             </div>
           </Reveal>
           <Reveal delay={120} className="h-full">
-            <div className="card-hover flex h-full flex-col gap-[18px] rounded-tarjeta-lg bg-texto p-9 text-white shadow-tarjeta-lg">
+            <div className="card-hover flex h-full flex-col gap-[18px] rounded-tarjeta-lg bg-texto p-7 text-white sm:p-9 shadow-tarjeta-lg">
               <div className="flex items-center justify-between">
                 <h3 className="text-[26px] font-bold text-white">Pro</h3>
-                <span className="rounded-[10px] bg-acento px-3 py-1.5 text-[13px] font-extrabold text-texto">Más elegido</span>
+                <span className="rounded-full bg-acento px-3 py-1.5 text-[13px] font-extrabold text-texto">Más elegido</span>
               </div>
               <div className="font-display text-[44px] font-bold">$8.900<span className="text-[18px] font-semibold text-[#C9CCE8]"> / mes</span></div>
-              <div className="flex flex-col gap-2.5 text-[#DADCF2]">
-                <span>Facturas A, B y C ilimitadas</span>
-                <span>Factura E ilimitada</span>
-                <span>Recordatorios de cobro</span>
-                <span>Registro de cobros</span>
-              </div>
-              <Link href="/registro" className="btn-lift mt-auto rounded-[16px] bg-acento px-4 py-4 text-center font-extrabold text-texto hover:brightness-105">Probar Pro</Link>
+              <ul className="flex flex-col gap-2.5 text-[#DADCF2]">
+                {['Facturas A, B y C ilimitadas', 'Factura E ilimitada', 'Recordatorios de cobro', 'Registro de cobros'].map((t) => (
+                  <li key={t} className="flex items-center gap-2.5"><Tilde color="#FFD25E" size={18} />{t}</li>
+                ))}
+              </ul>
+              <Link href="/registro" className="btn-lift mt-auto rounded-full bg-acento px-4 py-4 text-center font-extrabold text-texto hover:brightness-105">Probar Pro</Link>
             </div>
           </Reveal>
         </div>
       </section>
 
       {/* CTA final */}
-      <section id="empezar" className="mx-auto max-w-[1200px] px-8 pb-20 pt-5">
+      <section id="empezar" className="mx-auto max-w-[1200px] px-4 pb-16 pt-5 sm:px-8 sm:pb-20">
         <Reveal>
-          <div className="flex flex-wrap items-center justify-center gap-10 rounded-[40px] bg-primario px-12 py-14 text-white">
+          <div className="flex flex-wrap items-center justify-center gap-8 rounded-[32px] bg-primario px-6 py-10 text-white sm:gap-10 sm:rounded-[40px] sm:px-12 sm:py-14">
             <div className="flex-none">
               <Facti pose="saludo" size={180} animated={false} />
             </div>
-            <div className="flex min-w-0 flex-1 basis-[420px] flex-col gap-[18px]">
-              <h2 className="text-[46px] font-bold leading-[1.15] text-white">Facti está listo para tu próxima factura</h2>
-              <p className="max-w-[520px] text-[19px] text-[#E4E5FF]">Creá tu cuenta gratis y conectá tu CUIT. Facti te acompaña en cada paso.</p>
-              <Link href="/registro" className="btn-lift self-start rounded-[18px] bg-acento px-8 py-4 text-[18px] font-extrabold text-texto shadow-[0_6px_0_#15193A] hover:shadow-[0_4px_0_#15193A]">
+            <div className="flex min-w-0 flex-1 basis-[min(420px,100%)] flex-col gap-[18px]">
+              <h2 className="text-balance text-[clamp(32px,5vw,46px)] font-bold leading-[1.15] text-white">Facti está listo para tu próxima factura</h2>
+              <p className="max-w-[520px] text-[17px] text-[#E4E5FF] sm:text-[19px]">Creá tu cuenta gratis y conectá tu CUIT. Facti te acompaña en cada paso.</p>
+              <Link href="/registro" className="btn-lift self-start rounded-full bg-acento px-8 py-4 text-[18px] font-extrabold text-texto shadow-[0_10px_24px_rgba(21,25,58,0.25)] hover:shadow-[0_14px_30px_rgba(21,25,58,0.32)]">
                 Empezar gratis
               </Link>
             </div>
@@ -296,7 +300,7 @@ export default function Landing() {
         </Reveal>
       </section>
 
-      <footer className="mx-auto flex max-w-[1200px] flex-wrap justify-between gap-4 px-8 pb-12 text-sm text-texto-tenue">
+      <footer className="mx-auto flex max-w-[1200px] flex-wrap justify-between gap-4 px-4 pb-12 sm:px-8 text-sm text-texto-tenue">
         <span>© 2026 Facti</span>
         <span>Facti es un servicio independiente y no pertenece a ARCA.</span>
       </footer>
