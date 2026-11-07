@@ -88,7 +88,7 @@ export default function Facturas() {
       </div>
 
       {/* Filtros separados */}
-      <div style={{ animationDelay: '80ms' }} className="aparece flex flex-wrap items-end gap-4">
+      <div style={{ animationDelay: '20ms' }} className="aparece flex flex-wrap items-end gap-4">
         <div className="flex min-w-[240px] flex-1 flex-col gap-1.5">
           <span className="text-sm font-bold">Buscar</span>
           <div className="flex h-12 items-center gap-2 rounded-input border-[1.5px] border-borde bg-white px-4 transition-colors focus-within:border-primario">
@@ -116,7 +116,7 @@ export default function Facturas() {
       </div>
 
       {/* Tabla / vacío */}
-      <section style={{ animationDelay: '160ms' }} aria-busy={lista.estado === 'cargando'} className="aparece rounded-tarjeta bg-superficie p-6 shadow-tarjeta">
+      <section style={{ animationDelay: '40ms' }} aria-busy={lista.estado === 'cargando'} className="aparece rounded-tarjeta bg-superficie p-6 shadow-tarjeta">
         {lista.estado === 'error' && !lista.dato ? (
           <AvisoApi error={lista.error} onReintentar={lista.recargar} />
         ) : !lista.dato ? (

@@ -35,7 +35,7 @@ export default function PlanPro() {
       </div>
 
       {/* Hero */}
-      <div style={{ animationDelay: '60ms' }} className="aparece flex flex-wrap items-center justify-center gap-6 rounded-tarjeta-lg bg-primario p-8 text-center text-white sm:justify-start sm:text-left">
+      <div style={{ animationDelay: '15ms' }} className="aparece flex flex-wrap items-center justify-center gap-6 rounded-tarjeta-lg bg-primario p-8 text-center text-white sm:justify-start sm:text-left">
         <Facti pose="festejo" size={150} animated />
         <div className="flex flex-col gap-2">
           <span className="self-center rounded-full bg-acento px-3 py-1 text-[13px] font-extrabold text-texto sm:self-start">Facti Pro</span>
@@ -45,7 +45,7 @@ export default function PlanPro() {
       </div>
 
       {/* Consumo actual */}
-      <div style={{ animationDelay: '90ms' }} className="aparece">
+      <div style={{ animationDelay: '22ms' }} className="aparece">
         {cuenta.dato ? (
           <div className="entra">
             <ConsumoPlan plan={cuenta.dato.plan} />
@@ -59,7 +59,7 @@ export default function PlanPro() {
 
       <div className="flex flex-wrap items-stretch gap-6">
         {/* Comparación */}
-        <section style={{ animationDelay: '120ms' }} className="aparece min-w-0 flex-[2_1_440px] rounded-tarjeta bg-superficie p-6 shadow-tarjeta">
+        <section style={{ animationDelay: '30ms' }} className="aparece min-w-0 flex-[2_1_440px] rounded-tarjeta bg-superficie p-6 shadow-tarjeta">
           <div className="grid grid-cols-[1fr_auto_auto] items-center gap-x-6 gap-y-1">
             <div className="pb-3 text-xs font-extrabold tracking-[0.06em] text-texto-tenue">QUÉ INCLUYE</div>
             <div className="pb-3 text-center text-xs font-extrabold tracking-[0.06em] text-texto-tenue">GRATIS</div>
@@ -75,7 +75,7 @@ export default function PlanPro() {
         </section>
 
         {/* CTA Pro */}
-        <aside style={{ animationDelay: '200ms' }} className="aparece flex min-w-0 flex-1 basis-[300px] flex-col gap-4 rounded-tarjeta-lg bg-texto p-7 text-white shadow-tarjeta-lg">
+        <aside style={{ animationDelay: '50ms' }} className="aparece flex min-w-0 flex-1 basis-[300px] flex-col gap-4 rounded-tarjeta-lg bg-texto p-7 text-white shadow-tarjeta-lg">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-[26px] font-bold text-white">Pro</h2>
             <span className="rounded-[10px] bg-acento px-3 py-1 text-[13px] font-extrabold text-texto">Más elegido</span>

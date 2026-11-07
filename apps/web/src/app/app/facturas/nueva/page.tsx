@@ -368,7 +368,8 @@ export default function NuevaFactura() {
                   className="flex items-center gap-3 self-start"
                 >
                   <span className={`relative h-6 w-11 flex-none rounded-full transition-colors ${incluyeServicio ? 'bg-primario' : 'bg-[#D6DBE7]'}`}>
-                    <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${incluyeServicio ? 'left-[22px]' : 'left-0.5'}`} />
+                    {/* Se mueve con transform (no con left) para no recalcular el diseño en cada cuadro. */}
+                    <span className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ease-mover ${incluyeServicio ? 'translate-x-5' : 'translate-x-0'}`} />
                   </span>
                   <span className="font-bold text-texto">{incluyeServicio ? 'Sí, cobro por un período de trabajo' : 'No, vendo productos'}</span>
                 </button>

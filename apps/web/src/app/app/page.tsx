@@ -80,7 +80,7 @@ export default function Inicio() {
       )}
 
       {/* Acciones rápidas */}
-      <div style={{ animationDelay: '300ms' }} className="aparece flex flex-wrap gap-3">
+      <div style={{ animationDelay: '75ms' }} className="aparece flex flex-wrap gap-3">
         {ACCIONES.map((a) => (
           <Link key={a.label} href={a.href} className="btn-lift flex items-center gap-2.5 rounded-[16px] border-[1.5px] border-borde bg-superficie px-[18px] py-3.5 font-extrabold text-texto hover:border-primario">
             <span style={{ color: a.color }}>
@@ -92,7 +92,7 @@ export default function Inicio() {
       </div>
 
       {/* Tabla + aside */}
-      <div style={{ animationDelay: '360ms' }} className="aparece flex flex-wrap items-start gap-[22px]">
+      <div style={{ animationDelay: '90ms' }} className="aparece flex flex-wrap items-start gap-[22px]">
         <section className="min-w-0 flex-[999_1_560px] rounded-tarjeta bg-superficie p-6 shadow-tarjeta">
           <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-[22px] font-bold">Últimas facturas</h2>

@@ -82,7 +82,7 @@ export default function DetalleFactura() {
 
       <div className="flex flex-wrap items-start gap-7">
         {/* Vista del comprobante (principal) */}
-        <div style={{ animationDelay: '80ms' }} className="aparece order-1 flex min-w-0 flex-[2_1_520px] flex-col gap-2.5">
+        <div style={{ animationDelay: '20ms' }} className="aparece order-1 flex min-w-0 flex-[2_1_520px] flex-col gap-2.5">
           <span className="text-[13px] font-extrabold tracking-[0.06em] text-texto-tenue">COMPROBANTE (FORMATO OFICIAL)</span>
           {esE || !datos ? (
             <div className="flex flex-col items-center gap-3 rounded-tarjeta-lg bg-[#E4E8F1] p-12 text-center">
@@ -102,7 +102,7 @@ export default function DetalleFactura() {
         </div>
 
         {/* Datos (secundario) */}
-        <aside style={{ animationDelay: '160ms' }} className="aparece order-2 flex min-w-0 flex-1 basis-[280px] flex-col gap-[18px]">
+        <aside style={{ animationDelay: '40ms' }} className="aparece order-2 flex min-w-0 flex-1 basis-[280px] flex-col gap-[18px]">
           <div className="flex flex-col gap-3 rounded-tarjeta bg-superficie p-6 shadow-tarjeta">
             <h2 className="text-[18px] font-bold">Datos del comprobante</h2>
             {(

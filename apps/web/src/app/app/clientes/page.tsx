@@ -50,13 +50,13 @@ export default function Clientes() {
       )}
 
       {/* Buscador */}
-      <div style={{ animationDelay: '160ms' }} className="aparece flex min-w-[240px] max-w-[440px] items-center gap-2 rounded-input border-[1.5px] border-borde bg-white px-4 transition-colors focus-within:border-primario">
+      <div style={{ animationDelay: '40ms' }} className="aparece flex min-w-[240px] max-w-[440px] items-center gap-2 rounded-input border-[1.5px] border-borde bg-white px-4 transition-colors focus-within:border-primario">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="flex-none text-texto-tenue"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
         <input value={q} onChange={(e) => setQ(e.target.value)} aria-label="Buscar clientes" placeholder="Buscar por nombre o CUIT…" className="h-12 w-full bg-transparent text-base text-texto outline-none placeholder:text-texto-tenue" />
       </div>
 
       {/* Tabla */}
-      <section style={{ animationDelay: '240ms' }} aria-busy={lista.estado === 'cargando'} className="aparece rounded-tarjeta bg-superficie p-6 shadow-tarjeta">
+      <section style={{ animationDelay: '60ms' }} aria-busy={lista.estado === 'cargando'} className="aparece rounded-tarjeta bg-superficie p-6 shadow-tarjeta">
         {lista.estado === 'error' && !lista.dato ? (
           <AvisoApi error={lista.error} onReintentar={lista.recargar} />
         ) : !lista.dato ? (

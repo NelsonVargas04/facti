@@ -33,6 +33,13 @@
   --shadow-tarjeta-lg: 0 20px 50px rgba(21, 25, 58, 0.12);
   --shadow-boton: 0 10px 24px rgba(59, 63, 216, 0.25);
   --shadow-chip: 0 4px 14px rgba(21, 25, 58, 0.07);
+
+  /* Curvas de animación (generan las clases ease-salida, ease-mover y ease-rebote).
+     salida: entradas y salidas (arranca rápido) · mover: algo que se desplaza en pantalla ·
+     rebote: momentos lúdicos y poco frecuentes (mascota, festejos). */
+  --ease-salida: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-mover: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-rebote: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @layer base {
@@ -69,7 +76,7 @@
 /* Vista previa de comprobantes en la landing: entra suave al cambiar de tipo. */
 @media (prefers-reduced-motion: no-preference) {
   .muestra-entrar {
-    animation: muestraEntrar 0.35s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+    animation: muestraEntrar 0.3s var(--ease-salida) both;
   }
 }
 @keyframes muestraEntrar {
@@ -124,7 +131,7 @@
     transform-origin: 220px 150px;
   }
   .f-pop {
-    animation: fPop 0.7s cubic-bezier(0.3, 1.6, 0.5, 1) both 0.4s;
+    animation: fPop 0.6s var(--ease-rebote) both 0.4s;
   }
 }
 
@@ -260,16 +267,46 @@
   }
 }
 
-/* ===== Entrada de contenido (aparece de a poco) ===== */
+/* ===== Entradas de contenido =====
+   Las pantallas de la app se abren muchas veces por día: las entradas son cortas (≤ 250 ms),
+   con desplazamiento chico y escalonados de 30–40 ms, para que acompañen sin hacer esperar.
+   .aparece: secciones de una pantalla (con animation-delay inline, de pocas decenas de ms).
+   .pagina-entra: cada pantalla al navegar (lo usan los template.tsx).
+   .entra: un bloque que aparece cuando terminó de cargar (reemplaza al skeleton).
+   .cascada: los hijos entran de a uno (filas de tablas, tarjetas); también sirve en <tbody>.
+   .aviso-entra: errores y avisos, con un pequeño deslizamiento.
+   Con prefers-reduced-motion queda solo un fundido corto (ver más abajo). */
 @media (prefers-reduced-motion: no-preference) {
   .aparece {
-    animation: aparece 0.5s ease-out both;
+    animation: aparece 0.24s var(--ease-salida) both;
+  }
+  .pagina-entra {
+    animation: paginaEntra 0.2s var(--ease-salida) both;
+  }
+  .entra {
+    animation: entra 0.24s var(--ease-salida) both;
+    animation-delay: calc(var(--i, 0) * 40ms);
+  }
+  .cascada > * {
+    animation: entra 0.24s var(--ease-salida) both;
+  }
+  .cascada > :nth-child(2) { animation-delay: 30ms; }
+  .cascada > :nth-child(3) { animation-delay: 60ms; }
+  .cascada > :nth-child(4) { animation-delay: 90ms; }
+  .cascada > :nth-child(5) { animation-delay: 120ms; }
+  .cascada > :nth-child(6) { animation-delay: 150ms; }
+  .cascada > :nth-child(n + 7) { animation-delay: 180ms; }
+  .aviso-entra {
+    animation: avisoEntra 0.2s var(--ease-salida) both;
+  }
+  .girando {
+    animation: girar 0.8s linear infinite;
   }
 }
 @keyframes aparece {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -277,43 +314,31 @@
   }
 }
 
-/* ===== Entradas cuando llegan los datos =====
-   .pagina-entra: cada pantalla al navegar (lo usan los template.tsx).
-   .entra: un bloque que aparece cuando terminó de cargar (reemplaza al skeleton).
-   .cascada: los hijos entran de a uno (filas de tablas, tarjetas); también sirve en <tbody>.
-   .aviso-entra: errores y avisos, con un pequeño deslizamiento.
-   Con prefers-reduced-motion todo aparece de una. */
-@media (prefers-reduced-motion: no-preference) {
-  .pagina-entra {
-    animation: paginaEntra 0.38s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+/* Movimiento reducido: sin desplazamientos ni escalas, pero con un fundido corto
+   para que se entienda qué cambió en la pantalla. */
+@media (prefers-reduced-motion: reduce) {
+  .aparece,
+  .pagina-entra,
+  .entra,
+  .cascada > *,
+  .aviso-entra,
+  .muestra-entrar,
+  .pop-in {
+    animation: desvanecer 0.2s ease both;
   }
-  .entra {
-    animation: entra 0.45s cubic-bezier(0.2, 0.8, 0.3, 1) both;
-    animation-delay: calc(var(--i, 0) * 60ms);
+}
+@keyframes desvanecer {
+  from {
+    opacity: 0;
   }
-  .cascada > * {
-    animation: entra 0.42s cubic-bezier(0.2, 0.8, 0.3, 1) both;
-  }
-  .cascada > :nth-child(2) { animation-delay: 40ms; }
-  .cascada > :nth-child(3) { animation-delay: 80ms; }
-  .cascada > :nth-child(4) { animation-delay: 120ms; }
-  .cascada > :nth-child(5) { animation-delay: 160ms; }
-  .cascada > :nth-child(6) { animation-delay: 200ms; }
-  .cascada > :nth-child(7) { animation-delay: 240ms; }
-  .cascada > :nth-child(8) { animation-delay: 280ms; }
-  .cascada > :nth-child(9) { animation-delay: 320ms; }
-  .cascada > :nth-child(n + 10) { animation-delay: 360ms; }
-  .aviso-entra {
-    animation: avisoEntra 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
-  }
-  .girando {
-    animation: girar 0.8s linear infinite;
+  to {
+    opacity: 1;
   }
 }
 @keyframes paginaEntra {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(4px);
   }
   to {
     opacity: 1;
@@ -323,7 +348,7 @@
 @keyframes entra {
   from {
     opacity: 0;
-    transform: translateY(10px) scale(0.985);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -333,7 +358,7 @@
 @keyframes avisoEntra {
   from {
     opacity: 0;
-    transform: translateY(-6px);
+    transform: translateY(-4px);
   }
   to {
     opacity: 1;
@@ -354,7 +379,8 @@
 }
 @media (prefers-reduced-motion: no-preference) {
   .skeleton {
-    animation: shimmer 1.4s ease infinite;
+    /* Movimiento constante: lineal, para que no "respire" a los tirones. */
+    animation: shimmer 1.4s linear infinite;
   }
 }
 @keyframes shimmer {
@@ -369,7 +395,7 @@
 /* ===== Pop-in (beneficios estilo Duolingo) + pulso del CTA ===== */
 @media (prefers-reduced-motion: no-preference) {
   .pop-in {
-    animation: popIn 0.45s cubic-bezier(0.3, 1.5, 0.5, 1) both;
+    animation: popIn 0.4s var(--ease-rebote) both;
   }
   .pulse-cta {
     animation: pulseCta 2.2s ease-in-out infinite;
@@ -378,7 +404,7 @@
 @keyframes popIn {
   0% {
     opacity: 0;
-    transform: scale(0.4);
+    transform: scale(0.8);
   }
   100% {
     opacity: 1;
@@ -424,7 +450,7 @@
 }
 @media (prefers-reduced-motion: no-preference) {
   .dropdown-anim {
-    animation: dropIn 0.15s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+    animation: dropIn 0.15s var(--ease-salida) both;
   }
 }
 @keyframes dropIn {
@@ -440,43 +466,49 @@
 
 /* ===== Microinteracciones y entradas ===== */
 
-/* Botones: se elevan al pasar el mouse y se hunden al apretar. */
+/* Botones: se elevan al pasar el mouse (solo con mouse: en el celular el toque dispara un hover falso)
+   y se achican apenas al apretar, para que el clic se sienta. Son transiciones: si soltás a mitad
+   de camino, vuelven desde donde estaban. */
 .btn-lift {
   transition:
-    transform 0.16s ease,
+    transform 0.16s var(--ease-salida),
     box-shadow 0.2s ease,
     background-color 0.16s ease,
     filter 0.16s ease;
 }
-@media (prefers-reduced-motion: no-preference) {
+@media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
   .btn-lift:hover {
     transform: translateY(-2px);
   }
-  .btn-lift:active {
-    transform: translateY(0);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .btn-lift:active:not(:disabled) {
+    transform: scale(0.97);
+    transition-duration: 0.1s;
   }
 }
 
-/* Tarjetas: se elevan suavemente al pasar el mouse. */
+/* Tarjetas: se elevan suavemente al pasar el mouse (solo con mouse). */
 .card-hover {
   transition:
-    transform 0.22s ease,
+    transform 0.22s var(--ease-salida),
     box-shadow 0.22s ease;
 }
-@media (prefers-reduced-motion: no-preference) {
+@media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
   .card-hover:hover {
     transform: translateY(-4px);
     box-shadow: var(--shadow-tarjeta-lg);
   }
 }
 
-/* Entrada: los elementos aparecen desde abajo cuando entran en viewport. */
+/* Entrada en la landing: los elementos aparecen desde abajo cuando entran en viewport.
+   Es marketing y se ve pocas veces, por eso puede durar más que en la app. */
 .reveal {
   opacity: 0;
   transform: translateY(18px);
   transition:
-    opacity 0.6s ease,
-    transform 0.6s ease;
+    opacity 0.6s var(--ease-salida),
+    transform 0.6s var(--ease-salida);
   will-change: opacity, transform;
 }
 .reveal.reveal-in {
@@ -485,8 +517,7 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .reveal {
-    opacity: 1;
     transform: none;
-    transition: none;
+    transition: opacity 0.3s ease;
   }
 }

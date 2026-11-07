@@ -55,7 +55,7 @@ export default function Cobros() {
       </div>
 
       {/* Stats */}
-      <div style={{ animationDelay: '80ms' }} className="aparece grid gap-[18px] [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
+      <div style={{ animationDelay: '20ms' }} className="aparece grid gap-[18px] [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
         {r ? (
           <>
             <div className="entra card-hover flex flex-col gap-1 rounded-tarjeta bg-superficie px-6 py-5 shadow-tarjeta">
@@ -75,7 +75,7 @@ export default function Cobros() {
       </div>
 
       {/* Filtros */}
-      <div style={{ animationDelay: '160ms' }} role="group" aria-label="Filtrar por estado de cobro" className="aparece inline-flex gap-1 self-start rounded-input bg-fondo p-1">
+      <div style={{ animationDelay: '40ms' }} role="group" aria-label="Filtrar por estado de cobro" className="aparece inline-flex gap-1 self-start rounded-input bg-fondo p-1">
         {FILTROS.map((f) => {
           const on = filtro === f.id;
           return (
@@ -90,7 +90,7 @@ export default function Cobros() {
       {errMarcar && <AvisoApi error={errMarcar} compacto />}
 
       {/* Tabla */}
-      <section style={{ animationDelay: '240ms' }} aria-busy={lista.estado === 'cargando'} className="aparece rounded-tarjeta bg-superficie p-6 shadow-tarjeta">
+      <section style={{ animationDelay: '60ms' }} aria-busy={lista.estado === 'cargando'} className="aparece rounded-tarjeta bg-superficie p-6 shadow-tarjeta">
         {lista.estado === 'error' && !lista.dato ? (
           <AvisoApi error={lista.error} onReintentar={lista.recargar} />
         ) : !lista.dato ? (

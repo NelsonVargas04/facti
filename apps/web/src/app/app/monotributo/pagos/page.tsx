@@ -134,7 +134,7 @@ export default function MonotributoPagos() {
       </div>
 
       {/* Cuota + recordatorio */}
-      <div style={{ animationDelay: '80ms' }} className="aparece flex flex-wrap items-stretch gap-6">
+      <div style={{ animationDelay: '20ms' }} className="aparece flex flex-wrap items-stretch gap-6">
         <section className="flex min-w-0 flex-[999_1_480px] flex-col gap-4 rounded-tarjeta bg-superficie p-7 shadow-tarjeta">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-[24px] font-bold">Cuota de octubre 2026</h2>
@@ -201,7 +201,7 @@ export default function MonotributoPagos() {
       </div>
 
       {/* Subir comprobante */}
-      <section id="subir" style={{ animationDelay: '160ms' }} className="aparece flex flex-wrap items-center justify-between gap-4 rounded-tarjeta border-2 border-dashed border-[#B9BED3] bg-superficie p-7">
+      <section id="subir" style={{ animationDelay: '40ms' }} className="aparece flex flex-wrap items-center justify-between gap-4 rounded-tarjeta border-2 border-dashed border-[#B9BED3] bg-superficie p-7">
         <div className="flex items-center gap-4">
           <span className="flex h-14 w-14 items-center justify-center rounded-[18px] bg-primario-suave text-primario-oscuro">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14" /></svg>
@@ -218,7 +218,7 @@ export default function MonotributoPagos() {
       </section>
 
       {/* Historial + comprobante */}
-      <div style={{ animationDelay: '240ms' }} className="aparece flex flex-wrap items-stretch gap-6">
+      <div style={{ animationDelay: '60ms' }} className="aparece flex flex-wrap items-stretch gap-6">
         <section className="flex min-w-0 flex-[999_1_560px] flex-col gap-4 rounded-tarjeta bg-superficie p-6 shadow-tarjeta">
           <h2 className="text-[22px] font-bold">Historial de pagos</h2>
 

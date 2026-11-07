@@ -42,7 +42,12 @@ export function Uso({ label, usadas, limite }: { label: string; usadas: number; 
       </div>
       {!ilimitado && (
         <div className="h-2.5 overflow-hidden rounded-full bg-[#ECEFF5]">
-          <div className={`h-full rounded-full transition-[width] duration-700 ease-out ${bajo ? 'bg-[#E5484D]' : 'bg-primario'}`} style={{ width: `${w}%` }} />
+          {/* La barra mide siempre el 100% y se corre con transform (no anima el ancho, que recalcula el diseño).
+              translateX y no scaleX, para que el extremo redondeado no se deforme. */}
+          <div
+            className={`h-full w-full rounded-full transition-transform duration-700 ease-salida ${bajo ? 'bg-[#E5484D]' : 'bg-primario'}`}
+            style={{ transform: `translateX(${w - 100}%)` }}
+          />
         </div>
       )}
       <span className="text-xs text-texto-tenue">
