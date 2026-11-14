@@ -111,6 +111,11 @@ export function asignarCuit(cuit: string) {
   return pedir<{ cuenta: Cuenta; plan: Plan; padron: boolean }>('/cuenta/cuit', { method: 'PUT', body: JSON.stringify({ cuit }) });
 }
 
+/** Guarda a mano nombre y domicilio del emisor (solo en homologación, donde el padrón de prueba no tiene a casi nadie). */
+export function cargarPerfil(nombre: string, domicilio: string) {
+  return pedir<{ cuenta: Cuenta }>('/cuenta/perfil', { method: 'PUT', body: JSON.stringify({ nombre, domicilio }) });
+}
+
 // ---------- Comprobantes ----------
 
 export type Cobro = '' | 'pendiente' | 'cobrada';

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { cerrarSesion } from '@/lib/sesion';
 import { AvisoApi } from '@/components/AvisoApi';
+import { CargarPerfil } from '@/components/CargarPerfil';
 import { verCuenta } from '@/lib/api';
 import { formatearCuit, nombrePropio } from '@/lib/formato';
 import { useApi } from '@/lib/useApi';
@@ -56,7 +57,7 @@ export default function Configuracion() {
             <Dato k="CUIT" v={formatearCuit(c.cuit)} />
             <Dato k="Condición" v={[CONDICION[c.condicion] ?? c.condicion, c.categoria && `Categoría ${c.categoria}`].filter(Boolean).join(' · ')} />
             <Dato k="Domicilio fiscal" v={c.domicilio} />
-            {!c.nombre && <p className="text-sm text-texto-suave">Estos datos se completan solos desde el padrón de ARCA cuando conectes Facti con ARCA.</p>}
+            {!c.nombre && <CargarPerfil onGuardado={() => cuenta.recargar()} />}
           </Tarjeta>
 
           <Tarjeta titulo="Conexión con ARCA">

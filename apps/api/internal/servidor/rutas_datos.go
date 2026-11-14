@@ -108,6 +108,44 @@ func (s *Servidor) asignarCuit(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+// cargarPerfil guarda a mano el nombre y el domicilio del emisor. Solo en homologación, donde el padrón
+// de prueba casi no tiene personas reales; en producción esos datos salen siempre del padrón de ARCA.
+func (s *Servidor) cargarPerfil(w http.ResponseWriter, r *http.Request) error {
+	if s.entorno == arca.Produccion {
+		return &errorPedido{estado: http.StatusForbidden, codigo: "perfil_del_padron", mensaje: "Tu nombre y domicilio salen del padrón de ARCA."}
+	}
+	var body struct {
+		Nombre    string `json:"nombre"`
+		Domicilio string `json:"domicilio"`
+	}
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 4<<10)).Decode(&body); err != nil {
+		return pedidoInvalido("perfil_invalido", "No pudimos leer los datos.")
+	}
+	nombre, domicilio := strings.TrimSpace(body.Nombre), strings.TrimSpace(body.Domicilio)
+	if nombre == "" || len([]rune(nombre)) > 120 || len([]rune(domicilio)) > 200 {
+		return pedidoInvalido("perfil_invalido", "Escribí tu nombre y apellido (o razón social) y, si querés, tu domicilio fiscal.")
+	}
+	d, c, err := s.cuenta(r)
+	if err != nil {
+		return err
+	}
+	if c.Cuit == "" {
+		return &errorPedido{estado: http.StatusConflict, codigo: "falta_cuit", mensaje: "Primero cargá tu CUIT."}
+	}
+	condicion := c.Condicion
+	if condicion == "" || condicion == string(arca.ConsumidorFinal) {
+		condicion = string(arca.Monotributo)
+	}
+	act, err := d.ActualizarPerfil(r.Context(), c.ID, datos.Perfil{
+		Nombre: strings.ToUpper(nombre), Domicilio: domicilio, Condicion: condicion, Categoria: c.Categoria,
+	})
+	if err != nil {
+		return &BaseDatosError{Mensaje: err.Error()}
+	}
+	responderJSON(w, http.StatusOK, map[string]any{"cuenta": act})
+	return nil
+}
+
 // verResumen devuelve los números del mes (?mes=AAAA-MM, por defecto el actual) y las últimas facturas.
 func (s *Servidor) verResumen(w http.ResponseWriter, r *http.Request) error {
 	ahora := s.ahora().In(arca.HoraArgentina)

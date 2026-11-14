@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Facti } from '@/components/Facti';
 import { AvisoApi } from '@/components/AvisoApi';
 import { Stepper } from '@/components/Stepper';
+import { CargarPerfil } from '@/components/CargarPerfil';
 import { asignarCuit, verCuenta, type Cuenta, type ErrorApi } from '@/lib/api';
 import { formatearCuit } from '@/lib/formato';
 import { useApi } from '@/lib/useApi';
@@ -176,6 +177,8 @@ export default function PerfilFiscal() {
                 ))}
             </div>
           )}
+
+          {cuenta && !cuenta.nombre && <CargarPerfil onGuardado={(c) => setGuardado({ cuenta: c, padron: false })} />}
 
           {/* Qué podés emitir */}
           <div className="flex flex-col gap-2.5">

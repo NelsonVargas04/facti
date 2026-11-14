@@ -474,3 +474,30 @@ func TestMes(t *testing.T) {
 		t.Errorf("diciembre: %s %s", d, h)
 	}
 }
+
+func TestCargarPerfilAMano(t *testing.T) {
+	e := &entorno{arca: &arcaSimulado{}, mem: datos.NuevaMemoria()}
+	cl := e.arca.clientes(t)
+	e.h = Nuevo(Opciones{Arca: func() (*ClientesArca, error) { return cl, nil }, Datos: FijarDatos(e.mem), Auth: authFalso{}, PuntoVenta: 3, Entorno: arca.Homologacion})
+
+	if res, j := e.pedir(t, "PUT", "/cuenta/perfil", `{"nombre":"Vargas Nelson"}`); res.StatusCode != 409 || j["error"] != "falta_cuit" {
+		t.Errorf("sin CUIT: %d %v", res.StatusCode, j)
+	}
+	if res, j := e.pedir(t, "PUT", "/cuenta/cuit", `{"cuit":"20-11111111-2"}`); res.StatusCode != 200 {
+		t.Fatalf("cargar CUIT: %d %v", res.StatusCode, j)
+	}
+	if res, j := e.pedir(t, "PUT", "/cuenta/perfil", `{"nombre":"  "}`); res.StatusCode != 400 || j["error"] != "perfil_invalido" {
+		t.Errorf("sin nombre: %d %v", res.StatusCode, j)
+	}
+	res, j := e.pedir(t, "PUT", "/cuenta/perfil", `{"nombre":"Vargas Nelson","domicilio":"Mitre 100 - Rosario"}`)
+	c, _ := j["cuenta"].(map[string]any)
+	if res.StatusCode != 200 || c["nombre"] != "VARGAS NELSON" || c["domicilio"] != "Mitre 100 - Rosario" || c["condicion"] != "monotributo" {
+		t.Fatalf("cargar perfil: %d %v", res.StatusCode, j)
+	}
+
+	// En producción no se puede: los datos salen del padrón.
+	prod := Nuevo(Opciones{Arca: func() (*ClientesArca, error) { return cl, nil }, Datos: FijarDatos(e.mem), Auth: authFalso{}, PuntoVenta: 3, Entorno: arca.Produccion})
+	if res, j := pedir(t, prod, "PUT", "/cuenta/perfil", `{"nombre":"Otro"}`, "Authorization", "Bearer lucia"); res.StatusCode != 403 {
+		t.Errorf("producción: %d %v", res.StatusCode, j)
+	}
+}

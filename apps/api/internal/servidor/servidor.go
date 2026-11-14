@@ -71,6 +71,7 @@ func Nuevo(o Opciones) http.Handler {
 	mux.Handle("POST /facturas", s.ruta(s.emitirFactura))
 	mux.Handle("GET /cuenta", s.ruta(s.verCuenta))
 	mux.Handle("PUT /cuenta/cuit", s.ruta(s.asignarCuit))
+	mux.Handle("PUT /cuenta/perfil", s.ruta(s.cargarPerfil))
 	mux.Handle("GET /resumen", s.ruta(s.verResumen))
 	mux.Handle("GET /comprobantes", s.ruta(s.listarComprobantes))
 	mux.Handle("GET /comprobantes/{id}", s.ruta(s.verComprobante))
