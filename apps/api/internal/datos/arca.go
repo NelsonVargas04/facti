@@ -42,22 +42,22 @@ func (p *Postgres) GuardarTicket(ctx context.Context, clave string, ta arca.Tick
 	return err
 }
 
-// Bloquear toma un advisory lock de Postgres para la clave (espera si otro lo tiene) en una conexión
-// propia, y lo suelta al llamar a la función devuelta. Vale entre todas las instancias de la API.
-// Necesita una conexión de sesión (directa o pooler en modo sesión, puerto 5432), no el modo transacción.
+// Bloquear toma un advisory lock de Postgres para la clave (espera si otro lo tiene) y lo suelta al
+// llamar a la función devuelta. Vale entre todas las instancias de la API.
+// Usa un lock de transacción (pg_advisory_xact_lock) dentro de una transacción abierta mientras dura
+// el bloqueo: así funciona también con el pooler de Supabase en modo transacción (puerto 6543).
 func (p *Postgres) Bloquear(ctx context.Context, clave string) (func(), error) {
-	conn, err := p.pool.Acquire(ctx)
+	tx, err := p.pool.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
-	if _, err := conn.Exec(ctx, `select pg_advisory_lock(hashtextextended($1, 0))`, clave); err != nil {
-		conn.Release()
+	if _, err := tx.Exec(ctx, `select pg_advisory_xact_lock(hashtextextended($1, 0))`, clave); err != nil {
+		_ = tx.Rollback(context.Background())
 		return nil, err
 	}
 	return func() {
 		// Con un contexto nuevo: hay que soltarlo aunque el pedido se haya cancelado.
-		_, _ = conn.Exec(context.Background(), `select pg_advisory_unlock(hashtextextended($1, 0))`, clave)
-		conn.Release()
+		_ = tx.Commit(context.Background())
 	}, nil
 }
 

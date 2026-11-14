@@ -52,8 +52,9 @@ func Cargar() Config {
 		Raiz:       raiz,
 		EnvCargado: envPath,
 		// En Vercel (y otros hosts) el puerto lo asigna la plataforma en PORT.
-		Puerto:      entero(valor("PORT", os.Getenv("API_PORT")), 4000),
-		DatabaseURL: strings.TrimSpace(os.Getenv("DATABASE_URL")),
+		Puerto: entero(valor("PORT", os.Getenv("API_PORT")), 4000),
+		// DATABASE_URL, o las que crea la integración de Supabase con Vercel (primero la de sesión).
+		DatabaseURL: strings.TrimSpace(primera("DATABASE_URL", "POSTGRES_URL_NON_POOLING", "POSTGRES_URL")),
 		// La web usa NEXT_PUBLIC_SUPABASE_URL; la API acepta la misma variable para no repetirla.
 		SupabaseURL:       strings.TrimSpace(valor("SUPABASE_URL", os.Getenv("NEXT_PUBLIC_SUPABASE_URL"))),
 		SupabaseJWTSecret: strings.TrimSpace(os.Getenv("SUPABASE_JWT_SECRET")),
@@ -112,4 +113,14 @@ func entero(s string, porDefecto int) int {
 		return n
 	}
 	return porDefecto
+}
+
+// primera devuelve el valor de la primera variable de entorno que no esté vacía.
+func primera(nombres ...string) string {
+	for _, n := range nombres {
+		if v := strings.TrimSpace(os.Getenv(n)); v != "" {
+			return v
+		}
+	}
+	return ""
 }
