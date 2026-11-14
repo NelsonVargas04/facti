@@ -51,6 +51,7 @@ export default function AutorizarArca() {
               playsInline
               className="aspect-video w-full rounded-[18px] bg-[#0F1330] shadow-tarjeta"
               src="/videos/conectar-arca.mp4"
+              poster="/videos/conectar-arca.jpg"
             >
               Tu navegador no puede mostrar el video. <a href="/guias/conectar-arca">Mirá la guía paso a paso</a>.
             </video>
