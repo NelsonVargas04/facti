@@ -51,7 +51,8 @@ func Cargar() Config {
 	c := Config{
 		Raiz:        raiz,
 		EnvCargado:  envPath,
-		Puerto:      entero(os.Getenv("API_PORT"), 4000),
+		// En Vercel (y otros hosts) el puerto lo asigna la plataforma en PORT.
+		Puerto:      entero(valor("PORT", os.Getenv("API_PORT")), 4000),
 		DatabaseURL: strings.TrimSpace(os.Getenv("DATABASE_URL")),
 		// La web usa NEXT_PUBLIC_SUPABASE_URL; la API acepta la misma variable para no repetirla.
 		SupabaseURL:       strings.TrimSpace(valor("SUPABASE_URL", os.Getenv("NEXT_PUBLIC_SUPABASE_URL"))),
