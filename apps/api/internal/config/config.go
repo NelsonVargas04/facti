@@ -32,7 +32,11 @@ type Config struct {
 	PuntoVenta      int
 	CertPath        string
 	KeyPath         string
-	CacheDir        string
+	// Certificado y clave como contenido (PEM o PEM en base64), para hosts sin archivos como Vercel.
+	// Si están, tienen prioridad sobre CertPath y KeyPath.
+	CertPEM  string
+	KeyPEM   string
+	CacheDir string
 }
 
 // Cargar busca el .env subiendo desde la carpeta actual (la API corre dentro de apps/api)
@@ -58,6 +62,8 @@ func Cargar() Config {
 		PuntoVenta:        entero(os.Getenv("ARCA_PUNTO_VENTA"), 1),
 		CertPath:          enRaiz(raiz, os.Getenv("ARCA_CERT_PATH")),
 		KeyPath:           enRaiz(raiz, os.Getenv("ARCA_KEY_PATH")),
+		CertPEM:           strings.TrimSpace(os.Getenv("ARCA_CERT_PEM")),
+		KeyPEM:            strings.TrimSpace(os.Getenv("ARCA_KEY_PEM")),
 		CacheDir:          enRaiz(raiz, valor("ARCA_CACHE_DIR", ".cache")),
 	}
 	for _, o := range strings.Split(os.Getenv("WEB_ORIGIN"), ",") {

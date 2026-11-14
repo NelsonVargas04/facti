@@ -69,6 +69,10 @@ type Config struct {
 	Endpoints *Endpoints
 	// Cliente HTTP. Si es nil, se usa http.DefaultClient.
 	HTTP *http.Client
+	// Dónde guardar los tickets del WSAA. Si es nil, en CacheDir (disco).
+	Almacen AlmacenTickets
+	// Bloqueo entre instancias (ticket y emisión). Si es nil, uno dentro del proceso.
+	Candado Candado
 }
 
 func (c Config) endpoints() Endpoints {

@@ -7,7 +7,6 @@ import (
 	"math"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -164,12 +163,11 @@ type Wsfe struct {
 	tickets    *CacheTickets
 	cuitEmisor string
 
-	mu       sync.Mutex
-	bloqueos map[string]*sync.Mutex
+	candado Candado
 }
 
 func NuevoWsfe(cfg Config, tickets *CacheTickets, cuitEmisor string) *Wsfe {
-	return &Wsfe{cfg: cfg, tickets: tickets, cuitEmisor: cuitEmisor, bloqueos: map[string]*sync.Mutex{}}
+	return &Wsfe{cfg: cfg, tickets: tickets, cuitEmisor: cuitEmisor, candado: candadoDe(cfg)}
 }
 
 // llamar invoca un método de WSFEv1 y decodifica <metodo>Result en out.
@@ -333,16 +331,12 @@ func (w *Wsfe) Emitir(ctx context.Context, c NuevoComprobante) (ResultadoCAE, er
 	if err := Validar(c); err != nil {
 		return ResultadoCAE{}, err
 	}
-	clave := fmt.Sprintf("%d-%d", c.PuntoVenta, c.Tipo)
-	w.mu.Lock()
-	l, ok := w.bloqueos[clave]
-	if !ok {
-		l = &sync.Mutex{}
-		w.bloqueos[clave] = l
+	// La clave incluye el CUIT: con Postgres el candado es uno solo para todos los emisores.
+	soltar, err := w.candado.Bloquear(ctx, fmt.Sprintf("emitir-%s-%s-%d-%d", w.cfg.Entorno, w.cuitEmisor, c.PuntoVenta, c.Tipo))
+	if err != nil {
+		return ResultadoCAE{}, fmt.Errorf("no se pudo bloquear el punto de venta: %w", err)
 	}
-	w.mu.Unlock()
-	l.Lock()
-	defer l.Unlock()
+	defer soltar()
 	return w.emitirSinBloqueo(ctx, c)
 }
 

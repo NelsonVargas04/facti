@@ -147,7 +147,7 @@ type CacheTickets struct {
 	cfg     Config
 	mu      sync.Mutex
 	memoria map[string]TicketAcceso
-	locks   map[string]*sync.Mutex
+	candado Candado
 
 	// Reemplazables en tests.
 	login func(context.Context, Config, Servicio) (TicketAcceso, error)
@@ -158,7 +158,7 @@ func NuevaCacheTickets(cfg Config) *CacheTickets {
 	return &CacheTickets{
 		cfg:     cfg,
 		memoria: map[string]TicketAcceso{},
-		locks:   map[string]*sync.Mutex{},
+		candado: candadoDe(cfg),
 		login:   LoginCms,
 		ahora:   time.Now,
 	}
@@ -168,16 +168,13 @@ func NuevaCacheTickets(cfg Config) *CacheTickets {
 func (c *CacheTickets) Obtener(ctx context.Context, servicio Servicio) (TicketAcceso, error) {
 	clave := fmt.Sprintf("%s-%s-%s", c.cfg.Entorno, c.cfg.CuitCertificado, servicio)
 
-	// Un candado por servicio: evita pedir dos tickets a la vez para el mismo servicio.
-	c.mu.Lock()
-	l, ok := c.locks[clave]
-	if !ok {
-		l = &sync.Mutex{}
-		c.locks[clave] = l
+	// Un candado por servicio: evita pedir dos tickets a la vez para el mismo servicio
+	// (con Postgres, también entre instancias de la función).
+	soltar, err := c.candado.Bloquear(ctx, "wsaa-"+clave)
+	if err != nil {
+		return TicketAcceso{}, fmt.Errorf("no se pudo bloquear el ticket de acceso: %w", err)
 	}
-	c.mu.Unlock()
-	l.Lock()
-	defer l.Unlock()
+	defer soltar()
 
 	c.mu.Lock()
 	enMemoria, ok := c.memoria[clave]
@@ -185,9 +182,9 @@ func (c *CacheTickets) Obtener(ctx context.Context, servicio Servicio) (TicketAc
 	if ok && enMemoria.vigente(c.ahora()) {
 		return enMemoria, nil
 	}
-	if enDisco, ok := c.leer(clave); ok && enDisco.vigente(c.ahora()) {
-		c.recordar(clave, enDisco)
-		return enDisco, nil
+	if guardado, ok := c.leer(ctx, clave); ok && guardado.vigente(c.ahora()) {
+		c.recordar(clave, guardado)
+		return guardado, nil
 	}
 
 	ta, err := c.login(ctx, c.cfg, servicio)
@@ -195,7 +192,7 @@ func (c *CacheTickets) Obtener(ctx context.Context, servicio Servicio) (TicketAc
 		return TicketAcceso{}, err
 	}
 	c.recordar(clave, ta)
-	if err := c.guardar(clave, ta); err != nil {
+	if err := c.guardar(ctx, clave, ta); err != nil {
 		return TicketAcceso{}, fmt.Errorf("no se pudo guardar el ticket de acceso: %w", err)
 	}
 	return ta, nil
@@ -214,7 +211,11 @@ func (c *CacheTickets) ruta(clave string) string {
 	return filepath.Join(c.cfg.CacheDir, "ta-"+clave+".json")
 }
 
-func (c *CacheTickets) leer(clave string) (TicketAcceso, bool) {
+func (c *CacheTickets) leer(ctx context.Context, clave string) (TicketAcceso, bool) {
+	if c.cfg.Almacen != nil {
+		ta, ok, err := c.cfg.Almacen.LeerTicket(ctx, clave)
+		return ta, ok && err == nil
+	}
 	var ta TicketAcceso
 	ruta := c.ruta(clave)
 	if ruta == "" {
@@ -227,7 +228,10 @@ func (c *CacheTickets) leer(clave string) (TicketAcceso, bool) {
 	return ta, true
 }
 
-func (c *CacheTickets) guardar(clave string, ta TicketAcceso) error {
+func (c *CacheTickets) guardar(ctx context.Context, clave string, ta TicketAcceso) error {
+	if c.cfg.Almacen != nil {
+		return c.cfg.Almacen.GuardarTicket(ctx, clave, ta)
+	}
 	ruta := c.ruta(clave)
 	if ruta == "" {
 		return nil

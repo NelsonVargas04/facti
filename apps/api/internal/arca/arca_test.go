@@ -296,3 +296,41 @@ func TestErroresSonDistinguibles(t *testing.T) {
 		t.Error("SinRespuestaError tiene que exponer la causa")
 	}
 }
+
+// almacenMemoria simula la base: guarda los tickets fuera de la CacheTickets.
+type almacenMemoria struct{ m map[string]TicketAcceso }
+
+func (a *almacenMemoria) LeerTicket(_ context.Context, clave string) (TicketAcceso, bool, error) {
+	ta, ok := a.m[clave]
+	return ta, ok, nil
+}
+func (a *almacenMemoria) GuardarTicket(_ context.Context, clave string, ta TicketAcceso) error {
+	a.m[clave] = ta
+	return nil
+}
+
+func TestTicketsEnAlmacenCompartido(t *testing.T) {
+	ahora := time.Date(2026, 11, 14, 10, 0, 0, 0, time.UTC)
+	almacen := &almacenMemoria{m: map[string]TicketAcceso{}}
+	cfg := Config{Entorno: Homologacion, CuitCertificado: "20111111112", Almacen: almacen}
+	logins := 0
+	nueva := func() *CacheTickets {
+		c := NuevaCacheTickets(cfg)
+		c.ahora = func() time.Time { return ahora }
+		c.login = func(context.Context, Config, Servicio) (TicketAcceso, error) {
+			logins++
+			return TicketAcceso{Token: "t", Sign: "s", Expiracion: ahora.Add(12 * time.Hour).Format(time.RFC3339)}, nil
+		}
+		return c
+	}
+	// Dos "instancias" (como dos funciones de Vercel): la segunda usa el ticket que guardó la primera.
+	if _, err := nueva().Obtener(context.Background(), ServicioFacturacion); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := nueva().Obtener(context.Background(), ServicioFacturacion); err != nil {
+		t.Fatal(err)
+	}
+	if logins != 1 {
+		t.Errorf("tiene que pedir un solo ticket al WSAA, pidió %d", logins)
+	}
+}
