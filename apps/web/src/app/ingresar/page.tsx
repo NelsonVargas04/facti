@@ -8,6 +8,7 @@ import { BotonGoogle } from '@/components/BotonGoogle';
 import { Facti } from '@/components/Facti';
 import { FactiWordmark } from '@/components/FactiLogo';
 import { mensajeAuth, supabase } from '@/lib/supabase';
+import { demoHabilitado, entrarDemo } from '@/lib/demo';
 
 const inputCls =
   'h-12 w-full rounded-input border-[1.5px] border-borde bg-white px-4 text-base font-normal text-texto outline-none transition-colors placeholder:text-[#9399B2] hover:border-[#C5CCDC] focus:border-primario focus:ring-4 focus:ring-primario-suave';
@@ -113,6 +114,19 @@ function Ingresar() {
           {enviando ? (<><Girando />Entrando…</>) : 'Iniciar sesión'}
         </button>
       </form>
+
+      {demoHabilitado && (
+        <button
+          type="button"
+          onClick={() => {
+            entrarDemo();
+            router.replace(volver);
+          }}
+          className="btn-lift flex h-[50px] items-center justify-center gap-2 rounded-full border-2 border-dashed border-primario bg-primario-suave text-[16px] font-extrabold text-primario-oscuro"
+        >
+          Entrar con la cuenta de prueba
+        </button>
+      )}
 
       <p className="text-center text-[15px] text-texto-suave">
         ¿Todavía no tenés cuenta?{' '}

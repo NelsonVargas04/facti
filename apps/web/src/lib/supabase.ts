@@ -1,6 +1,7 @@
 'use client';
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { enDemo, TOKEN_DEMO } from '@/lib/demo';
 
 const URL_SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL;
 // Supabase llama "publishable key" a la clave nueva y "anon key" a la vieja: sirve cualquiera de las dos.
@@ -21,6 +22,7 @@ export function supabase(): SupabaseClient | null {
 
 /** Token de acceso de la sesión actual (Supabase lo renueva solo), para mandarlo a la API. */
 export async function tokenActual(): Promise<string | null> {
+  if (enDemo()) return TOKEN_DEMO;
   const s = supabase();
   if (!s) return null;
   const { data } = await s.auth.getSession();

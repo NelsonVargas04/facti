@@ -14,6 +14,7 @@ import (
 
 	"facti/api/internal/auth"
 	"facti/api/internal/config"
+	"facti/api/internal/demo"
 	"facti/api/internal/servidor"
 )
 
@@ -40,11 +41,28 @@ func main() {
 		log.Warn("falta SUPABASE_URL: nadie puede iniciar sesión")
 	}
 
+	datosApp := servidor.DatosPerezosos(cfg.DatabaseURL)
+	// Modo demo (solo en la compu): cuenta de prueba en memoria, sin Supabase ni Postgres.
+	if os.Getenv("FACTI_DEMO") == "1" {
+		if cfg.Entorno == "produccion" {
+			log.Error("FACTI_DEMO no se puede usar con ARCA_ENTORNO=produccion")
+			os.Exit(1)
+		}
+		m, err := demo.Datos(cfg.PuntoVenta)
+		if err != nil {
+			log.Error("no se pudo armar la cuenta de prueba", "error", err)
+			os.Exit(1)
+		}
+		datosApp = servidor.FijarDatos(m)
+		autenticador = demo.Autenticador{}
+		log.Warn("MODO DEMO: cuenta de prueba en memoria (se borra al reiniciar), sin Supabase ni base de datos")
+	}
+
 	srv := &http.Server{
 		Addr: fmt.Sprintf(":%d", cfg.Puerto),
 		Handler: servidor.Nuevo(servidor.Opciones{
 			Arca:        servidor.ClientesPerezosos(cfg),
-			Datos:       servidor.DatosPerezosos(cfg.DatabaseURL),
+			Datos:       datosApp,
 			Auth:        autenticador,
 			PuntoVenta:  cfg.PuntoVenta,
 			Entorno:     cfg.Entorno,
