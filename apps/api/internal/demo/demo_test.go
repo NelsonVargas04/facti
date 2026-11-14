@@ -9,7 +9,7 @@ import (
 )
 
 func TestCuentaDePrueba(t *testing.T) {
-	m, err := Datos(3)
+	m, err := Datos(3, "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -40,5 +40,16 @@ func TestSoloAceptaElTokenDeDemo(t *testing.T) {
 	u, err := (Autenticador{}).Verificar(context.Background(), Token)
 	if err != nil || u.ID != Usuario.ID {
 		t.Errorf("el token de demo tiene que entrar: %v %v", u, err)
+	}
+}
+
+func TestCuentaDePruebaConCuitReal(t *testing.T) {
+	m, err := Datos(1, "20-96037763-0", "Vargas Planas Nelson Eduardo")
+	if err != nil {
+		t.Fatal(err)
+	}
+	c, _ := m.CuentaDeUsuario(context.Background(), Usuario.ID, Usuario.Email, 1)
+	if c.Cuit != "20960377630" || c.Nombre != "VARGAS PLANAS NELSON EDUARDO" {
+		t.Errorf("tiene que usar el CUIT y el nombre reales: %s %s", c.Cuit, c.Nombre)
 	}
 }

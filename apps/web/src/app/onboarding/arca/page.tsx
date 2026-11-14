@@ -4,8 +4,7 @@ import { Facti } from '@/components/Facti';
 import { Stepper } from '@/components/Stepper';
 import { CopiarCuit } from '@/components/CopiarCuit';
 
-// Placeholder: reemplazar por el CUIT real de Facti cuando esté definido.
-const CUIT_FACTI = '[CUIT DE FACTI]';
+import { CUIT_FACTI } from '@/lib/cuitFacti';
 
 function Tilde({ size = 16, color = '#1E9E63' }: { size?: number; color?: string }) {
   return (
@@ -16,10 +15,11 @@ function Tilde({ size = 16, color = '#1E9E63' }: { size?: number; color?: string
 }
 
 const PASOS_ARCA = [
-  { t: 'Entrá a ARCA con tu CUIT y clave fiscal nivel 3.', d: null },
-  { t: 'Abrí el "Administrador de Relaciones de Clave Fiscal".', d: 'Está en "Mis servicios".' },
-  { t: 'Tocá "Nueva relación" y elegí ARCA › WebServices.', d: 'Hacelo una vez por cada servicio de la lista de abajo.' },
-  { t: 'En "Representante", pegá el CUIT de Facti y confirmá.', d: 'ARCA te muestra el formulario 3283 como constancia.' },
+  { t: 'Entrá a ARCA con tu CUIT y clave fiscal nivel 3.', d: 'La clave la escribís solo vos, en la web de ARCA.' },
+  { t: 'Abrí el "Administrador de Relaciones de Clave Fiscal".', d: 'Buscalo con el buscador de arriba.' },
+  { t: 'Tocá "Nueva Relación" y elegí ARCA › WebServices › Facturación Electrónica.', d: 'Si hacés Factura E, repetilo con "Factura Electrónica de Exportación".' },
+  { t: 'En "Representante", buscá el CUIT de Facti y confirmá.', d: 'ARCA te muestra el formulario 3283 como constancia.' },
+  { t: 'Creá un punto de venta "Factura Electrónica - Monotributo - Web Services".', d: 'En "Administración de puntos de venta y domicilios" › Agregar.' },
 ];
 
 const SERVICIOS = [
@@ -43,6 +43,26 @@ export default function AutorizarArca() {
             </p>
           </div>
 
+          {/* Video con los pasos, lento y con subtítulos. Se graba con apps/web/scripts/grabar-guia-arca.mjs. */}
+          <div className="flex flex-col gap-2">
+            <video
+              controls
+              preload="metadata"
+              playsInline
+              className="aspect-video w-full rounded-[18px] bg-[#0F1330] shadow-tarjeta"
+              src="/videos/conectar-arca.mp4"
+            >
+              Tu navegador no puede mostrar el video. <a href="/guias/conectar-arca">Mirá la guía paso a paso</a>.
+            </video>
+            <p className="text-[14px] text-texto-tenue">
+              Mirá el video paso a paso (dura menos de 2 minutos). También está la{' '}
+              <a href="/guias/conectar-arca" target="_blank" rel="noopener noreferrer" className="font-semibold text-primario-oscuro underline-offset-2 hover:underline">
+                guía interactiva
+              </a>
+              , que podés pausar y ver más lenta.
+            </p>
+          </div>
+
           <ol className="flex flex-col gap-3.5">
             {PASOS_ARCA.map((p, i) => (
               <li key={i} className="flex gap-3.5">
@@ -57,7 +77,7 @@ export default function AutorizarArca() {
 
           <div className="flex flex-wrap items-center justify-between gap-3.5 rounded-[18px] bg-fondo px-5 py-[18px]">
             <div>
-              <div className="text-[13px] font-bold text-texto-tenue">CUIT DE FACTI (REPRESENTANTE)</div>
+              <div className="text-[13px] font-semibold text-texto-tenue">CUIT de Facti (representante)</div>
               <div className="font-display text-[26px] font-semibold tracking-wide">{CUIT_FACTI}</div>
             </div>
             <CopiarCuit value={CUIT_FACTI} />

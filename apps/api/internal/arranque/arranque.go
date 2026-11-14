@@ -47,7 +47,7 @@ func Armar(log *slog.Logger, conDemo bool) (http.Handler, config.Config, error) 
 		if cfg.Entorno == "produccion" {
 			return nil, cfg, errors.New("FACTI_DEMO no se puede usar con ARCA_ENTORNO=produccion")
 		}
-		m, err := demo.Datos(cfg.PuntoVenta)
+		m, err := demo.Datos(cfg.PuntoVenta, cfg.CuitEmisor, os.Getenv("FACTI_DEMO_NOMBRE"))
 		if err != nil {
 			return nil, cfg, err
 		}

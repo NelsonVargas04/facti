@@ -49,8 +49,8 @@ func Cargar() Config {
 	}
 
 	c := Config{
-		Raiz:        raiz,
-		EnvCargado:  envPath,
+		Raiz:       raiz,
+		EnvCargado: envPath,
 		// En Vercel (y otros hosts) el puerto lo asigna la plataforma en PORT.
 		Puerto:      entero(valor("PORT", os.Getenv("API_PORT")), 4000),
 		DatabaseURL: strings.TrimSpace(os.Getenv("DATABASE_URL")),

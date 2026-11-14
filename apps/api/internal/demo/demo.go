@@ -9,10 +9,12 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"facti/api/internal/arca"
 	"facti/api/internal/auth"
+	"facti/api/internal/cuit"
 	"facti/api/internal/datos"
 )
 
@@ -56,7 +58,9 @@ type cliente struct {
 }
 
 // Datos devuelve una base en memoria con la cuenta de prueba ya cargada.
-func Datos(puntoVenta int) (*datos.Memoria, error) {
+// Si se pasa un CUIT válido (el del certificado de ARCA), la cuenta lo usa, así se puede emitir de
+// verdad en homologación; si no, usa uno de ejemplo. nombre es opcional (como figura en ARCA).
+func Datos(puntoVenta int, cuitReal, nombre string) (*datos.Memoria, error) {
 	ctx := context.Background()
 	m := datos.NuevaMemoria()
 	c, err := m.CuentaDeUsuario(ctx, Usuario.ID, Usuario.Email, puntoVenta)
@@ -64,8 +68,14 @@ func Datos(puntoVenta int) (*datos.Memoria, error) {
 		return nil, err
 	}
 	cuitEmisor := conDV("2731456789")
+	if cuit.Validar(cuitReal) {
+		cuitEmisor = cuit.Limpiar(cuitReal)
+	}
+	if strings.TrimSpace(nombre) == "" {
+		nombre = "FERNÁNDEZ LUCÍA"
+	}
 	c, err = m.AsignarCuit(ctx, c.ID, cuitEmisor, datos.Perfil{
-		Nombre:    "FERNÁNDEZ LUCÍA",
+		Nombre:    strings.ToUpper(strings.TrimSpace(nombre)),
 		Domicilio: "Av. Corrientes 1234 - CABA",
 		Condicion: "monotributo",
 		Categoria: "D",

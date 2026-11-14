@@ -10,3 +10,7 @@ certs/*
 *.log
 apps/api/bin/
 .DS_Store
+
+# Claves y datos personales de ARCA: nunca al repo
+Claves arca.txt
+[Cc]laves*.txt
