@@ -27,8 +27,8 @@ usar como referencia visual y de contenido, no copiar el código tal cual) y la 
 | `facti-cuerpo` | `#7B7FF2` | Solo la mascota |
 
 ## Tipografía
-- Títulos: **Quicksand** 700 (H1 34–68 px, H2 20–44 px), interletrado -0.02em en tamaños grandes.
-- Texto: **Nunito** 400/600/700/800, 16–17 px, interlineado 1.55.
+- Títulos: **Plus Jakarta Sans** 700 (H1 34–68 px, H2 20–44 px), interletrado -0.02em en tamaños grandes.
+- Texto: **Plus Jakarta Sans** 400/600/700, 16–17 px, interlineado 1.55. Una sola familia en todo el sitio (reemplazó a Quicksand + Nunito; los mockups HTML todavía usan las viejas).
 - Etiquetas en mayúsculas: 12–13 px, 800, interletrado 0.06em.
 
 ## Formas

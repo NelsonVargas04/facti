@@ -19,12 +19,12 @@ export function Stepper({ actual }: { actual: number }) {
         return (
           <li key={label} className="flex flex-1 items-center gap-2.5" style={{ minWidth: 0 }}>
             <div
-              className={`flex items-center gap-2 text-[15px] font-extrabold ${
+              className={`flex items-center gap-2 text-[15px] font-bold ${
                 done ? 'text-exito-texto' : current ? 'text-texto' : 'text-texto-tenue'
               }`}
             >
               <span
-                className={`flex h-[34px] w-[34px] flex-none items-center justify-center rounded-full font-extrabold ${
+                className={`flex h-[34px] w-[34px] flex-none items-center justify-center rounded-full font-bold ${
                   done ? 'bg-exito text-white' : current ? 'bg-primario text-white' : 'bg-[#E6EAF2] text-texto-tenue'
                 }`}
               >

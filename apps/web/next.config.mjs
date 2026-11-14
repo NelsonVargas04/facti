@@ -16,6 +16,10 @@ if (existsSync(envRaiz)) {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Los parámetros normativos (topes, montos con vigencia) vienen de packages/shared, en TypeScript.
+  transpilePackages: ['@facti/shared'],
+  // El indicador de Next (solo en desarrollo) va abajo a la derecha para no tapar la cuenta del menú.
+  devIndicators: { position: 'bottom-right' },
 };
 
 export default nextConfig;

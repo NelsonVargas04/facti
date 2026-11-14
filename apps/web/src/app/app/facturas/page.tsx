@@ -81,7 +81,7 @@ export default function Facturas() {
           <h1 className="text-[34px] font-bold">Facturas</h1>
           <p className="text-texto-suave">Todas tus facturas emitidas, en un solo lugar.</p>
         </div>
-        <Link href="/app/facturas/nueva" className="btn-lift flex h-12 items-center gap-2 rounded-full bg-primario px-6 font-extrabold text-white shadow-boton">
+        <Link href="/app/facturas/nueva" className="btn-lift flex h-12 items-center gap-2 rounded-full bg-primario px-6 font-bold text-white shadow-boton">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
           Emitir factura
         </Link>
@@ -90,7 +90,7 @@ export default function Facturas() {
       {/* Filtros separados */}
       <div style={{ animationDelay: '20ms' }} className="aparece flex flex-wrap items-end gap-4">
         <div className="flex min-w-[240px] flex-1 flex-col gap-1.5">
-          <span className="text-sm font-bold">Buscar</span>
+          <span className="text-sm font-semibold">Buscar</span>
           <div className="flex h-12 items-center gap-2 rounded-input border-[1.5px] border-borde bg-white px-4 transition-colors focus-within:border-primario">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="flex-none text-texto-tenue"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
             <input
@@ -102,15 +102,15 @@ export default function Facturas() {
           </div>
         </div>
         <div className="flex w-[185px] flex-col gap-1.5">
-          <span className="text-sm font-bold">Período</span>
+          <span className="text-sm font-semibold">Período</span>
           <Select ariaLabel="Período" value={periodo} onChange={setPeriodo} options={PERIODOS} />
         </div>
         <div className="flex w-[160px] flex-col gap-1.5">
-          <span className="text-sm font-bold">Estado</span>
+          <span className="text-sm font-semibold">Estado</span>
           <Select ariaLabel="Estado" value={filtro} onChange={(v) => setFiltro(v as Filtro)} options={FILTROS_SEL} />
         </div>
         <div className="flex w-[185px] flex-col gap-1.5">
-          <span className="text-sm font-bold">Ordenar por</span>
+          <span className="text-sm font-semibold">Ordenar por</span>
           <Select ariaLabel="Ordenar por" value={orden} onChange={setOrden} options={ORDENES} />
         </div>
       </div>
@@ -139,7 +139,7 @@ export default function Facturas() {
                     const npag = i + 1;
                     const on = npag === paginaActual;
                     return (
-                      <button key={npag} type="button" onClick={() => setPagina(npag)} aria-current={on ? 'page' : undefined} className={`h-9 min-w-9 rounded-[10px] px-2.5 text-sm font-extrabold transition-colors ${on ? 'bg-primario text-white' : 'text-texto-suave hover:bg-fondo'}`}>{npag}</button>
+                      <button key={npag} type="button" onClick={() => setPagina(npag)} aria-current={on ? 'page' : undefined} className={`h-9 min-w-9 rounded-[10px] px-2.5 text-sm font-bold transition-colors ${on ? 'bg-primario text-white' : 'text-texto-suave hover:bg-fondo'}`}>{npag}</button>
                     );
                   })}
                   <button type="button" onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))} disabled={paginaActual === totalPaginas} aria-label="Página siguiente" className="flex h-9 w-9 items-center justify-center rounded-[10px] border-[1.5px] border-borde text-texto-suave transition-colors hover:border-primario hover:text-primario disabled:opacity-40">
@@ -157,7 +157,7 @@ export default function Facturas() {
               {hayFiltros ? 'Probá con otra búsqueda o cambiá el período o el estado.' : 'Cuando emitas la primera, va a aparecer acá.'}
             </p>
             {!hayFiltros && (
-              <Link href="/app/facturas/nueva" className="btn-lift rounded-full bg-primario px-6 py-3 font-extrabold text-white shadow-boton">Emitir factura</Link>
+              <Link href="/app/facturas/nueva" className="inline-flex items-center justify-center btn-lift rounded-full bg-primario px-6 h-12 font-bold text-white shadow-boton">Emitir factura</Link>
             )}
           </div>
         )}

@@ -39,7 +39,7 @@ export function AvisoApi({ error, onReintentar, compacto }: { error: ErrorApi; o
           {compacto ? <strong>{titulo}. </strong> : <h2 className="text-[20px] font-bold text-texto">{titulo}</h2>}
           <span className={compacto ? '' : 'text-texto-suave'}>{detalle}</span>
         </span>
-        <Link href={accion.href} className="btn-lift rounded-full bg-primario px-5 py-2.5 font-extrabold text-white shadow-boton">
+        <Link href={accion.href} className="inline-flex items-center justify-center btn-lift rounded-full bg-primario px-5 h-11 font-bold text-white shadow-boton">
           {accion.texto}
         </Link>
       </div>
@@ -52,7 +52,7 @@ export function AvisoApi({ error, onReintentar, compacto }: { error: ErrorApi; o
           <strong>{titulo}.</strong> {detalle}
         </span>
         {onReintentar && (
-          <button type="button" onClick={onReintentar} className="rounded-full bg-white px-3.5 py-1.5 font-extrabold text-texto shadow-chip">
+          <button type="button" onClick={onReintentar} className="rounded-full bg-white px-3.5 py-1.5 font-bold text-texto shadow-chip">
             Reintentar
           </button>
         )}
@@ -65,7 +65,7 @@ export function AvisoApi({ error, onReintentar, compacto }: { error: ErrorApi; o
       <h2 className="text-[20px] font-bold">{titulo}</h2>
       <p className="max-w-[460px] text-texto-suave">{detalle}</p>
       {onReintentar && (
-        <button type="button" onClick={onReintentar} className="btn-lift mt-1 rounded-full bg-primario px-6 py-3 font-extrabold text-white shadow-boton">
+        <button type="button" onClick={onReintentar} className="inline-flex items-center justify-center btn-lift mt-1 rounded-full bg-primario px-6 h-12 font-bold text-white shadow-boton">
           Reintentar
         </button>
       )}

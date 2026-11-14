@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type CSSProperties } from 'react';
 import QRCode from 'qrcode';
+import { nombrePropio } from '@/lib/formato';
 
 export interface ItemComprobante {
   descripcion: string;
@@ -16,7 +17,7 @@ export interface DatosComprobanteC {
   titulo?: string;
   cod?: string;
   // Emisor
-  emisor: { razonSocial: string; domicilio: string; cuit: string; ingresosBrutos: string; inicioActividades: string };
+  emisor: { razonSocial: string; domicilio: string; cuit: string; ingresosBrutos: string; inicioActividades: string; condicionIva?: string };
   // Cabecera
   puntoVenta: number;
   numero: number;
@@ -76,7 +77,7 @@ export function ComprobanteC({ datos }: { datos: DatosComprobanteC }) {
         padding: 40,
         background: '#fff',
         color: linea,
-        fontFamily: "'Nunito', 'Segoe UI', sans-serif",
+        fontFamily: "var(--font-jakarta), 'Plus Jakarta Sans', 'Segoe UI', sans-serif",
         fontSize: 12,
         lineHeight: 1.45,
         display: 'flex',
@@ -89,12 +90,10 @@ export function ComprobanteC({ datos }: { datos: DatosComprobanteC }) {
       {/* Cabecera: emisor | letra | comprobante */}
       <div style={{ border: `1px solid ${linea}`, display: 'flex', position: 'relative' }}>
         <div style={{ flex: '1 1 0', padding: '16px 44px 14px 16px', display: 'flex', flexDirection: 'column', gap: 5, borderRight: `1px solid ${linea}` }}>
-          <div style={{ height: 46, display: 'flex', alignItems: 'center' }}>
-            <span style={{ border: '1.5px dashed #9AA0B4', color: '#5A6080', borderRadius: 6, padding: '6px 10px', fontSize: 11, fontWeight: 700 }}>LOGO DEL EMISOR (opcional)</span>
-          </div>
-          <div style={fila}><span style={bold}>Razón Social:</span><span>{datos.emisor.razonSocial}</span></div>
+          <div style={{ fontSize: 20, fontWeight: 800, lineHeight: 1.2, marginBottom: 6 }}>{nombrePropio(datos.emisor.razonSocial)}</div>
+          <div style={fila}><span style={bold}>Razón Social:</span><span>{nombrePropio(datos.emisor.razonSocial)}</span></div>
           <div style={fila}><span style={bold}>Domicilio Comercial:</span><span>{datos.emisor.domicilio}</span></div>
-          <div style={fila}><span style={bold}>Condición frente al IVA:</span><span style={bold}>Responsable Monotributo</span></div>
+          <div style={fila}><span style={bold}>Condición frente al IVA:</span><span>{datos.emisor.condicionIva ?? 'Responsable Monotributo'}</span></div>
         </div>
         <div style={{ position: 'absolute', left: '50%', top: -1, transform: 'translateX(-50%)', width: 64, background: '#fff', border: `2px solid ${linea}`, borderTop: `1px solid ${linea}`, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '4px 0 6px' }}>
           <span style={{ fontSize: 38, fontWeight: 800, lineHeight: 1 }}>{letra}</span>
@@ -125,7 +124,7 @@ export function ComprobanteC({ datos }: { datos: DatosComprobanteC }) {
       {/* Receptor */}
       <div style={{ border: `1px solid ${linea}`, padding: '12px 16px', display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '5px 20px' }}>
         <div style={fila}><span style={bold}>CUIT:</span><span>{datos.receptor.cuit}</span></div>
-        <div style={fila}><span style={bold}>Apellido y Nombre / Razón Social:</span><span>{datos.receptor.nombre}</span></div>
+        <div style={fila}><span style={bold}>Apellido y Nombre / Razón Social:</span><span>{nombrePropio(datos.receptor.nombre)}</span></div>
         <div style={fila}><span style={bold}>Condición frente al IVA:</span><span>{datos.receptor.condicionIva}</span></div>
         <div style={fila}><span style={bold}>Domicilio:</span><span>{datos.receptor.domicilio}</span></div>
         <div style={fila}><span style={bold}>Condición de venta:</span><span>{datos.receptor.condicionVenta}</span></div>
@@ -182,7 +181,7 @@ export function ComprobanteC({ datos }: { datos: DatosComprobanteC }) {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
           <span style={{ fontSize: 20, fontWeight: 800, letterSpacing: '0.04em' }}>ARCA</span>
           <span style={{ fontWeight: 800, fontStyle: 'italic' }}>Comprobante Autorizado</span>
-          <span style={{ fontSize: 11, color: '#4A5072', fontStyle: 'italic' }}>La Agencia no se responsabiliza por la veracidad de los datos ingresados en el detalle de la operación.</span>
+          <span style={{ fontSize: 11, color: '#4A5072', fontStyle: 'italic' }}>Esta Agencia no se responsabiliza por los datos ingresados en el detalle de la operación.</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end', fontSize: 13 }}>
           <span style={{ fontWeight: 700 }}>Pág. 1/1</span>

@@ -10,7 +10,7 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
         <Link href="/">
           <FactiWordmark size={34} />
         </Link>
-        <a href="#ayuda" className="font-bold text-texto-suave transition-colors hover:text-texto">
+        <a href="#ayuda" className="font-semibold text-texto-suave transition-colors hover:text-texto">
           ¿Necesitás ayuda?
         </a>
       </header>

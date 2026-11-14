@@ -175,7 +175,7 @@ export function Facti({ pose = 'saludo', size = 160, animated = true, className 
           <circle cx="252" cy="20" r="9" fill="#fff" stroke="#C9CEDD" strokeWidth="2" />
           <g>
             <circle cx="276" cy="-2" r="22" fill="#fff" stroke="#C9CEDD" strokeWidth="2" />
-            <text x="276" y="7" textAnchor="middle" fontFamily="Quicksand, Nunito, sans-serif" fontWeight="700" fontSize="26" fill="#7B7FF2">?</text>
+            <text x="276" y="7" textAnchor="middle" fontFamily="var(--font-jakarta), sans-serif" fontWeight="700" fontSize="26" fill="#7B7FF2">?</text>
           </g>
           <g className={c('f-float')}>
             <path d="M40 160 Q18 172 24 202" fill="none" stroke="#7B7FF2" strokeWidth="16" strokeLinecap="round" />
@@ -248,7 +248,7 @@ export function Facti({ pose = 'saludo', size = 160, animated = true, className 
           {sombra}
           <g className={c('f-pulse')}>
             <circle cx="20" cy="40" r="20" fill="#FFD25E" />
-            <text x="20" y="50" textAnchor="middle" fontFamily="Nunito, sans-serif" fontWeight="800" fontSize="28" fill="#15193A">!</text>
+            <text x="20" y="50" textAnchor="middle" fontFamily="var(--font-jakarta), sans-serif" fontWeight="800" fontSize="28" fill="#15193A">!</text>
           </g>
           <path d="M226 56 Q234 70 226 78 Q218 70 226 56 Z" fill="#7CC6FF" />
           <g className={c('f-shake')}>
@@ -273,9 +273,9 @@ export function Facti({ pose = 'saludo', size = 160, animated = true, className 
       return (
         <svg {...svgProps}>
           {sombra}
-          <text className={c('f-z')} style={confDelay('0s')} x="222" y="40" fontFamily="Quicksand, Nunito, sans-serif" fontWeight="700" fontSize="22" fill="#7B7FF2">z</text>
-          <text className={c('f-z')} style={confDelay('0.8s')} x="244" y="20" fontFamily="Quicksand, Nunito, sans-serif" fontWeight="700" fontSize="28" fill="#7B7FF2">z</text>
-          <text className={c('f-z')} style={confDelay('1.6s')} x="268" y="-2" fontFamily="Quicksand, Nunito, sans-serif" fontWeight="700" fontSize="34" fill="#7B7FF2">z</text>
+          <text className={c('f-z')} style={confDelay('0s')} x="222" y="40" fontFamily="var(--font-jakarta), sans-serif" fontWeight="700" fontSize="22" fill="#7B7FF2">z</text>
+          <text className={c('f-z')} style={confDelay('0.8s')} x="244" y="20" fontFamily="var(--font-jakarta), sans-serif" fontWeight="700" fontSize="28" fill="#7B7FF2">z</text>
+          <text className={c('f-z')} style={confDelay('1.6s')} x="268" y="-2" fontFamily="var(--font-jakarta), sans-serif" fontWeight="700" fontSize="34" fill="#7B7FF2">z</text>
           <g className={c('f-float')}>
             <path d="M40 160 Q18 172 24 202" fill="none" stroke="#7B7FF2" strokeWidth="16" strokeLinecap="round" />
             <circle cx="24" cy="208" r="13" fill="#FFD25E" />

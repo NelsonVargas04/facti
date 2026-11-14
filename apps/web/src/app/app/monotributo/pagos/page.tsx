@@ -120,12 +120,12 @@ export default function MonotributoPagos() {
           <h1 className="text-[34px] font-bold">Monotributo</h1>
           <p className="text-texto-suave">Categoría C · Servicios · CUIT 27-31456789-4</p>
         </div>
-        <nav aria-label="Secciones de monotributo" className="inline-flex flex-wrap gap-1 rounded-input bg-[#E8EBF2] p-1">
+        <nav aria-label="Secciones de monotributo" className="inline-flex max-w-full gap-1 overflow-x-auto rounded-input bg-[#E8EBF2] p-1 [scrollbar-width:none]">
           {[['resumen', 'Resumen'], ['pagos', 'Pagos'], ['recategorizacion', 'Recategorización']].map(([id, label]) => {
             const on = tab === id;
             return (
               <button key={id} type="button" onClick={() => setTab(id)} aria-current={on ? 'page' : undefined}
-                className={`rounded-xl px-[18px] py-2.5 transition-colors ${on ? 'bg-white font-extrabold text-texto shadow-[0_2px_8px_rgba(21,25,58,0.08)]' : 'font-bold text-texto-suave hover:text-texto'}`}>
+                className={`whitespace-nowrap rounded-xl px-4 py-2.5 transition-colors sm:px-[18px] ${on ? 'bg-white font-bold text-texto shadow-[0_2px_8px_rgba(21,25,58,0.08)]' : 'font-semibold text-texto-suave hover:text-texto'}`}>
                 {label}
               </button>
             );
@@ -138,7 +138,7 @@ export default function MonotributoPagos() {
         <section className="flex min-w-0 flex-[999_1_480px] flex-col gap-4 rounded-tarjeta bg-superficie p-7 shadow-tarjeta">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-[24px] font-bold">Cuota de octubre 2026</h2>
-            <span className="rounded-full bg-aviso-suave px-3.5 py-1.5 text-sm font-extrabold text-aviso-texto">Vence el 20/10</span>
+            <span className="rounded-full bg-aviso-suave px-3.5 py-1.5 text-sm font-bold text-aviso-texto">Vence el 20/10</span>
           </div>
           <div className="flex flex-col gap-2.5">
             {[
@@ -149,26 +149,26 @@ export default function MonotributoPagos() {
               <div key={k} className="flex justify-between gap-4 text-texto-suave"><span>{k}</span><strong className="text-texto">{v}</strong></div>
             ))}
           </div>
-          <div className="flex items-baseline justify-between border-t-[1.5px] border-dashed border-borde pt-3.5">
-            <strong className="text-[17px]">Total a pagar</strong>
-            <span className="font-display text-[38px] font-bold">$66.020,12</span>
+          <div className="flex items-baseline justify-between gap-3 border-t-[1.5px] border-dashed border-borde pt-3.5">
+            <strong className="whitespace-nowrap text-[17px]">Total a pagar</strong>
+            <span className="whitespace-nowrap font-display text-[30px] font-semibold tabular-nums sm:text-[38px]">$66.020,12</span>
           </div>
 
           <div>
             <h3 className="mb-1 text-base font-extrabold">Cómo pagarla</h3>
             {PASOS.map((p) => (
               <div key={p.n} className="flex items-start gap-3.5 border-t border-[#EDF0F6] py-3.5">
-                <span className="flex h-8 w-8 flex-none items-center justify-center rounded-[10px] bg-primario-suave font-extrabold text-primario-oscuro">{p.n}</span>
+                <span className="flex h-8 w-8 flex-none items-center justify-center rounded-[10px] bg-primario-suave font-bold text-primario-oscuro">{p.n}</span>
                 <div className="flex flex-1 flex-wrap items-center justify-between gap-2.5">
                   <div className="min-w-0">
                     <strong>{p.titulo}</strong>
                     <div className="text-sm text-texto-suave">{p.texto}</div>
                   </div>
                   {p.cta === 'ir' && (
-                    <a href="https://www.arca.gob.ar" target="_blank" rel="noopener noreferrer" className="btn-lift flex h-11 items-center gap-2 rounded-full bg-primario px-[18px] font-extrabold text-white"><span>Ir a ARCA</span><Externo /></a>
+                    <a href="https://www.arca.gob.ar" target="_blank" rel="noopener noreferrer" className="btn-lift flex h-11 items-center gap-2 rounded-full bg-primario px-[18px] font-bold text-white"><span>Ir a ARCA</span><Externo /></a>
                   )}
                   {p.cta === 'subir' && (
-                    <a href="#subir" className="btn-lift flex h-11 items-center rounded-full border-[1.5px] border-borde px-[18px] font-extrabold text-texto">Subir comprobante</a>
+                    <a href="#subir" className="btn-lift flex h-11 items-center rounded-full border-[1.5px] border-borde px-[18px] font-bold text-texto hover:border-primario hover:text-primario-oscuro">Subir comprobante</a>
                   )}
                 </div>
               </div>
@@ -181,17 +181,17 @@ export default function MonotributoPagos() {
           {ES_PRO ? (
             <>
               <Facti pose="alerta" size={150} />
-              <p className="font-bold leading-snug">Pagando antes del <span className="text-acento">20/10</span> no tenés intereses. ¿Te lo recuerdo el 18?</p>
-              <button type="button" className="btn-lift h-11 rounded-full bg-acento px-5 font-extrabold text-texto">Sí, recordámelo</button>
+              <p className="font-semibold leading-snug">Pagando antes del <span className="text-acento">20/10</span> no tenés intereses. ¿Te lo recuerdo el 18?</p>
+              <button type="button" className="inline-flex items-center justify-center btn-lift h-11 rounded-full bg-acento px-5 font-bold text-texto">Sí, recordámelo</button>
             </>
           ) : (
             <>
               <Facti pose="senalando" size={150} />
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-extrabold text-acento">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-acento">
                 <Icon name="chispa" size={14} />Función Pro
               </span>
-              <p className="font-bold leading-snug">Pagando antes del <span className="text-acento">20/10</span> no tenés intereses. Con <strong>Pro</strong> te aviso 2 días antes así no se te pasa.</p>
-              <Link href="/app/plan" className="btn-lift flex h-11 items-center gap-2 rounded-full bg-acento px-5 font-extrabold text-texto">
+              <p className="font-semibold leading-snug">Pagando antes del <span className="text-acento">20/10</span> no tenés intereses. Con <strong>Pro</strong> te aviso 2 días antes así no se te pasa.</p>
+              <Link href="/app/plan" className="btn-lift flex h-11 items-center gap-2 rounded-full bg-acento px-5 font-bold text-texto">
                 <Icon name="corona" size={18} />Pasá a Pro
               </Link>
               <span className="text-xs text-[#9CA0C8]">Desde {PLAN_DEMO.precioPro} / mes · cancelás cuando quieras</span>
@@ -211,7 +211,7 @@ export default function MonotributoPagos() {
             <div className="text-sm text-texto-suave">Facti lee el número de VEP, el período, el importe, la fecha y el código de control.</div>
           </div>
         </div>
-        <label className="btn-lift flex h-12 cursor-pointer items-center rounded-full bg-texto px-6 font-extrabold text-white">
+        <label className="btn-lift flex h-12 cursor-pointer items-center rounded-full bg-primario px-6 font-bold text-white shadow-boton">
           Elegir archivo
           <input type="file" accept="application/pdf" className="hidden" />
         </label>
@@ -225,29 +225,29 @@ export default function MonotributoPagos() {
           {/* Filtros */}
           <div className="flex flex-wrap items-end gap-3">
             <div className="flex min-w-[180px] flex-1 flex-col gap-1.5">
-              <span className="text-sm font-bold">Buscar</span>
+              <span className="text-sm font-semibold">Buscar</span>
               <div className="flex h-11 items-center gap-2 rounded-input border-[1.5px] border-borde bg-white px-3.5 transition-colors focus-within:border-primario">
                 <Icon name="buscar" size={18} className="flex-none text-texto-tenue" />
                 <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Período o N° de VEP…" className="h-full w-full bg-transparent text-base text-texto outline-none placeholder:text-texto-tenue" />
               </div>
             </div>
             <div className="flex w-[150px] flex-col gap-1.5">
-              <span className="text-sm font-bold">Estado</span>
+              <span className="text-sm font-semibold">Estado</span>
               <Select ariaLabel="Estado" value={estado} onChange={setEstado} options={ESTADOS} />
             </div>
             <div className="flex w-[165px] flex-col gap-1.5">
-              <span className="text-sm font-bold">Ordenar por</span>
+              <span className="text-sm font-semibold">Ordenar por</span>
               <Select ariaLabel="Ordenar por" value={orden} onChange={setOrden} options={ORDENES} />
             </div>
           </div>
 
           {visibles.length > 0 ? (
-            <div className="overflow-x-auto">
+            <div className="overflow-y-hidden overflow-x-auto">
               <table className="w-full min-w-[640px] border-collapse text-[15px]">
                 <thead>
-                  <tr className="text-xs tracking-[0.06em] text-texto-tenue">
+                  <tr className="text-[13px] text-texto-tenue">
                     {['PERÍODO', 'IMPORTE', 'VENCE', 'PAGADO EL', 'MEDIO', 'ESTADO', ''].map((h, i) => (
-                      <th key={h || 'acc'} className={`border-b-2 border-[#EDF0F6] px-3 pb-3 font-extrabold ${i === 1 ? 'text-right' : 'text-left'}`}>{h}</th>
+                      <th key={h || 'acc'} className={`border-b-2 border-[#EDF0F6] px-3 pb-3 font-bold ${i === 1 ? 'text-right' : 'text-left'}`}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -261,23 +261,23 @@ export default function MonotributoPagos() {
                         aria-current={on ? 'true' : undefined}
                         className={`cursor-pointer border-b border-[#F0F2F7] transition-colors last:border-0 ${on ? 'bg-primario-suave/60' : 'hover:bg-fondo'}`}
                       >
-                        <td className="rounded-l-[10px] px-3 py-4 font-bold">
+                        <td className="rounded-l-[10px] px-3 py-4 font-semibold">
                           <span className="flex items-center gap-2">
                             {on && <span className="h-4 w-1 flex-none rounded-full bg-primario" />}
                             {h.periodo}
                           </span>
                         </td>
-                        <td className="px-3 py-4 text-right font-extrabold tabular-nums">{h.importe}</td>
+                        <td className="px-3 py-4 text-right font-semibold tabular-nums">{h.importe}</td>
                         <td className="px-3 py-4 tabular-nums text-texto-suave">{h.vence}</td>
                         <td className="px-3 py-4 tabular-nums text-texto-suave">{h.pagado}</td>
                         <td className="px-3 py-4 text-texto-suave">{h.medio}</td>
                         <td className="px-3 py-4">
                           {h.estado === 'Pagado'
-                            ? <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EAF8F0] px-2.5 py-1 text-[12.5px] font-bold text-[#0E5C38] ring-1 ring-inset ring-[#C8EDD8]"><span className="h-[7px] w-[7px] rounded-full bg-[#1E9E63]" />Pagado</span>
-                            : <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FFF6E1] px-2.5 py-1 text-[12.5px] font-bold text-[#7A5200] ring-1 ring-inset ring-[#F3E1A6]"><span className="h-[7px] w-[7px] rounded-full bg-[#E0A100]" />Pendiente</span>}
+                            ? <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EAF8F0] px-2.5 py-1 text-[12.5px] font-semibold text-[#0E5C38] ring-1 ring-inset ring-[#C8EDD8]"><span className="h-[7px] w-[7px] rounded-full bg-[#1E9E63]" />Pagado</span>
+                            : <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FFF6E1] px-2.5 py-1 text-[12.5px] font-semibold text-[#7A5200] ring-1 ring-inset ring-[#F3E1A6]"><span className="h-[7px] w-[7px] rounded-full bg-[#E0A100]" />Pendiente</span>}
                         </td>
                         <td className="rounded-r-[10px] px-3 py-4 text-right">
-                          <span className={`inline-flex items-center gap-1 text-sm font-extrabold ${on ? 'text-primario-oscuro' : 'text-texto-tenue'}`}>
+                          <span className={`inline-flex items-center gap-1 text-sm font-bold ${on ? 'text-primario-oscuro' : 'text-texto-tenue'}`}>
                             {h.estado === 'Pagado' ? 'Ver' : 'Detalle'}
                             <Icon name="chevron-derecha" size={15} />
                           </span>
@@ -302,7 +302,7 @@ export default function MonotributoPagos() {
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-[20px] font-bold">Comprobante de pago</h2>
             {sel?.estado === 'Pagado' && (
-              <span className="inline-flex items-center gap-1.5 text-sm font-extrabold text-exito-texto">
+              <span className="inline-flex items-center gap-1.5 text-sm font-bold text-exito-texto">
                 <Icon name="check" size={16} strokeWidth={3} />Leído del PDF
               </span>
             )}
@@ -312,7 +312,7 @@ export default function MonotributoPagos() {
             <>
               <p className="-mt-1 text-sm text-texto-suave">{sel.periodo} · Monotributo pago mensual</p>
               <ComprobantePagoVEP datos={aDatosVEP(sel)} />
-              <a href="#descargar" className="btn-lift flex h-12 items-center justify-center gap-2 rounded-full border-[1.5px] border-borde bg-superficie font-extrabold text-texto">
+              <a href="#descargar" className="btn-lift flex h-12 items-center justify-center gap-2 rounded-full border-[1.5px] border-borde bg-superficie font-bold text-texto hover:border-primario hover:text-primario-oscuro">
                 <Icon name="descargar" size={18} />Descargar comprobante de ARCA
               </a>
             </>
@@ -324,7 +324,7 @@ export default function MonotributoPagos() {
                 {sel ? `La cuota de ${sel.periodo} figura como pendiente. Cuando la pagues y subas el PDF, el comprobante aparece acá.` : 'Elegí un pago del historial para ver su comprobante.'}
               </p>
               {sel?.estado === 'Pendiente' && (
-                <a href="#subir" className="btn-lift mt-1 flex h-11 items-center gap-2 rounded-full bg-primario px-5 font-extrabold text-white shadow-boton">
+                <a href="#subir" className="btn-lift mt-1 flex h-11 items-center gap-2 rounded-full bg-primario px-5 font-bold text-white shadow-boton">
                   <Icon name="descargar" size={18} className="rotate-180" />Subir comprobante
                 </a>
               )}

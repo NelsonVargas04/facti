@@ -58,7 +58,7 @@ CAEA de contingencia, FCE MiPyME (WSFECred), constatación de comprobantes (WSCD
 ## Diseño
 - **Sistema de diseño completo en [`docs/diseno/DISENO.md`](docs/diseno/DISENO.md)**: tokens (colores, tipografías, radios, sombras), componentes, mascota y rutas. Los mockups HTML están en `docs/diseno/pantallas/` y los SVG de la mascota en `docs/diseno/facti/`. Es la referencia para `apps/web`.
 - Estilo "playful / soft UI": fondo #F2F5F9, índigo #3B3FD8, amarillo #FFD25E, verde menta #D7F5E6, texto #15193A.
-- Tipografías: Quicksand (títulos) y Nunito (texto). Botones redondeados tipo píldora, tarjetas blancas con sombra suave.
+- Tipografía: Plus Jakarta Sans para títulos y texto (antes Quicksand + Nunito; los mockups de `docs/diseno/pantallas/` siguen con las viejas). Botones redondeados tipo píldora, tarjetas blancas con sombra suave.
 - Mascota **Facti**: ticket de factura lila (#7B7FF2) con borde en zigzag, manos amarillas, cachetes rosados.
   Poses: saludo, ok, festejo, factura, pensando, señalando, buscando, alerta, durmiendo. Una sola pose animada por pantalla; respetar prefers-reduced-motion.
 - Pantallas diseñadas: landing, crear cuenta, perfil fiscal, autorizar en ARCA, inicio, emitir factura, factura emitida, pagos de monotributo, y PDFs de Factura A, C y E.

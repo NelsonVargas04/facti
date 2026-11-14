@@ -381,6 +381,17 @@ func TestEmitirGuardaYSeVeEnTodasLasPantallas(t *testing.T) {
 	if j["ultimos12Meses"].(map[string]any)["facturado"] != 100000.0 {
 		t.Errorf("últimos 12 meses: %v", j["ultimos12Meses"])
 	}
+	if pm, _ := j["ultimos12Meses"].(map[string]any)["porMes"].([]any); len(pm) != 12 {
+		t.Errorf("tiene que venir la facturación de los 12 meses, vino %v", j["ultimos12Meses"])
+	} else {
+		suma := 0.0
+		for _, m := range pm {
+			suma += m.(map[string]any)["facturado"].(float64)
+		}
+		if suma != 100000.0 {
+			t.Errorf("la suma mes a mes tiene que dar lo mismo que el total: %v", suma)
+		}
+	}
 	plan := j["plan"].(map[string]any)
 	if plan["nombre"] != "gratis" || plan["uso"].(map[string]any)["facturas"] != 2.0 || plan["limites"].(map[string]any)["facturas"] != 10.0 {
 		t.Errorf("plan: %v", plan)

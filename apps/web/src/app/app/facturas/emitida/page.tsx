@@ -38,7 +38,7 @@ function FacturaEmitida() {
       <div className="flex flex-col items-center gap-3 py-16 text-center">
         <Facti pose="pensando" size={150} />
         <h1 className="text-[22px] font-bold">No encontramos esa factura</h1>
-        <Link href="/app/facturas" className="btn-lift rounded-full bg-primario px-6 py-3 font-extrabold text-white shadow-boton">Ver mis facturas</Link>
+        <Link href="/app/facturas" className="inline-flex items-center justify-center btn-lift rounded-full bg-primario px-6 h-12 font-bold text-white shadow-boton">Ver mis facturas</Link>
       </div>
     );
   }
@@ -75,7 +75,7 @@ function FacturaEmitida() {
           <div className="flex items-center gap-[18px] rounded-tarjeta-lg bg-exito-suave p-7">
             <Facti pose="festejo" size={160} animated />
             <div className="flex flex-col gap-1.5 text-exito-texto">
-              <span className="flex items-center gap-1.5 text-sm font-extrabold"><Ic><path d="M5 12.5l4.5 4.5L19 7.5" /></Ic>Autorizada por ARCA</span>
+              <span className="flex items-center gap-1.5 text-sm font-bold"><Ic><path d="M5 12.5l4.5 4.5L19 7.5" /></Ic>Autorizada por ARCA</span>
               <h1 className="text-[32px] font-bold leading-tight text-texto">¡Listo! Tu factura ya es válida</h1>
               <span className="text-[15px] text-exito-texto">Ya quedó guardada. Descargala o compartila con tu cliente.</span>
             </div>
@@ -91,16 +91,16 @@ function FacturaEmitida() {
           </section>
 
           <div className="flex flex-wrap gap-3">
-            <button type="button" onClick={() => window.print()} className="btn-lift flex h-[52px] items-center gap-2.5 rounded-[16px] bg-primario px-5 font-extrabold text-white shadow-boton">
+            <button type="button" onClick={() => window.print()} className="btn-lift flex h-12 items-center gap-2.5 rounded-full bg-primario px-5 font-bold text-white shadow-boton">
               <Ic><path d="M12 4v11M7 10l5 5 5-5M5 20h14" /></Ic>Descargar PDF
             </button>
-            <button type="button" className="btn-lift flex h-[52px] items-center gap-2.5 rounded-[16px] border-[1.5px] border-borde bg-white px-5 font-extrabold text-texto">
+            <button type="button" className="btn-lift flex h-12 items-center gap-2.5 rounded-full border-[1.5px] border-borde bg-white px-5 font-bold text-texto hover:border-primario hover:text-primario-oscuro">
               <Ic><path d="M4 20l1.5-4.5A8 8 0 1 1 9 19z" /></Ic>Enviar por WhatsApp
             </button>
-            <button type="button" className="btn-lift flex h-[52px] items-center gap-2.5 rounded-[16px] border-[1.5px] border-borde bg-white px-5 font-extrabold text-texto">
+            <button type="button" className="btn-lift flex h-12 items-center gap-2.5 rounded-full border-[1.5px] border-borde bg-white px-5 font-bold text-texto hover:border-primario hover:text-primario-oscuro">
               <Ic><rect x="3" y="5" width="18" height="14" rx="3" /><path d="M3 8l9 6 9-6" /></Ic>Reenviar email
             </button>
-            <button type="button" onClick={copiarLink} className="btn-lift flex h-[52px] items-center gap-2.5 rounded-[16px] border-[1.5px] border-borde bg-white px-5 font-extrabold text-texto">
+            <button type="button" onClick={copiarLink} className="btn-lift flex h-12 items-center gap-2.5 rounded-full border-[1.5px] border-borde bg-white px-5 font-bold text-texto hover:border-primario hover:text-primario-oscuro">
               <Ic><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" /><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" /></Ic>
               {copiado ? '¡Link copiado!' : 'Copiar link'}
             </button>
@@ -124,13 +124,13 @@ function FacturaEmitida() {
 
         {/* Columna derecha: vista previa en formato oficial */}
         <div className="flex flex-[0_1_460px] flex-col gap-2.5">
-          <span className="text-[13px] font-extrabold tracking-[0.06em] text-texto-tenue">VISTA PREVIA DEL PDF (FORMATO OFICIAL)</span>
+          <span className="text-[14px] font-semibold text-texto-tenue">Vista previa del PDF (formato oficial)</span>
           <div className="overflow-hidden rounded-xl shadow-tarjeta-lg" style={{ width: 445, height: 629 }}>
             <div style={{ width: 794, transformOrigin: 'top left', transform: 'scale(0.56)' }}>
               <ComprobanteC datos={datos} />
             </div>
           </div>
-          <button type="button" onClick={() => window.print()} className="self-start text-[15px] font-extrabold text-primario-oscuro transition-colors hover:text-texto">Descargar / imprimir PDF →</button>
+          <button type="button" onClick={() => window.print()} className="self-start text-[15px] font-bold text-primario-oscuro transition-colors hover:text-texto">Descargar / imprimir PDF →</button>
         </div>
       </div>
 

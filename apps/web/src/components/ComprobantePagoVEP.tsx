@@ -43,7 +43,7 @@ export function ComprobantePagoVEP({ datos }: { datos: DatosPagoVEP }) {
         position: 'relative',
         background: '#fff',
         color: linea,
-        fontFamily: "'Nunito', 'Segoe UI', sans-serif",
+        fontFamily: "var(--font-jakarta), 'Plus Jakarta Sans', 'Segoe UI', sans-serif",
         fontSize: 12.5,
         lineHeight: 1.45,
         border: `1px solid ${linea}`,

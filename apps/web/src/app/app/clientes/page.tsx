@@ -7,10 +7,10 @@ import { AvisoApi } from '@/components/AvisoApi';
 import { Facti } from '@/components/Facti';
 import { TablaSkeleton } from '@/components/TablaFacturas';
 import { condicionTexto, listarClientes } from '@/lib/api';
-import { fecha, formatearCuit, pesos } from '@/lib/formato';
+import { fecha, formatearCuit, nombrePropio, pesos } from '@/lib/formato';
 import { useApi, useDemorado } from '@/lib/useApi';
 
-const th = 'border-b-2 border-[#EDF0F6] px-4 pb-3 font-extrabold';
+const th = 'whitespace-nowrap border-b border-[#EDF0F6] px-4 pb-3 font-semibold';
 const td = 'px-4 py-4 align-middle';
 
 const DOC: Record<number, string> = { 80: 'CUIT', 86: 'CUIL', 96: 'DNI' };
@@ -29,7 +29,7 @@ export default function Clientes() {
           <h1 className="text-[34px] font-bold">Clientes</h1>
           <p className="text-texto-suave">Tus clientes y cuánto les facturaste. Se guardan solos cuando les hacés una factura.</p>
         </div>
-        <Link href="/app/facturas/nueva" className="btn-lift flex h-12 items-center gap-2 rounded-full bg-primario px-6 font-extrabold text-white shadow-boton">
+        <Link href="/app/facturas/nueva" className="btn-lift flex h-12 items-center gap-2 rounded-full bg-primario px-6 font-bold text-white shadow-boton">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="10" cy="8" r="4" /><path d="M3 20c0-3.9 3.1-7 7-7M18 14v6M15 17h6" /></svg>
           Facturar a un cliente nuevo
         </Link>
@@ -38,13 +38,13 @@ export default function Clientes() {
       {/* Stats */}
       {lista.dato && !qDemorado && (
         <div className="cascada grid gap-[18px] [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
-          <div className="card-hover flex flex-col gap-1 rounded-tarjeta bg-superficie px-6 py-5 shadow-tarjeta">
-            <span className="text-[13px] font-extrabold tracking-[0.06em] text-texto-tenue">CLIENTES</span>
-            <span className="font-display text-[30px] font-bold tabular-nums"><Numero valor={clientes.length} formato={String} /></span>
+          <div className="flex flex-col gap-1 rounded-tarjeta bg-superficie px-6 py-5 shadow-tarjeta">
+            <span className="text-[14px] font-semibold text-texto-tenue">Clientes</span>
+            <span className="font-display text-[30px] font-semibold tabular-nums"><Numero valor={clientes.length} formato={String} /></span>
           </div>
-          <div className="card-hover flex flex-col gap-1 rounded-tarjeta bg-superficie px-6 py-5 shadow-tarjeta">
-            <span className="text-[13px] font-extrabold tracking-[0.06em] text-texto-tenue">COMPROBANTES EMITIDOS</span>
-            <span className="font-display text-[30px] font-bold tabular-nums"><Numero valor={totalComprobantes} formato={String} /></span>
+          <div className="flex flex-col gap-1 rounded-tarjeta bg-superficie px-6 py-5 shadow-tarjeta">
+            <span className="text-[14px] font-semibold text-texto-tenue">Comprobantes emitidos</span>
+            <span className="font-display text-[30px] font-semibold tabular-nums"><Numero valor={totalComprobantes} formato={String} /></span>
           </div>
         </div>
       )}
@@ -62,32 +62,32 @@ export default function Clientes() {
         ) : !lista.dato ? (
           <TablaSkeleton filas={4} />
         ) : clientes.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[820px] border-collapse text-[15px]">
+          <div className="overflow-y-hidden overflow-x-auto">
+            <table className="w-full min-w-[640px] border-collapse text-[15px]">
               <thead>
-                <tr className="text-xs tracking-[0.06em] text-texto-tenue">
-                  <th className={`${th} text-left`}>CLIENTE</th>
-                  <th className={`${th} text-left`}>CUIT / DNI</th>
-                  <th className={`${th} text-left`}>CONDICIÓN IVA</th>
-                  <th className={`${th} text-center`}>COMPROBANTES</th>
-                  <th className={`${th} text-right`}>FACTURADO</th>
-                  <th className={`${th} text-right`}>POR COBRAR</th>
+                <tr className="text-[13px] text-texto-tenue">
+                  <th className={`${th} text-left`}>Cliente</th>
+                  <th className={`${th} text-left`}>Condición IVA</th>
+                  <th className={`${th} text-center`}>Comprobantes</th>
+                  <th className={`${th} text-right`}>Facturado</th>
+                  <th className={`${th} text-right`}>Por cobrar</th>
                 </tr>
               </thead>
               <tbody className="cascada" key={qDemorado}>
                 {clientes.map((c) => (
                   <tr key={c.id} className="border-b border-[#F0F2F7] transition-colors last:border-0 hover:bg-fondo">
-                    <td className={`${td}`}>
-                      <span className="block font-bold">{c.nombre || formatearCuit(c.docNro)}</span>
-                      {c.ultimo && <span className="text-[13px] text-texto-tenue">Última factura: {fecha(c.ultimo)}</span>}
+                    <td className={`${td} whitespace-nowrap`}>
+                      <span className="block font-semibold">{c.nombre ? nombrePropio(c.nombre) : formatearCuit(c.docNro)}</span>
+                      {/* Documento debajo del nombre: una columna menos y todo entra en una línea. */}
+                      <span className="block text-[13px] tabular-nums text-texto-tenue">
+                        {DOC[c.docTipo] ?? 'Doc.'} {c.docTipo === 96 ? c.docNro : formatearCuit(c.docNro)}
+                        {c.ultimo && <> · última {fecha(c.ultimo)}</>}
+                      </span>
                     </td>
-                    <td className={`${td} whitespace-nowrap tabular-nums text-texto-suave`}>
-                      {DOC[c.docTipo] ?? 'Doc.'} {c.docTipo === 96 ? c.docNro : formatearCuit(c.docNro)}
-                    </td>
-                    <td className={`${td} text-texto-suave`}>{condicionTexto(c)}</td>
-                    <td className={`${td} text-center font-bold tabular-nums`}>{c.comprobantes}</td>
-                    <td className={`${td} text-right font-extrabold tabular-nums`}>{pesos(c.facturado)}</td>
-                    <td className={`${td} text-right tabular-nums ${c.porCobrar > 0 ? 'font-extrabold text-aviso-texto' : 'text-texto-tenue'}`}>
+                    <td className={`${td} whitespace-nowrap text-texto-suave`}>{condicionTexto(c)}</td>
+                    <td className={`${td} text-center font-semibold tabular-nums`}>{c.comprobantes}</td>
+                    <td className={`${td} whitespace-nowrap text-right font-semibold tabular-nums`}>{pesos(c.facturado)}</td>
+                    <td className={`${td} whitespace-nowrap text-right tabular-nums ${c.porCobrar > 0 ? 'font-semibold text-aviso-texto' : 'text-texto-tenue'}`}>
                       {c.porCobrar > 0 ? pesos(c.porCobrar) : '—'}
                     </td>
                   </tr>

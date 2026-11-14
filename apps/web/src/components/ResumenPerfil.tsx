@@ -16,14 +16,14 @@ export function ResumenPerfil() {
     return (
       <div className="flex flex-col gap-2 rounded-tarjeta bg-superficie p-7 shadow-tarjeta">
         <strong>Todavía no cargaste tu CUIT</strong>
-        <Link href="/onboarding/perfil" className="text-[15px] font-extrabold text-primario-oscuro">Cargarlo ahora</Link>
+        <Link href="/onboarding/perfil" className="text-[15px] font-bold text-primario-oscuro">Cargarlo ahora</Link>
       </div>
     );
   }
   const condicion = [CONDICION[c.condicion] ?? '', c.categoria && `categoría ${c.categoria}`].filter(Boolean).join(', ');
   return (
     <div className="flex flex-col gap-2.5 rounded-tarjeta bg-superficie p-7 shadow-tarjeta">
-      <div className="flex items-center gap-2 text-sm font-extrabold text-exito-texto">
+      <div className="flex items-center gap-2 text-sm font-bold text-exito-texto">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1E9E63" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
         Tu perfil
       </div>

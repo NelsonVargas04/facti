@@ -1,9 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { cerrarSesion } from '@/lib/sesion';
 import { AvisoApi } from '@/components/AvisoApi';
 import { verCuenta } from '@/lib/api';
-import { formatearCuit } from '@/lib/formato';
+import { formatearCuit, nombrePropio } from '@/lib/formato';
 import { useApi } from '@/lib/useApi';
 
 function Tarjeta({ titulo, children }: { titulo: string; children: React.ReactNode }) {
@@ -33,6 +35,7 @@ const CONDICION: Record<string, string> = {
 };
 
 export default function Configuracion() {
+  const router = useRouter();
   const cuenta = useApi(verCuenta, []);
   const c = cuenta.dato?.cuenta;
   const esPro = c?.plan === 'pro';
@@ -49,7 +52,7 @@ export default function Configuracion() {
       {c ? (
         <div className="cascada grid items-start gap-6 [grid-template-columns:repeat(auto-fit,minmax(320px,1fr))]">
           <Tarjeta titulo="Perfil fiscal">
-            <Dato k="Nombre" v={c.nombre} />
+            <Dato k="Nombre" v={nombrePropio(c.nombre)} />
             <Dato k="CUIT" v={formatearCuit(c.cuit)} />
             <Dato k="Condición" v={[CONDICION[c.condicion] ?? c.condicion, c.categoria && `Categoría ${c.categoria}`].filter(Boolean).join(' · ')} />
             <Dato k="Domicilio fiscal" v={c.domicilio} />
@@ -58,18 +61,18 @@ export default function Configuracion() {
 
           <Tarjeta titulo="Conexión con ARCA">
             <Dato k="Punto de venta" v={`${String(c.puntoVenta).padStart(4, '0')} · Web Services`} />
-            <Link href="/estado" className="btn-lift flex h-11 items-center self-start rounded-full border-[1.5px] border-borde px-5 font-extrabold text-texto">Ver estado de la conexión</Link>
+            <Link href="/estado" className="btn-lift flex h-11 items-center self-start rounded-full border-[1.5px] border-borde px-5 font-bold text-texto hover:border-primario hover:text-primario-oscuro">Ver estado de la conexión</Link>
           </Tarjeta>
 
           <Tarjeta titulo="Tu plan">
             <div className="flex items-center justify-between">
-              <span className="font-display text-[24px] font-bold">{esPro ? 'Pro' : 'Gratis'}</span>
-              <span className="rounded-full bg-primario-suave px-3 py-1 text-[13px] font-extrabold text-primario-oscuro">Actual</span>
+              <span className="font-display text-[24px] font-semibold">{esPro ? 'Pro' : 'Gratis'}</span>
+              <span className="rounded-full bg-primario-suave px-3 py-1 text-[13px] font-bold text-primario-oscuro">Actual</span>
             </div>
             <p className="text-sm text-texto-suave">
               {esPro ? 'Facturas ilimitadas y recordatorios de cobro.' : '10 facturas A/B/C y 1 Factura E por mes. Pasate a Pro para ilimitadas y recordatorios de cobro.'}
             </p>
-            {!esPro && <Link href="/app/plan" className="btn-lift flex h-11 items-center justify-center rounded-full bg-primario font-extrabold text-white shadow-boton">Pasar a Pro</Link>}
+            {!esPro && <Link href="/app/plan" className="btn-lift flex h-11 items-center justify-center rounded-full bg-primario font-bold text-white shadow-boton">Pasar a Pro</Link>}
           </Tarjeta>
         </div>
       ) : (
@@ -80,7 +83,20 @@ export default function Configuracion() {
         )
       )}
 
-      <p className="text-[13px] text-texto-tenue">Facti es una herramienta complementaria y de ayuda. No es ARCA ni un organismo oficial.</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-[13px] text-texto-tenue">Facti es una herramienta complementaria y de ayuda. No es ARCA ni un organismo oficial.</p>
+        {/* En celular el menú no muestra la cuenta: desde acá se puede salir. */}
+        <button
+          type="button"
+          onClick={async () => {
+            await cerrarSesion();
+            router.replace('/ingresar');
+          }}
+          className="btn-lift inline-flex h-11 items-center justify-center rounded-full border-[1.5px] border-borde bg-white px-5 text-[15px] font-bold text-texto hover:border-error hover:text-error"
+        >
+          Cerrar sesión
+        </button>
+      </div>
     </>
   );
 }

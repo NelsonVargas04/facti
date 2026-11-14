@@ -91,32 +91,32 @@ function Tilde({ color = '#0E5C38' }: { color?: string }) {
 
 
 const inputCls = 'h-12 w-full rounded-input border-[1.5px] border-borde bg-white px-4 text-base text-texto outline-none transition-colors focus:border-primario';
-const labelCls = 'flex flex-col gap-2 text-sm font-bold';
+const labelCls = 'flex flex-col gap-2 text-sm font-semibold';
 
 let proximoId = 3;
 
 function Aviso({ res }: { res: ErrorApi }) {
   if (res.codigo === 'configuracion') {
     return (
-      <div role="alert" className="aviso-entra flex flex-col gap-1 rounded-[14px] bg-aviso-suave px-4 py-3 text-sm font-bold text-aviso-texto">
+      <div role="alert" className="aviso-entra flex flex-col gap-1 rounded-[14px] bg-aviso-suave px-4 py-3 text-sm font-semibold text-aviso-texto">
         <span>Todavía no conectaste Facti con ARCA. {res.mensaje}</span>
-        <Link href="/onboarding/arca" className="font-extrabold text-primario-oscuro underline">Conectar ahora</Link>
+        <Link href="/onboarding/arca" className="font-bold text-primario-oscuro underline">Conectar ahora</Link>
       </div>
     );
   }
   if (res.codigo === 'base_datos' || res.codigo === 'sin_conexion') return <AvisoApi error={res} compacto />;
   if (res.codigo === 'limite_plan') {
     return (
-      <div role="alert" className="aviso-entra flex flex-col gap-1 rounded-[14px] bg-aviso-suave px-4 py-3 text-sm font-bold text-aviso-texto">
+      <div role="alert" className="aviso-entra flex flex-col gap-1 rounded-[14px] bg-aviso-suave px-4 py-3 text-sm font-semibold text-aviso-texto">
         <span>{res.mensaje}</span>
-        <Link href="/app/plan" className="font-extrabold text-primario-oscuro underline">Ver el plan Pro</Link>
+        <Link href="/app/plan" className="font-bold text-primario-oscuro underline">Ver el plan Pro</Link>
       </div>
     );
   }
   if (res.estado === 501) {
-    return <div role="alert" className="aviso-entra rounded-[14px] bg-aviso-suave px-4 py-3 text-sm font-bold text-aviso-texto">{res.mensaje}</div>;
+    return <div role="alert" className="aviso-entra rounded-[14px] bg-aviso-suave px-4 py-3 text-sm font-semibold text-aviso-texto">{res.mensaje}</div>;
   }
-  return <div role="alert" className="aviso-entra rounded-[14px] bg-[#FDE8EA] px-4 py-3 text-sm font-bold text-[#B4232B]">{res.mensaje}</div>;
+  return <div role="alert" className="aviso-entra rounded-[14px] bg-[#FDE8EA] px-4 py-3 text-sm font-semibold text-[#B4232B]">{res.mensaje}</div>;
 }
 
 export default function NuevaFactura() {
@@ -237,7 +237,7 @@ export default function NuevaFactura() {
           <BackLink href="/app">Volver al inicio</BackLink>
           <h1 className="mt-1 text-[34px] font-bold">Nueva factura</h1>
         </div>
-        <span className="inline-flex items-center gap-2.5 rounded-input bg-primario-suave px-4 py-2.5 font-extrabold text-primario-oscuro">
+        <span className="inline-flex items-center gap-2.5 rounded-input bg-primario-suave px-4 py-2.5 font-bold text-primario-oscuro">
           <span className="rounded-lg bg-primario px-2.5 py-0.5 text-white">{tipo}</span>
           {esE ? 'Factura E · Exportación' : `Factura C · Punto de venta ${puntoVenta}`}
         </span>
@@ -268,7 +268,7 @@ export default function NuevaFactura() {
                       on ? 'border-primario bg-[#F4F4FF]' : 'border-[#E1E5EE] bg-white'
                     } ${t.hab ? 'cursor-pointer hover:border-primario' : 'cursor-not-allowed opacity-60'}`}
                   >
-                    <span className={`flex h-10 w-10 flex-none items-center justify-center rounded-lg font-mono text-xl font-bold ${t.letra === 'E' ? 'bg-acento text-texto' : on ? 'bg-primario text-white' : 'bg-primario-suave text-primario-oscuro'}`}>{t.letra}</span>
+                    <span className={`flex h-10 w-10 flex-none items-center justify-center rounded-lg font-mono text-xl font-semibold ${t.letra === 'E' ? 'bg-acento text-texto' : on ? 'bg-primario text-white' : 'bg-primario-suave text-primario-oscuro'}`}>{t.letra}</span>
                     <span>
                       <strong className="block text-[15px]">{t.nombre}</strong>
                       <span className="text-xs text-texto-tenue">{t.nota}</span>
@@ -302,7 +302,7 @@ export default function NuevaFactura() {
 
                 {!esCF && (
                   <div>
-                    <button type="button" onClick={buscar} disabled={buscando} className="btn-lift flex h-11 items-center gap-2 rounded-input bg-texto px-5 text-[15px] font-extrabold text-white disabled:opacity-60">
+                    <button type="button" onClick={buscar} disabled={buscando} className="btn-lift flex h-11 items-center gap-2 rounded-full bg-primario px-5 text-[15px] font-bold text-white disabled:opacity-60 shadow-boton">
                       <Lupa />{buscando ? 'Buscando…' : 'Buscar en ARCA'}
                     </button>
                   </div>
@@ -312,7 +312,7 @@ export default function NuevaFactura() {
                   <p className="rounded-[18px] bg-fondo px-5 py-4 text-sm text-texto-suave">Consumidor final. Solo se pide identificación cuando la factura es de <strong>$10.000.000</strong> o más.</p>
                 ) : padron ? (
                   <div className="grid gap-4 rounded-[18px] bg-fondo p-5 [grid-template-columns:repeat(auto-fit,minmax(180px,1fr))]">
-                    <div className="col-span-full flex items-center gap-2 text-sm font-extrabold text-exito-texto"><Tilde />Encontrado en el padrón de ARCA</div>
+                    <div className="col-span-full flex items-center gap-2 text-sm font-bold text-exito-texto"><Tilde />Encontrado en el padrón de ARCA</div>
                     <div><div className="text-[13px] text-texto-tenue">Nombre / Razón social</div><strong>{padron.nombre}</strong></div>
                     <div><div className="text-[13px] text-texto-tenue">Condición frente al IVA</div><strong>{COND_LABEL[padron.condicion]}{padron.categoriaMonotributo ? ` · ${padron.categoriaMonotributo}` : ''}</strong></div>
                     {padron.domicilio && <div><div className="text-[13px] text-texto-tenue">Domicilio</div><strong>{padron.domicilio}</strong></div>}
@@ -331,7 +331,7 @@ export default function NuevaFactura() {
             ) : (
               // Receptor del exterior (Factura E)
               <>
-                <div className="flex items-start gap-2 rounded-[14px] bg-aviso-suave px-4 py-3 text-sm font-bold text-aviso-texto">
+                <div className="flex items-start gap-2 rounded-[14px] bg-aviso-suave px-4 py-3 text-sm font-semibold text-aviso-texto">
                   <Tilde color="#6B4600" />El cliente del exterior no está en el padrón de ARCA: cargá sus datos a mano.
                 </div>
                 <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
@@ -350,8 +350,8 @@ export default function NuevaFactura() {
 
             {esE ? (
               <div className="flex flex-col gap-2">
-                <span className="text-sm font-bold">Concepto</span>
-                <span className="inline-flex items-center gap-2 self-start rounded-input bg-primario-suave px-4 py-2.5 text-[15px] font-extrabold text-primario-oscuro">
+                <span className="text-sm font-semibold">Concepto</span>
+                <span className="inline-flex items-center gap-2 self-start rounded-input bg-primario-suave px-4 py-2.5 text-[15px] font-bold text-primario-oscuro">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
                   Servicios · Exportación
                 </span>
@@ -359,7 +359,7 @@ export default function NuevaFactura() {
               </div>
             ) : (
               <div className="flex flex-col gap-2">
-                <span className="text-sm font-bold">¿Es un servicio?</span>
+                <span className="text-sm font-semibold">¿Es un servicio?</span>
                 <button
                   type="button"
                   role="switch"
@@ -371,7 +371,7 @@ export default function NuevaFactura() {
                     {/* Se mueve con transform (no con left) para no recalcular el diseño en cada cuadro. */}
                     <span className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ease-mover ${incluyeServicio ? 'translate-x-5' : 'translate-x-0'}`} />
                   </span>
-                  <span className="font-bold text-texto">{incluyeServicio ? 'Sí, cobro por un período de trabajo' : 'No, vendo productos'}</span>
+                  <span className="font-semibold text-texto">{incluyeServicio ? 'Sí, cobro por un período de trabajo' : 'No, vendo productos'}</span>
                 </button>
                 <span className="text-xs text-texto-tenue">Si está activado, sumamos el período facturado (desde/hasta). Apagalo si vendés productos. Los ítems los agregás abajo como más te convenga.</span>
               </div>
@@ -399,16 +399,16 @@ export default function NuevaFactura() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <span className="text-sm font-bold">Detalle</span>
-              <div className="overflow-x-auto">
+              <span className="text-sm font-semibold">Detalle</span>
+              <div className="overflow-y-hidden overflow-x-auto">
                 <table className="w-full min-w-[640px] border-separate border-spacing-y-2">
                   <thead>
-                    <tr className="text-left text-xs font-extrabold tracking-[0.06em] text-texto-tenue">
-                      <th className="px-1 pb-1">DESCRIPCIÓN</th>
-                      <th className="w-[80px] px-1 pb-1">CANT.</th>
-                      <th className="w-[130px] px-1 pb-1">U. MEDIDA</th>
-                      <th className="w-[140px] px-1 pb-1">PRECIO UNIT.</th>
-                      <th className="w-[130px] px-1 pb-1 text-right">SUBTOTAL</th>
+                    <tr className="text-left text-[13px] text-texto-tenue">
+                      <th className="px-1 pb-1">Descripción</th>
+                      <th className="w-[80px] px-1 pb-1">Cant.</th>
+                      <th className="w-[130px] px-1 pb-1">U. medida</th>
+                      <th className="w-[140px] px-1 pb-1">Precio unit.</th>
+                      <th className="w-[130px] px-1 pb-1 text-right">Subtotal</th>
                       <th className="w-[40px] px-1 pb-1" />
                     </tr>
                   </thead>
@@ -419,7 +419,7 @@ export default function NuevaFactura() {
                         <td className="pr-2"><input aria-label="Cantidad" type="text" value={it.cant} onChange={(e) => actualizar(it.id, 'cant', e.target.value)} className={inputCls} /></td>
                         <td className="pr-2"><Select ariaLabel="Unidad de medida" value={it.unidad} onChange={(v) => actualizar(it.id, 'unidad', v)} options={UNIDADES} /></td>
                         <td className="pr-2"><input aria-label="Precio unitario" type="text" inputMode="decimal" value={it.precio} onChange={(e) => actualizar(it.id, 'precio', e.target.value)} onBlur={(e) => actualizar(it.id, 'precio', e.target.value.trim() ? fmtNum(parseNum(e.target.value)) : '')} className={inputCls} placeholder="0,00" /></td>
-                        <td className="whitespace-nowrap px-1 text-right align-middle font-extrabold">{fmt(parseNum(it.cant) * parseNum(it.precio), simboloMoneda)}</td>
+                        <td className="whitespace-nowrap px-1 text-right align-middle font-bold">{fmt(parseNum(it.cant) * parseNum(it.precio), simboloMoneda)}</td>
                         <td className="text-center align-middle">
                           <button type="button" onClick={() => quitar(it.id)} aria-label="Quitar ítem" disabled={items.length === 1} className="rounded-lg p-2 text-texto-tenue transition-colors hover:bg-fondo hover:text-[#D9466F] disabled:opacity-30">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
@@ -430,7 +430,7 @@ export default function NuevaFactura() {
                   </tbody>
                 </table>
               </div>
-              <button type="button" onClick={agregar} className="flex items-center gap-2 self-start rounded-input border-[1.5px] border-dashed border-[#B9BED3] px-[18px] py-3 text-[15px] font-extrabold text-primario-oscuro transition-colors hover:border-primario hover:bg-fondo">
+              <button type="button" onClick={agregar} className="flex items-center gap-2 self-start rounded-input border-[1.5px] border-dashed border-[#B9BED3] px-[18px] py-3 text-[15px] font-bold text-primario-oscuro transition-colors hover:border-primario hover:bg-fondo">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
                 Agregar ítem
               </button>
@@ -446,18 +446,18 @@ export default function NuevaFactura() {
             <div className="flex justify-between text-texto-suave"><span>IVA</span><span>{esE ? 'Exento (exportación)' : 'No corresponde'}</span></div>
             <div className="flex items-baseline justify-between border-t-[1.5px] border-dashed border-borde pt-3.5">
               <strong>Total</strong>
-              <span className="font-display text-[32px] font-bold">{fmt(total, simboloMoneda)}</span>
+              <span className="font-display text-[32px] font-semibold">{fmt(total, simboloMoneda)}</span>
             </div>
             {emitirMsg && <Aviso res={emitirMsg} />}
-            <button type="button" onClick={emitir} disabled={emitiendo || yaAutorizada} className="btn-lift flex h-[54px] items-center justify-center gap-2 rounded-full bg-primario text-[17px] font-extrabold text-white shadow-boton disabled:opacity-60">
+            <button type="button" onClick={emitir} disabled={emitiendo || yaAutorizada} className="btn-lift flex h-12 items-center justify-center gap-2 rounded-full bg-primario text-base font-bold text-white shadow-boton disabled:opacity-60">
               {emitiendo ? (<><Girando />Emitiendo en ARCA…</>) : `Emitir y enviar Factura ${tipo}`}
             </button>
-            <button type="button" className="btn-lift h-[50px] rounded-full border-[1.5px] border-borde bg-white text-base font-extrabold text-texto">Guardar borrador</button>
+            <button type="button" className="inline-flex items-center justify-center btn-lift h-12 rounded-full border-[1.5px] border-borde bg-white text-base font-bold text-texto hover:border-primario hover:text-primario-oscuro">Guardar borrador</button>
           </div>
 
           <div className="flex items-center gap-3.5 rounded-tarjeta bg-texto p-[22px] text-white">
             <Facti pose="factura" size={110} animated={false} />
-            <p className="text-[15px] font-bold leading-snug">
+            <p className="text-[15px] font-semibold leading-snug">
               {esE
                 ? <>Para exportar usás la <span className="text-acento">Factura E</span>. Cargá el país y la moneda del exterior.</>
                 : <>Te puse <span className="text-acento">Factura C</span> porque sos monotributista. Revisá el monto y yo le pido el CAE a ARCA.</>}

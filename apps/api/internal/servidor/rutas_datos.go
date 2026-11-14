@@ -132,6 +132,21 @@ func (s *Servidor) verResumen(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return &BaseDatosError{Mensaje: err.Error()}
 	}
+	// Mes a mes de los últimos 12 (del más viejo al actual), para el gráfico del inicio y de monotributo.
+	type mesFacturado struct {
+		Mes       string  `json:"mes"` // AAAA-MM
+		Facturado float64 `json:"facturado"`
+	}
+	porMes := make([]mesFacturado, 0, 12)
+	for i := 11; i >= 0; i-- {
+		m := time.Date(ahora.Year(), ahora.Month(), 1, 0, 0, 0, 0, arca.HoraArgentina).AddDate(0, -i, 0)
+		md, mh := mes(m)
+		rm, err := d.Resumen(ctx, c.ID, md, mh)
+		if err != nil {
+			return &BaseDatosError{Mensaje: err.Error()}
+		}
+		porMes = append(porMes, mesFacturado{Mes: md[:7], Facturado: rm.Facturado})
+	}
 	ultimas, err := d.ListarComprobantes(ctx, c.ID, datos.Filtro{Limite: 5})
 	if err != nil {
 		return &BaseDatosError{Mensaje: err.Error()}
@@ -143,7 +158,7 @@ func (s *Servidor) verResumen(w http.ResponseWriter, r *http.Request) error {
 	responderJSON(w, http.StatusOK, map[string]any{
 		"mes":            desde[:7],
 		"delMes":         delMes,
-		"ultimos12Meses": map[string]any{"facturado": doce.Facturado, "desde": ahora.AddDate(-1, 0, 1).Format("2006-01-02")},
+		"ultimos12Meses": map[string]any{"facturado": doce.Facturado, "desde": ahora.AddDate(-1, 0, 1).Format("2006-01-02"), "porMes": porMes},
 		// Lo que falta cobrar de cualquier mes, para el aviso del inicio.
 		"porCobrar": map[string]any{"total": pendientes.PorCobrar, "facturas": pendientes.Pendientes},
 		"ultimas":   ultimas.Comprobantes,

@@ -22,8 +22,8 @@
   --color-facti: #7b7ff2;
   --color-rosa: #ff9fb2;
 
-  --font-display: var(--font-quicksand), 'Quicksand', ui-sans-serif, system-ui, sans-serif;
-  --font-sans: var(--font-nunito), 'Nunito', ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-jakarta), 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-jakarta), 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
 
   --radius-input: 14px;
   --radius-tarjeta: 24px;
@@ -519,5 +519,100 @@
   .reveal {
     transform: none;
     transition: opacity 0.3s ease;
+  }
+}
+
+/* Landing: fondo del hero. Un velo lila arriba a la derecha (donde está la mascota), uno amarillo
+   abajo a la izquierda y una trama de puntitos muy suave, como papel de factura. */
+.fondo-hero {
+  position: relative;
+  background:
+    radial-gradient(ellipse 50% 60% at 90% 15%, rgb(123 127 242 / 0.2), transparent 70%),
+    radial-gradient(ellipse 45% 50% at 0% 95%, rgb(255 210 94 / 0.22), transparent 70%),
+    radial-gradient(circle at 1px 1px, rgb(21 25 58 / 0.08) 1px, transparent 0) 0 0 / 22px 22px,
+    var(--color-fondo);
+}
+/* Solo suaviza el borde de abajo: una franja finita que funde el fondo con la sección siguiente. */
+.fondo-hero::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 40px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, var(--color-fondo));
+}
+
+/* Landing: formas de la marca detrás de las secciones. Cada una tiene un círculo lleno que asoma
+   desde un borde (alternando izquierda y derecha) y un aro punteado más chico, corrido, como el
+   troquel de la mascota. Van detrás del contenido y no se mueven. */
+.landing [data-sec] {
+  position: relative;
+  isolation: isolate;
+}
+.landing [data-sec]::before,
+.landing [data-sec]::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.landing [data-sec]::after {
+  background: none;
+  border: 2px dashed var(--aro);
+}
+
+.landing [data-sec='como'] { --aro: #f5c94a; }
+.landing [data-sec='como']::before { width: 360px; height: 360px; right: -170px; top: 40px; background: #fff0c2; }
+.landing [data-sec='como']::after { width: 150px; height: 150px; right: 120px; top: 6px; }
+
+.landing [data-sec='comprobantes'] { --aro: #b9bcf8; }
+.landing [data-sec='comprobantes']::before { width: 480px; height: 480px; left: -250px; top: 160px; background: #e3e4ff; }
+.landing [data-sec='comprobantes']::after { width: 190px; height: 190px; left: 110px; top: 60px; }
+
+.landing [data-sec='monotributo'] { --aro: #8fdcb6; }
+.landing [data-sec='monotributo']::before { width: 400px; height: 400px; right: -210px; top: 20px; background: #d7f5e6; }
+.landing [data-sec='monotributo']::after { width: 130px; height: 130px; right: 150px; bottom: 30px; }
+
+.landing [data-sec='precios'] { --aro: #ffb9c8; }
+.landing [data-sec='precios']::before { width: 320px; height: 320px; left: -190px; bottom: 60px; background: #ffe3ea; }
+.landing [data-sec='precios']::after { width: 110px; height: 110px; left: 90px; top: 70px; }
+
+/* En pantallas chicas las formas se achican y el aro se esconde, para no tapar el texto. */
+@media (max-width: 767px) {
+  .landing [data-sec]::before { transform: scale(0.55); }
+  .landing [data-sec]::after { display: none; }
+}
+
+/* Fondo del modal de confirmación (componente Confirmar, sobre <dialog>). */
+.confirmar::backdrop {
+  background: rgb(21 25 58 / 0.42);
+  backdrop-filter: blur(3px);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .confirmar::backdrop {
+    animation: fondoEntra 0.2s var(--ease-salida) both;
+  }
+}
+@keyframes fondoEntra {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Menú de la app en celular: se desliza de costado sin mostrar la barra de scroll;
+   el borde derecho se desvanece para que se note que hay más ítems. */
+.menu-deslizable {
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+}
+.menu-deslizable::-webkit-scrollbar {
+  display: none;
+}
+@media (min-width: 768px) {
+  .menu-deslizable {
+    -webkit-mask-image: none;
+    mask-image: none;
   }
 }

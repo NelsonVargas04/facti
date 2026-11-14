@@ -1,6 +1,6 @@
 import type { DatosComprobanteC } from '@/components/ComprobanteC';
 import { condicionTexto, type Comprobante, type Cuenta } from '@/lib/api';
-import { fecha, formatearCuit } from '@/lib/formato';
+import { fecha, formatearCuit, nombrePropio } from '@/lib/formato';
 
 const TITULOS: Record<string, { titulo: string; cod: string }> = {
   C: { titulo: 'FACTURA', cod: '011' },
@@ -45,6 +45,6 @@ export function datosComprobante(c: Comprobante, emisor: Cuenta): DatosComproban
 /** Nombre a mostrar del cliente de un comprobante. */
 export function nombreCliente(c: Comprobante): string {
   const r = c.receptor;
-  if (r.nombre) return r.nombre;
+  if (r.nombre) return nombrePropio(r.nombre);
   return r.docNro && r.docNro !== '0' ? formatearCuit(r.docNro) : 'Consumidor final';
 }

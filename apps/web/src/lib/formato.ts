@@ -55,3 +55,22 @@ export function nombrePila(nombre: string): string {
 }
 
 export const formatearCuit = (c: string) => (c.length === 11 ? `${c.slice(0, 2)}-${c.slice(2, 10)}-${c.slice(10)}` : c);
+
+/** Siglas societarias y partículas que no se escriben como nombre propio. */
+const SIGLAS = new Set(['SRL', 'SA', 'SAS', 'SAU', 'SCS', 'SH', 'LLC', 'INC', 'LTD', 'CUIT']);
+const MINUSCULAS = new Set(['de', 'del', 'la', 'las', 'los', 'y', 'e']);
+
+/** "GARCÍA MARTÍN" → "García Martín"; "ESTUDIO LUMEN SRL" → "Estudio Lumen SRL". */
+export function nombrePropio(texto: string): string {
+  return texto
+    .trim()
+    .split(/\s+/)
+    .map((p, i) => {
+      const limpio = p.replace(/\./g, '').toUpperCase();
+      if (SIGLAS.has(limpio)) return p.toUpperCase();
+      const min = p.toLocaleLowerCase('es-AR');
+      if (i > 0 && MINUSCULAS.has(min)) return min;
+      return min.replace(/(^|[-'])(\p{L})/gu, (_, sep: string, l: string) => sep + l.toLocaleUpperCase('es-AR'));
+    })
+    .join(' ');
+}

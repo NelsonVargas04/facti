@@ -206,7 +206,7 @@ export function Select({ value, onChange, options, placeholder = 'Elegí una opc
                       onMouseEnter={() => setResaltado(i)}
                       onClick={() => elegir(o.value)}
                       className={`flex w-full items-center justify-between gap-2 rounded-[12px] px-3 py-2.5 text-left text-[15px] transition-colors ${
-                        sel ? 'bg-primario-suave font-extrabold text-primario-oscuro' : hl ? 'bg-fondo text-texto' : 'text-texto'
+                        sel ? 'bg-primario-suave font-bold text-primario-oscuro' : hl ? 'bg-fondo text-texto' : 'text-texto'
                       }`}
                     >
                       <span className="truncate">{o.label}</span>

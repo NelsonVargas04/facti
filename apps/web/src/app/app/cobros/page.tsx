@@ -2,10 +2,12 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { AnimatePresence, motion } from 'motion/react';
 import { Girando, Numero } from '@/components/Animado';
 import { AvisoApi } from '@/components/AvisoApi';
+import { Confirmar } from '@/components/Confirmar';
 import { ChipCobro, colorTipo, TablaSkeleton } from '@/components/TablaFacturas';
-import { listarComprobantes, marcarCobro, verResumen, type Cobro, type ErrorApi } from '@/lib/api';
+import { listarComprobantes, marcarCobro, verResumen, type Cobro, type Comprobante, type ErrorApi } from '@/lib/api';
 import { nombreCliente } from '@/lib/comprobante';
 import { fechaCorta, importe, numeroComprobante, pesos } from '@/lib/formato';
 import { useApi } from '@/lib/useApi';
@@ -18,7 +20,7 @@ const FILTROS: { id: Filtro; label: string; cobro: Cobro }[] = [
   { id: 'todas', label: 'Todas', cobro: '' },
 ];
 
-const th = 'border-b-2 border-[#EDF0F6] px-4 pb-3 font-extrabold';
+const th = 'whitespace-nowrap border-b border-[#EDF0F6] px-4 pb-3 font-semibold';
 const td = 'px-4 py-4 align-middle';
 
 export default function Cobros() {
@@ -29,6 +31,8 @@ export default function Cobros() {
   const resumen = useApi(() => verResumen(), []);
   const [marcando, setMarcando] = useState<number | null>(null);
   const [errMarcar, setErrMarcar] = useState<ErrorApi | null>(null);
+  // Factura que se está por marcar como cobrada: abre el modal de confirmación.
+  const [aConfirmar, setAConfirmar] = useState<Comprobante | null>(null);
 
   const filas = useMemo(() => (lista.dato?.comprobantes ?? []).filter((f) => f.cobro !== ''), [lista.dato]);
 
@@ -37,6 +41,7 @@ export default function Cobros() {
     setErrMarcar(null);
     const r = await marcarCobro(id, estado);
     setMarcando(null);
+    setAConfirmar(null);
     if (!r.ok) {
       setErrMarcar(r);
       return;
@@ -58,14 +63,14 @@ export default function Cobros() {
       <div style={{ animationDelay: '20ms' }} className="aparece grid gap-[18px] [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
         {r ? (
           <>
-            <div className="entra card-hover flex flex-col gap-1 rounded-tarjeta bg-superficie px-6 py-5 shadow-tarjeta">
-              <span className="text-[13px] font-extrabold tracking-[0.06em] text-texto-tenue">POR COBRAR</span>
-              <span className="font-display text-[30px] font-bold tabular-nums"><Numero valor={r.porCobrar.total} formato={pesos} /></span>
+            <div className="entra flex flex-col gap-1 rounded-tarjeta bg-superficie px-6 py-5 shadow-tarjeta">
+              <span className="text-[14px] font-semibold text-texto-tenue">Por cobrar</span>
+              <span className="font-display text-[30px] font-semibold tabular-nums"><Numero valor={r.porCobrar.total} formato={pesos} /></span>
               <span className="text-sm text-texto-suave">{r.porCobrar.facturas} {r.porCobrar.facturas === 1 ? 'factura pendiente' : 'facturas pendientes'}</span>
             </div>
-            <div style={{ '--i': 1 } as React.CSSProperties} className="entra card-hover flex flex-col gap-1 rounded-tarjeta bg-superficie px-6 py-5 shadow-tarjeta">
-              <span className="text-[13px] font-extrabold tracking-[0.06em] text-texto-tenue">COBRADO ESTE MES</span>
-              <span className="font-display text-[30px] font-bold tabular-nums"><Numero valor={r.delMes.cobrado} formato={pesos} /></span>
+            <div style={{ '--i': 1 } as React.CSSProperties} className="entra flex flex-col gap-1 rounded-tarjeta bg-superficie px-6 py-5 shadow-tarjeta">
+              <span className="text-[14px] font-semibold text-texto-tenue">Cobrado este mes</span>
+              <span className="font-display text-[30px] font-semibold tabular-nums"><Numero valor={r.delMes.cobrado} formato={pesos} /></span>
               <span className="text-sm text-texto-suave">{r.delMes.cobradas} {r.delMes.cobradas === 1 ? 'factura cobrada' : 'facturas cobradas'}</span>
             </div>
           </>
@@ -80,7 +85,7 @@ export default function Cobros() {
           const on = filtro === f.id;
           return (
             <button key={f.id} type="button" aria-pressed={on} onClick={() => setFiltro(f.id)}
-              className={`rounded-xl px-4 py-2.5 text-[15px] transition-colors ${on ? 'bg-white font-extrabold text-texto shadow-[0_2px_8px_rgba(21,25,58,0.08)]' : 'font-bold text-texto-suave hover:text-texto'}`}>
+              className={`rounded-xl px-4 py-2.5 text-[15px] transition-colors ${on ? 'bg-white font-bold text-texto shadow-[0_2px_8px_rgba(21,25,58,0.08)]' : 'font-semibold text-texto-suave hover:text-texto'}`}>
               {f.label}
             </button>
           );
@@ -99,42 +104,53 @@ export default function Cobros() {
           <div key={filtro} className="entra overflow-x-auto">
             <table className="w-full min-w-[720px] border-collapse text-[15px]">
               <thead>
-                <tr className="text-xs tracking-[0.06em] text-texto-tenue">
-                  <th className={`${th} text-center`}>TIPO</th>
-                  <th className={`${th} text-left`}>NÚMERO</th>
-                  <th className={`${th} text-left`}>CLIENTE</th>
-                  <th className={`${th} text-left`}>FECHA</th>
-                  <th className={`${th} text-right`}>TOTAL</th>
-                  <th className={`${th} text-right`}>ACCIÓN</th>
+                <tr className="text-[13px] text-texto-tenue">
+                  <th className={`${th} text-center`}>Tipo</th>
+                  <th className={`${th} text-left`}>Número</th>
+                  <th className={`${th} text-left`}>Cliente</th>
+                  <th className={`${th} text-left`}>Fecha</th>
+                  <th className={`${th} text-right`}>Total</th>
+                  <th className={`${th} text-right`}>Acción</th>
                 </tr>
               </thead>
-              <tbody className="cascada">
+              <tbody>
+                {/* Al marcar una factura como cobrada en "Pendientes", la fila se va hacia la derecha y las demás suben solas. */}
+                <AnimatePresence initial={false}>
                 {filas.map((f) => (
-                  <tr key={f.id} className="border-b border-[#F0F2F7] transition-colors last:border-0 hover:bg-fondo">
-                    <td className={`${td} text-center`}><span className={`inline-flex h-8 min-w-[34px] items-center justify-center rounded-[10px] px-2 text-[13px] font-extrabold ${colorTipo(f.sigla)}`}>{f.sigla}</span></td>
+                  <motion.tr
+                    key={f.id}
+                    layout
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: 24 }}
+                    transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+                    className="border-b border-[#F0F2F7] transition-colors last:border-0 hover:bg-fondo"
+                  >
+                    <td className={`${td} text-center`}><span className={`inline-flex h-8 min-w-[34px] items-center justify-center rounded-[10px] px-2 text-[13px] font-bold ${colorTipo(f.sigla)}`}>{f.sigla}</span></td>
                     <td className={`${td} whitespace-nowrap tabular-nums text-texto-suave`}>
                       <Link href={`/app/facturas/${f.id}`} className="hover:text-primario-oscuro hover:underline">{numeroComprobante(f.puntoVenta, f.numero)}</Link>
                     </td>
-                    <td className={`${td} font-bold`}>{nombreCliente(f)}</td>
+                    <td className={`${td} whitespace-nowrap font-semibold`}>{nombreCliente(f)}</td>
                     <td className={`${td} whitespace-nowrap tabular-nums text-texto-suave`}>{fechaCorta(f.fecha)}</td>
-                    <td className={`${td} text-right font-extrabold tabular-nums`}>{importe(f.total, f.moneda)}</td>
+                    <td className={`${td} text-right font-semibold tabular-nums`}>{importe(f.total, f.moneda)}</td>
                     <td className={`${td} text-right`}>
                       {f.cobro === 'pendiente' ? (
-                        <button type="button" disabled={marcando === f.id} onClick={() => marcar(f.id, 'cobrada')} className="btn-lift inline-flex h-9 items-center gap-1.5 rounded-full bg-exito px-3.5 text-sm font-extrabold text-white disabled:opacity-60">
+                        <button type="button" disabled={marcando === f.id} onClick={() => setAConfirmar(f)} className="btn-lift inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full bg-exito px-3.5 text-sm font-bold text-white disabled:opacity-60">
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
                           {marcando === f.id ? (<><Girando size={14} />Guardando…</>) : 'Marcar cobrada'}
                         </button>
                       ) : (
                         <span className="inline-flex items-center gap-2">
                           <ChipCobro estado={f.cobro} />
-                          <button type="button" disabled={marcando === f.id} onClick={() => marcar(f.id, 'pendiente')} className="text-sm font-bold text-texto-tenue underline-offset-2 hover:text-texto hover:underline disabled:opacity-60">
+                          <button type="button" disabled={marcando === f.id} onClick={() => marcar(f.id, 'pendiente')} className="text-sm font-semibold text-texto-tenue underline-offset-2 hover:text-texto hover:underline disabled:opacity-60">
                             Deshacer
                           </button>
                         </span>
                       )}
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))}
+                </AnimatePresence>
               </tbody>
             </table>
           </div>
@@ -144,6 +160,28 @@ export default function Cobros() {
           </p>
         )}
       </section>
+
+      <Confirmar
+        abierto={aConfirmar !== null}
+        tono="exito"
+        icono="cobros"
+        titulo="¿Marcar esta factura como cobrada?"
+        textoConfirmar="Sí, ya la cobré"
+        cargando={aConfirmar !== null && marcando === aConfirmar.id}
+        onConfirmar={() => aConfirmar && void marcar(aConfirmar.id, 'cobrada')}
+        onCancelar={() => setAConfirmar(null)}
+      >
+        {aConfirmar && (
+          <div className="flex flex-col gap-3">
+            <dl className="flex flex-col gap-2 rounded-[18px] bg-fondo px-4 py-3.5 text-[15px]">
+              <div className="flex justify-between gap-4"><dt className="text-texto-suave">Cliente</dt><dd className="truncate font-semibold">{nombreCliente(aConfirmar)}</dd></div>
+              <div className="flex justify-between gap-4"><dt className="text-texto-suave">Factura</dt><dd className="tabular-nums">{aConfirmar.sigla} {numeroComprobante(aConfirmar.puntoVenta, aConfirmar.numero)}</dd></div>
+              <div className="flex justify-between gap-4"><dt className="text-texto-suave">Total</dt><dd className="font-bold tabular-nums">{importe(aConfirmar.total, aConfirmar.moneda)}</dd></div>
+            </dl>
+            <p className="text-[14px] text-texto-suave">Pasa a &quot;Cobradas&quot; y deja de sumar en lo que te deben. Si te equivocás, la podés volver a pendiente.</p>
+          </div>
+        )}
+      </Confirmar>
     </>
   );
 }

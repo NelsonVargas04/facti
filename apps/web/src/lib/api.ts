@@ -194,7 +194,7 @@ export interface ResumenPeriodo {
 export interface Resumen {
   mes: string; // AAAA-MM
   delMes: ResumenPeriodo;
-  ultimos12Meses: { facturado: number; desde: string };
+  ultimos12Meses: { facturado: number; desde: string; porMes: { mes: string; facturado: number }[] };
   porCobrar: { total: number; facturas: number };
   ultimas: Comprobante[];
   plan: Plan;

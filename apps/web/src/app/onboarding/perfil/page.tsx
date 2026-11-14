@@ -80,7 +80,7 @@ export default function PerfilFiscal() {
         {/* Columna principal */}
         <section className="flex min-w-0 flex-[999_1_560px] flex-col gap-6 rounded-tarjeta bg-superficie p-9 shadow-tarjeta">
           <div className="flex flex-col gap-1.5">
-            <span className="text-[13px] font-extrabold tracking-[0.06em] text-texto-tenue">PASO 1 DE 5</span>
+            <span className="text-[14px] font-semibold text-texto-tenue">Paso 1 de 5</span>
             <h1 className="text-[34px] font-bold leading-tight">¿Para quién vas a facturar?</h1>
             <p className="text-[17px] text-texto-suave">Con tu CUIT consultamos el padrón de ARCA y configuramos todo según tu situación.</p>
           </div>
@@ -109,7 +109,7 @@ export default function PerfilFiscal() {
                         {activo && <Tilde size={16} color="#fff" />}
                       </span>
                     ) : (
-                      <span className="rounded-full bg-aviso-suave px-2.5 py-1 text-[11px] font-extrabold text-aviso-texto">Próximamente</span>
+                      <span className="rounded-full bg-aviso-suave px-2.5 py-1 text-[11px] font-bold text-aviso-texto">Próximamente</span>
                     )}
                   </span>
                   <strong className="text-[17px]">{t.titulo}</strong>
@@ -127,7 +127,7 @@ export default function PerfilFiscal() {
               void consultar();
             }}
           >
-            <label className="flex flex-1 basis-[260px] flex-col gap-1.5 text-sm font-bold">
+            <label className="flex flex-1 basis-[260px] flex-col gap-1.5 text-sm font-semibold">
               Tu CUIT
               <input
                 type="text"
@@ -144,7 +144,7 @@ export default function PerfilFiscal() {
                 className="h-12 w-full rounded-input border-[1.5px] border-borde bg-white px-4 text-base font-normal text-texto outline-none placeholder:text-[#9399B2] focus:border-primario"
               />
             </label>
-            <button type="submit" disabled={consultando || cuitVisible.replace(/\D/g, '').length !== 11} className="btn-lift flex h-12 items-center gap-2 rounded-input bg-texto px-5 text-[15px] font-extrabold text-white disabled:opacity-50">
+            <button type="submit" disabled={consultando || cuitVisible.replace(/\D/g, '').length !== 11} className="btn-lift flex h-12 items-center gap-2 rounded-full bg-primario px-5 text-[15px] font-bold text-white disabled:opacity-50 shadow-boton">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
               {consultando ? 'Consultando…' : 'Consultar en ARCA'}
             </button>
@@ -155,7 +155,7 @@ export default function PerfilFiscal() {
           {/* Resultado del padrón */}
           {cuenta && (
             <div key={cuenta.cuit} className="entra grid gap-3.5 rounded-[18px] bg-fondo p-5 [grid-template-columns:repeat(auto-fit,minmax(190px,1fr))]">
-              <div className="col-span-full flex items-center gap-2 text-sm font-extrabold text-exito-texto">
+              <div className="col-span-full flex items-center gap-2 text-sm font-bold text-exito-texto">
                 <Tilde />
                 {cuenta.nombre ? 'Encontramos tus datos en el padrón de ARCA' : 'Guardamos tu CUIT. Tus datos se completan cuando conectes Facti con ARCA.'}
               </div>
@@ -196,11 +196,11 @@ export default function PerfilFiscal() {
 
           <div className="flex flex-wrap justify-end gap-3">
             {cuenta ? (
-              <Link href="/onboarding/arca" className="btn-lift flex h-[52px] items-center rounded-full bg-primario px-7 font-extrabold text-white shadow-boton">
+              <Link href="/onboarding/arca" className="btn-lift flex h-12 items-center rounded-full bg-primario px-7 font-bold text-white shadow-boton">
                 {cuenta.nombre ? 'Sí, soy yo. Continuar' : 'Continuar'}
               </Link>
             ) : (
-              <span aria-disabled="true" className="flex h-[52px] items-center rounded-full bg-primario px-7 font-extrabold text-white opacity-50">
+              <span aria-disabled="true" className="flex h-[52px] items-center rounded-full bg-primario px-7 font-bold text-white opacity-50">
                 Cargá tu CUIT para seguir
               </span>
             )}
@@ -210,7 +210,7 @@ export default function PerfilFiscal() {
         {/* Aside */}
         <aside className="flex min-w-0 flex-1 basis-[320px] flex-col gap-5">
           <div className="flex flex-col items-center gap-2 rounded-tarjeta bg-superficie p-7 text-center shadow-tarjeta">
-            <div className="f-pop rounded-[20px_20px_20px_6px] bg-texto px-4 py-3 text-[15px] font-extrabold leading-snug text-white">
+            <div className="f-pop rounded-[20px_20px_20px_6px] bg-texto px-4 py-3 text-[15px] font-bold leading-snug text-white">
               Vas a necesitar tu<br /><span className="text-acento">clave fiscal nivel 3</span>.
             </div>
             <Facti pose="buscando" size={190} animated />
@@ -218,7 +218,7 @@ export default function PerfilFiscal() {
           <div className="flex flex-col gap-2.5 rounded-tarjeta bg-superficie p-7 shadow-tarjeta">
             <h2 className="text-[18px] font-bold">¿Facturás por una sociedad?</h2>
             <p className="text-[15px] text-texto-suave">La conexión la hace el representante legal, con su clave fiscal nivel 3 y dado de alta como Administrador de Relaciones de la sociedad en ARCA.</p>
-            <a href="#sociedades" className="text-[15px] font-extrabold text-primario-oscuro">Ver qué necesito</a>
+            <a href="#sociedades" className="text-[15px] font-bold text-primario-oscuro">Ver qué necesito</a>
           </div>
           <div className="flex flex-col gap-2.5 rounded-tarjeta bg-superficie p-7 shadow-tarjeta">
             <h2 className="text-[18px] font-bold">¿Sos contador?</h2>

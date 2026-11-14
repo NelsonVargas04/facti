@@ -37,7 +37,7 @@ export default function DetalleFactura() {
         <div className="flex flex-col items-center gap-3 py-16 text-center">
           <Facti pose="pensando" size={150} />
           <h1 className="text-[22px] font-bold">No encontramos esa factura</h1>
-          <Link href="/app/facturas" className="btn-lift rounded-full bg-primario px-6 py-3 font-extrabold text-white shadow-boton">Volver a facturas</Link>
+          <Link href="/app/facturas" className="inline-flex items-center justify-center btn-lift rounded-full bg-primario px-6 h-12 font-bold text-white shadow-boton">Volver a facturas</Link>
         </div>
       );
     }
@@ -73,7 +73,7 @@ export default function DetalleFactura() {
         <div className="mt-1 flex flex-wrap items-center justify-between gap-4">
           <h1 className="text-[32px] font-bold">{titulo}</h1>
           {!esE && (
-            <button type="button" onClick={() => window.print()} className="btn-lift flex h-12 items-center gap-2 rounded-full bg-primario px-6 font-extrabold text-white shadow-boton">
+            <button type="button" onClick={() => window.print()} className="btn-lift flex h-12 items-center gap-2 rounded-full bg-primario px-6 font-bold text-white shadow-boton">
               <Ic><path d="M12 4v11M7 10l5 5 5-5M5 20h14" /></Ic>Descargar PDF
             </button>
           )}
@@ -83,10 +83,10 @@ export default function DetalleFactura() {
       <div className="flex flex-wrap items-start gap-7">
         {/* Vista del comprobante (principal) */}
         <div style={{ animationDelay: '20ms' }} className="aparece order-1 flex min-w-0 flex-[2_1_520px] flex-col gap-2.5">
-          <span className="text-[13px] font-extrabold tracking-[0.06em] text-texto-tenue">COMPROBANTE (FORMATO OFICIAL)</span>
+          <span className="text-[14px] font-semibold text-texto-tenue">Comprobante (formato oficial)</span>
           {esE || !datos ? (
             <div className="flex flex-col items-center gap-3 rounded-tarjeta-lg bg-[#E4E8F1] p-12 text-center">
-              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-acento font-mono text-2xl font-bold text-texto">E</span>
+              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-acento font-mono text-2xl font-semibold text-texto">E</span>
               <h3 className="text-[18px] font-bold">{titulo}</h3>
               <p className="max-w-[360px] text-texto-suave">La vista del comprobante de exportación (formato WSFEX) se suma cuando integremos la Factura E.</p>
             </div>
@@ -121,7 +121,7 @@ export default function DetalleFactura() {
             ))}
             <div className="flex items-center justify-between gap-3 border-b border-[#F0F2F7] pb-2.5">
               <span className="text-sm text-texto-tenue">Estado ARCA</span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EAF8F0] px-2.5 py-1 text-[12.5px] font-bold text-[#0E5C38] ring-1 ring-inset ring-[#C8EDD8]"><span className="h-[7px] w-[7px] rounded-full bg-[#1E9E63]" />Autorizada</span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EAF8F0] px-2.5 py-1 text-[12.5px] font-semibold text-[#0E5C38] ring-1 ring-inset ring-[#C8EDD8]"><span className="h-[7px] w-[7px] rounded-full bg-[#1E9E63]" />Autorizada</span>
             </div>
             <div className="flex items-center justify-between gap-3">
               <span className="text-sm text-texto-tenue">Cobro</span>
@@ -135,7 +135,7 @@ export default function DetalleFactura() {
                 type="button"
                 onClick={cambiarCobro}
                 disabled={cambiando}
-                className={`btn-lift mt-1 flex h-11 items-center justify-center gap-2 rounded-full font-extrabold disabled:opacity-60 ${
+                className={`btn-lift mt-1 flex h-11 items-center justify-center gap-2 rounded-full font-bold disabled:opacity-60 ${
                   f.cobro === 'cobrada' ? 'border-[1.5px] border-borde bg-white text-texto' : 'bg-exito text-white'
                 }`}
               >
@@ -146,7 +146,7 @@ export default function DetalleFactura() {
           </div>
           {!esE && (
             <div className="flex flex-col gap-2.5 rounded-tarjeta bg-superficie p-6 shadow-tarjeta">
-              <button type="button" onClick={() => window.print()} className="btn-lift flex h-12 items-center justify-center gap-2 rounded-full bg-primario font-extrabold text-white shadow-boton">
+              <button type="button" onClick={() => window.print()} className="btn-lift flex h-12 items-center justify-center gap-2 rounded-full bg-primario font-bold text-white shadow-boton">
                 <Ic><path d="M12 4v11M7 10l5 5 5-5M5 20h14" /></Ic>Descargar PDF
               </button>
               <p className="text-sm text-texto-suave">Guardamos el comprobante y la respuesta de ARCA durante 10 años.</p>

@@ -50,7 +50,7 @@ function Campo({
   ayuda?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-1.5 lg:gap-1">
       <label htmlFor={id} className="text-sm font-bold">
         {label}
       </label>
@@ -62,7 +62,7 @@ function Campo({
 }
 
 function claseInput(conError: boolean) {
-  return `h-12 w-full rounded-input border-[1.5px] bg-white px-4 text-base font-normal text-texto outline-none transition-colors placeholder:text-[#9399B2] focus:ring-4 ${
+  return `h-12 w-full lg:h-11 rounded-input border-[1.5px] bg-white px-4 text-base font-normal text-texto outline-none transition-colors placeholder:text-[#9399B2] focus:ring-4 ${
     conError
       ? 'border-error focus:border-error focus:ring-error-suave'
       : 'border-borde hover:border-[#C5CCDC] focus:border-primario focus:ring-primario-suave'
@@ -91,7 +91,6 @@ export default function Registro() {
   const errores = validar(v);
   const mostrar = (c: CampoId) => (tocados[c] ? errores[c] : undefined);
   const tocar = (c: CampoId) => setTocados((t) => ({ ...t, [c]: true }));
-  const claveOk = v.clave.length >= MIN_CLAVE;
 
   async function enviar(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -147,7 +146,7 @@ export default function Registro() {
         </Link>
         <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
           <div className="relative">
-            <div className="absolute -right-[150px] -top-2.5 rotate-[4deg]">
+            <div className="absolute -right-[150px] -top-2.5">
               <div className="f-pop whitespace-nowrap rounded-[22px_22px_22px_6px] bg-white px-[18px] py-3 text-[15px] font-extrabold text-texto shadow-tarjeta-lg">
                 ¡Qué bueno verte por acá!
               </div>
@@ -164,8 +163,8 @@ export default function Registro() {
       </aside>
 
       {/* Formulario */}
-      <main className="flex flex-1 items-start justify-center px-4 py-8 sm:px-8 lg:items-center lg:px-14 lg:py-12">
-        <div className="flex w-full max-w-[420px] flex-col gap-6">
+      <main className="flex flex-1 items-start justify-center px-4 py-8 sm:px-8 lg:items-center lg:px-14 lg:py-6">
+        <div className="flex w-full max-w-[420px] flex-col gap-6 lg:gap-4">
           {/* Encabezado compacto en celular y tablet (el panel índigo no se muestra) */}
           <div className="flex items-center justify-between lg:hidden">
             <Link href="/" aria-label="Volver al inicio de Facti">
@@ -174,9 +173,14 @@ export default function Registro() {
             <Facti pose="saludo" size={84} animated />
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <h1 className="text-[30px] font-bold leading-tight sm:text-[36px]">Creá tu cuenta</h1>
-            <p className="text-texto-suave">Es gratis. Después conectamos tu CUIT con ARCA.</p>
+          <div className="flex flex-col gap-1">
+            <h1 className="text-[30px] font-bold leading-tight sm:text-[34px]">Creá tu cuenta</h1>
+            <p className="text-texto-suave">
+              Es gratis. ¿Ya tenés cuenta?{' '}
+              <Link href="/ingresar" className="font-extrabold text-primario-oscuro underline-offset-2 hover:underline">
+                Iniciá sesión
+              </Link>
+            </p>
           </div>
 
           <BotonGoogle volver="/onboarding/perfil" onError={setErrorGeneral} />
@@ -190,7 +194,7 @@ export default function Registro() {
             <span className="flex-1 border-t-[1.5px] border-borde" />o con tu email<span className="flex-1 border-t-[1.5px] border-borde" />
           </div>
 
-          <form noValidate onSubmit={enviar} className="flex flex-col gap-5">
+          <form noValidate onSubmit={enviar} className="flex flex-col gap-5 lg:gap-3.5">
             <Campo id="nombre" label="Nombre y apellido" error={mostrar('nombre')}>
               <input
                 id="nombre"
@@ -228,27 +232,18 @@ export default function Registro() {
               id="clave"
               label="Contraseña"
               error={mostrar('clave')}
-              ayuda={
-                !mostrar('clave') && (
-                  <p id="clave-ayuda" className={`flex items-center gap-1.5 text-[13px] font-semibold ${claveOk ? 'text-exito-texto' : 'text-texto-tenue'}`}>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      {claveOk ? <path d="M5 12.5l4.5 4.5L19 7.5" /> : <circle cx="12" cy="12" r="8" />}
-                    </svg>
-                    Al menos {MIN_CLAVE} caracteres
-                  </p>
-                )
-              }
             >
               <div className="relative">
                 <input
                   id="clave"
                   type={verClave ? 'text' : 'password'}
                   autoComplete="new-password"
+                  placeholder={`Al menos ${MIN_CLAVE} caracteres`}
                   value={v.clave}
                   onChange={(e) => setV({ ...v, clave: e.target.value })}
                   onBlur={() => v.clave && tocar('clave')}
                   aria-invalid={!!mostrar('clave')}
-                  aria-describedby={mostrar('clave') ? 'clave-error' : 'clave-ayuda'}
+                  aria-describedby={mostrar('clave') ? 'clave-error' : undefined}
                   className={`${claseInput(!!mostrar('clave'))} pr-12`}
                 />
                 <button
@@ -263,14 +258,13 @@ export default function Registro() {
               </div>
             </Campo>
 
-            <div className="flex items-start gap-2.5 rounded-[14px] bg-aviso-suave px-3.5 py-3 text-[13px] leading-snug text-aviso-texto">
+            <div className="flex items-start gap-2.5 rounded-[14px] bg-aviso-suave px-3.5 py-2.5 text-[13px] leading-snug text-aviso-texto">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="mt-px flex-none">
                 <circle cx="12" cy="12" r="9" />
                 <path d="M12 11v5M12 8v.5" />
               </svg>
               <span>
-                <strong>Facti es una herramienta complementaria y de ayuda.</strong> No es ARCA ni un organismo oficial, y no reemplaza
-                el asesoramiento de un contador.
+                <strong>Facti es una herramienta de ayuda:</strong> no es ARCA ni un organismo oficial, ni reemplaza a tu contador.
               </span>
             </div>
 
@@ -306,18 +300,12 @@ export default function Registro() {
             <button
               type="submit"
               disabled={enviando}
-              className="btn-lift flex h-[54px] items-center justify-center gap-2 rounded-full bg-primario text-[17px] font-extrabold text-white shadow-boton hover:shadow-[0_14px_30px_rgba(59,63,216,0.4)] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primario disabled:cursor-wait disabled:opacity-80"
+              className="btn-lift flex h-[54px] items-center justify-center gap-2 rounded-full bg-primario text-[17px] lg:h-[50px] font-extrabold text-white shadow-boton hover:shadow-[0_14px_30px_rgba(59,63,216,0.4)] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-primario disabled:cursor-wait disabled:opacity-80"
             >
               {enviando ? (<><Girando />Creando tu cuenta…</>) : 'Crear cuenta'}
             </button>
           </form>
 
-          <p className="text-center text-[15px] text-texto-suave">
-            ¿Ya tenés cuenta?{' '}
-            <Link href="/ingresar" className="font-extrabold text-primario-oscuro underline-offset-2 hover:underline">
-              Iniciá sesión
-            </Link>
-          </p>
         </div>
       </main>
     </div>
