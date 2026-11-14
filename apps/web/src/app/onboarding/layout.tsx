@@ -16,7 +16,7 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
       </header>
       <main className="mx-auto flex max-w-[1180px] flex-col gap-7 px-8 pb-12 pt-2">
         {children}
-        <p className="text-center text-[13px] text-texto-tenue">
+        <p className="text-center text-base text-texto-tenue">
           Facti es una herramienta complementaria y de ayuda. No es ARCA ni un organismo oficial.
         </p>
       </main>

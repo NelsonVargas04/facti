@@ -102,6 +102,16 @@ export interface Plan {
   uso: Uso;
 }
 
+export interface EstadoArca {
+  entorno: 'homologacion' | 'produccion' | string;
+  servidores: { app: string; db: string; auth: string };
+}
+
+/** Estado de la conexión con ARCA (los tres servidores de prueba de FEDummy). */
+export function verEstadoArca() {
+  return pedir<EstadoArca>('/arca/estado');
+}
+
 export function verCuenta() {
   return pedir<{ cuenta: Cuenta; plan: Plan }>('/cuenta');
 }

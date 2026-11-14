@@ -28,7 +28,7 @@ export function Uso({ label, usadas, limite }: { label: string; usadas: number; 
 
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="flex items-baseline justify-between gap-2 text-sm">
+      <div className="flex items-baseline justify-between gap-2 text-base">
         <span className="font-semibold">{label}</span>
         <span className={`font-bold ${bajo ? 'text-[#B4232B]' : 'text-texto-suave'}`}>
           {ilimitado
@@ -50,7 +50,7 @@ export function Uso({ label, usadas, limite }: { label: string; usadas: number; 
           />
         </div>
       )}
-      <span className="text-xs text-texto-tenue">
+      <span className="text-base text-texto-tenue">
         {usadas} {ilimitado ? 'emitidas' : `de ${limite}`} este mes
       </span>
     </div>
@@ -69,7 +69,7 @@ export function AlertaAgotado({ plan }: { plan: Plan }) {
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="flex-none"><path d="M12 8v5M12 16.5v.5" /><circle cx="12" cy="12" r="9" /></svg>
         Se te {faltan.length > 1 || a.facturas ? 'acabaron' : 'acabó'} tu cupo de {faltan.join(' y ')} este mes.
       </div>
-      <Link href="/app/plan" className="inline-flex items-center justify-center btn-lift rounded-full bg-primario px-4 h-11 text-sm font-bold text-white shadow-boton">Mejorar plan</Link>
+      <Link href="/app/plan" className="inline-flex items-center justify-center btn-lift rounded-full bg-primario px-4 h-11 text-base font-bold text-white shadow-boton">Mejorar plan</Link>
     </div>
   );
 }
@@ -81,11 +81,11 @@ export function UsoPlan({ plan }: { plan: Plan }) {
     <div className="flex flex-col gap-4 rounded-tarjeta bg-superficie p-[22px] shadow-tarjeta">
       <div className="flex items-center justify-between">
         <h2 className="text-[18px] font-bold">Tu plan</h2>
-        <span className="rounded-full bg-primario-suave px-2.5 py-1 text-[12px] font-bold text-primario-oscuro">{NOMBRE_PLAN[plan.nombre]}</span>
+        <span className="rounded-full bg-primario-suave px-2.5 py-1 text-base font-bold text-primario-oscuro">{NOMBRE_PLAN[plan.nombre]}</span>
       </div>
       <Uso label="Facturas A, B y C" usadas={plan.uso.facturas} limite={plan.limites?.facturas ?? null} />
       <Uso label="Factura E" usadas={plan.uso.exportacion} limite={plan.limites?.exportacion ?? null} />
-      {a.alguno && <p className="text-sm font-semibold text-[#B4232B]">Se te acabó un cupo este mes. Pasá a Pro para seguir facturando.</p>}
+      {a.alguno && <p className="text-base font-semibold text-[#B4232B]">Se te acabó un cupo este mes. Pasá a Pro para seguir facturando.</p>}
       {!esPro && (
         <Link href="/app/plan" className="btn-lift flex h-11 items-center justify-center gap-2 rounded-full bg-primario font-bold text-white shadow-boton">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z" /></svg>

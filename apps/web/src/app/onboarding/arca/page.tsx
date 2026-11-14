@@ -36,7 +36,7 @@ export default function AutorizarArca() {
       <div className="flex flex-wrap items-start gap-7">
         <section className="flex min-w-0 flex-[999_1_560px] flex-col gap-[22px] rounded-tarjeta bg-superficie p-9 shadow-tarjeta">
           <div className="flex flex-col gap-1.5">
-            <span className="text-[14px] font-semibold text-texto-tenue">Paso 3 de 5</span>
+            <span className="text-base font-semibold text-texto-tenue">Paso 3 de 5</span>
             <h1 className="text-[34px] font-bold leading-tight">Autorizá a Facti para facturar por vos</h1>
             <p className="text-[17px] text-texto-suave">
               Se hace una sola vez en la web de ARCA. <strong className="text-texto">Nunca te vamos a pedir tu clave fiscal</strong>: solo le decís a ARCA que Facti puede emitir comprobantes en tu nombre, y podés quitarle el permiso cuando quieras.
@@ -55,7 +55,7 @@ export default function AutorizarArca() {
             >
               Tu navegador no puede mostrar el video. <a href="/guias/conectar-arca">Mirá la guía paso a paso</a>.
             </video>
-            <p className="text-[14px] text-texto-tenue">
+            <p className="text-base text-texto-tenue">
               Mirá el video paso a paso (dura menos de 2 minutos). También está la{' '}
               <a href="/guias/conectar-arca" target="_blank" rel="noopener noreferrer" className="font-semibold text-primario-oscuro underline-offset-2 hover:underline">
                 guía interactiva
@@ -70,7 +70,7 @@ export default function AutorizarArca() {
                 <span className="flex h-[30px] w-[30px] flex-none items-center justify-center rounded-[10px] bg-primario-suave font-bold text-primario-oscuro">{i + 1}</span>
                 <span>
                   <strong className="block">{p.t}</strong>
-                  {p.d && <span className="text-[15px] text-texto-suave">{p.d}</span>}
+                  {p.d && <span className="text-base text-texto-suave">{p.d}</span>}
                 </span>
               </li>
             ))}
@@ -78,7 +78,7 @@ export default function AutorizarArca() {
 
           <div className="flex flex-wrap items-center justify-between gap-3.5 rounded-[18px] bg-fondo px-5 py-[18px]">
             <div>
-              <div className="text-[13px] font-semibold text-texto-tenue">CUIT de Facti (representante)</div>
+              <div className="text-base font-semibold text-texto-tenue">CUIT de Facti (representante)</div>
               <div className="font-display text-[26px] font-semibold tracking-wide">{CUIT_FACTI}</div>
             </div>
             <CopiarCuit value={CUIT_FACTI} />
@@ -90,9 +90,9 @@ export default function AutorizarArca() {
               <div key={s.nombre} className="flex flex-wrap items-center justify-between gap-3 border-t border-[#EDF0F6] py-3.5">
                 <div>
                   <strong>{s.nombre}</strong>
-                  <div className="text-sm text-texto-suave">{s.desc}</div>
+                  <div className="text-base text-texto-suave">{s.desc}</div>
                 </div>
-                <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-bold ${s.clase}`}>
+                <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-base font-bold ${s.clase}`}>
                   {s.check && <Tilde size={16} color="#0E5C38" />}
                   {s.estado}
                 </span>
@@ -111,14 +111,14 @@ export default function AutorizarArca() {
 
         <aside className="flex min-w-0 flex-1 basis-[320px] flex-col gap-5">
           <div className="flex flex-col items-center gap-2 rounded-tarjeta bg-superficie p-7 text-center shadow-tarjeta">
-            <div className="f-pop rounded-[20px_20px_20px_6px] bg-texto px-4 py-3 text-[15px] font-bold leading-snug text-white">
+            <div className="f-pop rounded-[20px_20px_20px_6px] bg-texto px-4 py-3 text-base font-bold leading-snug text-white">
               Tranqui, te acompaño.<br /><span className="text-acento">Yo reviso que quede bien.</span>
             </div>
             <Facti pose="senalando" size={190} animated={false} />
           </div>
           <div className="flex flex-col gap-2.5 rounded-tarjeta bg-superficie p-7 shadow-tarjeta">
             <h2 className="text-[18px] font-bold">Lo que sigue: tu punto de venta</h2>
-            <p className="text-[15px] text-texto-suave">En el próximo paso creamos juntos un punto de venta de tipo <strong className="text-texto">"Factura electrónica - Monotributo - Web Services"</strong>. Si ARCA ya te habilitó uno, lo detectamos.</p>
+            <p className="text-base text-texto-suave">En el próximo paso creamos juntos un punto de venta de tipo <strong className="text-texto">"Factura electrónica - Monotributo - Web Services"</strong>. Si ARCA ya te habilitó uno, lo detectamos.</p>
           </div>
           <ResumenPerfil />
         </aside>

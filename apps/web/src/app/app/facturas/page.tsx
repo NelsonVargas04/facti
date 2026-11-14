@@ -90,7 +90,7 @@ export default function Facturas() {
       {/* Filtros separados */}
       <div style={{ animationDelay: '20ms' }} className="aparece flex flex-wrap items-end gap-4">
         <div className="flex min-w-[240px] flex-1 flex-col gap-1.5">
-          <span className="text-sm font-semibold">Buscar</span>
+          <span className="text-base font-semibold">Buscar</span>
           <div className="flex h-12 items-center gap-2 rounded-input border-[1.5px] border-borde bg-white px-4 transition-colors focus-within:border-primario">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="flex-none text-texto-tenue"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
             <input
@@ -102,15 +102,15 @@ export default function Facturas() {
           </div>
         </div>
         <div className="flex w-[185px] flex-col gap-1.5">
-          <span className="text-sm font-semibold">Período</span>
+          <span className="text-base font-semibold">Período</span>
           <Select ariaLabel="Período" value={periodo} onChange={setPeriodo} options={PERIODOS} />
         </div>
         <div className="flex w-[160px] flex-col gap-1.5">
-          <span className="text-sm font-semibold">Estado</span>
+          <span className="text-base font-semibold">Estado</span>
           <Select ariaLabel="Estado" value={filtro} onChange={(v) => setFiltro(v as Filtro)} options={FILTROS_SEL} />
         </div>
         <div className="flex w-[185px] flex-col gap-1.5">
-          <span className="text-sm font-semibold">Ordenar por</span>
+          <span className="text-base font-semibold">Ordenar por</span>
           <Select ariaLabel="Ordenar por" value={orden} onChange={setOrden} options={ORDENES} />
         </div>
       </div>
@@ -129,7 +129,7 @@ export default function Facturas() {
               <TablaFacturas key={visibles.map((v) => v.id).join(',')} rows={visibles} />
             </div>
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-              <span className="text-sm text-texto-tenue">Mostrando {desde}–{hasta} de {total}</span>
+              <span className="text-base text-texto-tenue">Mostrando {desde}–{hasta} de {total}</span>
               {totalPaginas > 1 && (
                 <div className="flex items-center gap-1">
                   <button type="button" onClick={() => setPagina((p) => Math.max(1, p - 1))} disabled={paginaActual === 1} aria-label="Página anterior" className="flex h-9 w-9 items-center justify-center rounded-[10px] border-[1.5px] border-borde text-texto-suave transition-colors hover:border-primario hover:text-primario disabled:opacity-40">
@@ -139,7 +139,7 @@ export default function Facturas() {
                     const npag = i + 1;
                     const on = npag === paginaActual;
                     return (
-                      <button key={npag} type="button" onClick={() => setPagina(npag)} aria-current={on ? 'page' : undefined} className={`h-9 min-w-9 rounded-[10px] px-2.5 text-sm font-bold transition-colors ${on ? 'bg-primario text-white' : 'text-texto-suave hover:bg-fondo'}`}>{npag}</button>
+                      <button key={npag} type="button" onClick={() => setPagina(npag)} aria-current={on ? 'page' : undefined} className={`h-9 min-w-9 rounded-[10px] px-2.5 text-base font-bold transition-colors ${on ? 'bg-primario text-white' : 'text-texto-suave hover:bg-fondo'}`}>{npag}</button>
                     );
                   })}
                   <button type="button" onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))} disabled={paginaActual === totalPaginas} aria-label="Página siguiente" className="flex h-9 w-9 items-center justify-center rounded-[10px] border-[1.5px] border-borde text-texto-suave transition-colors hover:border-primario hover:text-primario disabled:opacity-40">

@@ -46,7 +46,7 @@ function ItemMenu({ it, activo }: { it: Item; activo: boolean }) {
     <Link
       href={it.href}
       aria-current={activo ? 'page' : undefined}
-      className={`group relative flex flex-none items-center gap-2 whitespace-nowrap rounded-[14px] px-3 py-2 text-[15px] font-semibold transition-colors duration-150 md:gap-3 md:py-2.5 ${
+      className={`group relative flex flex-none items-center gap-2 whitespace-nowrap rounded-[14px] px-3 py-2 text-base font-semibold transition-colors duration-150 md:gap-3 md:py-2.5 ${
         activo ? 'text-white' : 'text-texto-suave hover:bg-fondo hover:text-texto'
       }`}
     >
@@ -82,7 +82,7 @@ export function Sidebar() {
   const sesion = useSesion();
   const email = sesion.estado === 'con_sesion' ? sesion.sesion.user.email : undefined;
   const c = cuenta.dato?.cuenta;
-  const nombre = c?.nombre ? nombrePropio(c.nombre) : email || 'Tu cuenta';
+  const nombre = c?.nombre ? nombrePropio(c.nombre) : email ? email.split('@')[0] : 'Tu cuenta';
   // En celular el menú se desliza de costado: el ítem activo siempre queda a la vista.
   const menu = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -102,7 +102,7 @@ export function Sidebar() {
           <Link
             href="/app/facturas/nueva"
             aria-current={pathname === '/app/facturas/nueva' ? 'page' : undefined}
-            className="btn-lift flex h-10 items-center justify-center gap-2 rounded-full bg-acento px-4 text-[15px] font-bold text-texto shadow-[0_6px_16px_rgba(224,161,0,0.25)] hover:shadow-[0_10px_22px_rgba(224,161,0,0.32)] md:h-12"
+            className="btn-lift flex h-10 items-center justify-center gap-2 rounded-full bg-acento px-4 text-base font-bold text-texto shadow-[0_6px_16px_rgba(224,161,0,0.25)] hover:shadow-[0_10px_22px_rgba(224,161,0,0.32)] md:h-12"
           >
             <Icon name="mas" size={18} strokeWidth={2.4} />
             Emitir factura
@@ -112,7 +112,7 @@ export function Sidebar() {
         <nav ref={menu} aria-label="Menú de la app" className="menu-deslizable -mx-1 flex gap-1 overflow-x-auto px-1 pb-0.5 md:mx-0 md:flex-col md:gap-4 md:overflow-visible md:px-0 md:pb-0">
           {GRUPOS.map((g) => (
             <div key={g.titulo} className="contents md:flex md:flex-col md:gap-1">
-              <span className="hidden px-3 pb-1 text-[12px] font-semibold text-texto-tenue md:block">{g.titulo}</span>
+              <span className="hidden px-3 pb-1 text-base font-semibold text-texto-tenue md:block">{g.titulo}</span>
               {g.items.map((it) => (
                 <ItemMenu key={it.href} it={it} activo={esActivo(pathname, it.href)} />
               ))}
@@ -126,32 +126,35 @@ export function Sidebar() {
         <div className="mt-auto hidden flex-col gap-1 md:flex">
           <ItemMenu it={{ href: '/app/configuracion', label: 'Configuración', icon: 'config' }} activo={esActivo(pathname, '/app/configuracion')} />
 
-          {/* Cuenta: arriba quién sos (iniciales, nombre, CUIT) y abajo, separado, salir. */}
-          <div className="mt-2 flex flex-col rounded-[20px] bg-fondo p-3">
+          {/* Cuenta: quién sos arriba; abajo el CUIT y el botón para salir. */}
+          <div className="mt-2 flex flex-col gap-2.5 rounded-[20px] bg-fondo p-3">
             <div className="flex items-center gap-3">
-              <span aria-hidden="true" className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-facti font-display text-[15px] font-bold text-white">
+              <span aria-hidden="true" className="flex h-10 w-10 flex-none items-center justify-center rounded-[14px] bg-facti font-display text-base font-bold text-white">
                 {iniciales(nombre)}
               </span>
-              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span className="truncate text-[15px] font-semibold leading-tight text-texto" title={nombre}>{nombre}</span>
-                {c?.cuit ? (
-                  <span className="whitespace-nowrap text-[13px] leading-tight tabular-nums text-texto-suave">CUIT {formatearCuit(c.cuit)}</span>
-                ) : (
-                  cuenta.dato && <Link href="/onboarding/perfil" className="text-[13px] font-semibold text-primario-oscuro">Cargar mi CUIT</Link>
-                )}
+              <span className="line-clamp-2 min-w-0 flex-1 break-words font-bold leading-tight text-texto" title={c?.nombre ? nombre : email}>
+                {nombre}
               </span>
             </div>
-            <button
-              type="button"
-              onClick={async () => {
-                await cerrarSesion();
-                router.replace('/ingresar');
-              }}
-              className="mt-3 flex items-center gap-2 border-t border-[#E3E7F0] px-1 pt-3 text-[14px] font-semibold text-texto-suave transition-colors hover:text-error focus-visible:outline-2 focus-visible:outline-primario"
-            >
-              <Icon name="salir" size={18} />
-              Cerrar sesión
-            </button>
+            <div className="flex items-center justify-between gap-2 border-t border-[#E3E7F0] pt-2.5">
+              {c?.cuit ? (
+                <span className="whitespace-nowrap tabular-nums text-texto-suave">{formatearCuit(c.cuit)}</span>
+              ) : (
+                cuenta.dato && <Link href="/onboarding/perfil" className="font-semibold text-primario-oscuro">Cargar mi CUIT</Link>
+              )}
+              <button
+                type="button"
+                aria-label="Cerrar sesión"
+                title="Cerrar sesión"
+                onClick={async () => {
+                  await cerrarSesion();
+                  router.replace('/ingresar');
+                }}
+                className="flex h-9 w-9 flex-none items-center justify-center rounded-full text-texto-tenue transition-colors hover:bg-error-suave hover:text-error focus-visible:outline-2 focus-visible:outline-primario"
+              >
+                <Icon name="salir" size={19} />
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -46,7 +46,7 @@ function Pagina() {
         <p className="text-[17px] text-texto-suave">Paso a paso y despacio: se hace una sola vez, en unos 2 minutos. Facti nunca te pide tu clave fiscal.</p>
       </div>
       <ReproductorArca />
-      <p className="text-[14px] text-texto-tenue">Si querés descargarlo, también está como <a className="font-semibold text-primario-oscuro underline-offset-2 hover:underline" href="/videos/conectar-arca.mp4" download>video MP4</a>.</p>
+      <p className="text-base text-texto-tenue">Si querés descargarlo, también está como <a className="font-semibold text-primario-oscuro underline-offset-2 hover:underline" href="/videos/conectar-arca.mp4" download>video MP4</a>.</p>
     </main>
   );
 }

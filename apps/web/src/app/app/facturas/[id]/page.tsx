@@ -83,7 +83,7 @@ export default function DetalleFactura() {
       <div className="flex flex-wrap items-start gap-7">
         {/* Vista del comprobante (principal) */}
         <div style={{ animationDelay: '20ms' }} className="aparece order-1 flex min-w-0 flex-[2_1_520px] flex-col gap-2.5">
-          <span className="text-[14px] font-semibold text-texto-tenue">Comprobante (formato oficial)</span>
+          <span className="text-base font-semibold text-texto-tenue">Comprobante (formato oficial)</span>
           {esE || !datos ? (
             <div className="flex flex-col items-center gap-3 rounded-tarjeta-lg bg-[#E4E8F1] p-12 text-center">
               <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-acento font-mono text-2xl font-semibold text-texto">E</span>
@@ -115,16 +115,16 @@ export default function DetalleFactura() {
               ] as const
             ).map(([k, v]) => (
               <div key={k} className="flex items-center justify-between gap-3 border-b border-[#F0F2F7] pb-2.5">
-                <span className="text-sm text-texto-tenue">{k}</span>
+                <span className="text-base text-texto-tenue">{k}</span>
                 <strong className="text-right tabular-nums">{v}</strong>
               </div>
             ))}
             <div className="flex items-center justify-between gap-3 border-b border-[#F0F2F7] pb-2.5">
-              <span className="text-sm text-texto-tenue">Estado ARCA</span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EAF8F0] px-2.5 py-1 text-[12.5px] font-semibold text-[#0E5C38] ring-1 ring-inset ring-[#C8EDD8]"><span className="h-[7px] w-[7px] rounded-full bg-[#1E9E63]" />Autorizada</span>
+              <span className="text-base text-texto-tenue">Estado ARCA</span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EAF8F0] px-2.5 py-1 text-base font-semibold text-[#0E5C38] ring-1 ring-inset ring-[#C8EDD8]"><span className="h-[7px] w-[7px] rounded-full bg-[#1E9E63]" />Autorizada</span>
             </div>
             <div className="flex items-center justify-between gap-3">
-              <span className="text-sm text-texto-tenue">Cobro</span>
+              <span className="text-base text-texto-tenue">Cobro</span>
               {/* key: el chip vuelve a entrar cuando cambia el estado del cobro */}
               <span key={f.cobro} className="entra">
                 <ChipCobro estado={f.cobro} />
@@ -149,7 +149,7 @@ export default function DetalleFactura() {
               <button type="button" onClick={() => window.print()} className="btn-lift flex h-12 items-center justify-center gap-2 rounded-full bg-primario font-bold text-white shadow-boton">
                 <Ic><path d="M12 4v11M7 10l5 5 5-5M5 20h14" /></Ic>Descargar PDF
               </button>
-              <p className="text-sm text-texto-suave">Guardamos el comprobante y la respuesta de ARCA durante 10 años.</p>
+              <p className="text-base text-texto-suave">Guardamos el comprobante y la respuesta de ARCA durante 10 años.</p>
             </div>
           )}
         </aside>

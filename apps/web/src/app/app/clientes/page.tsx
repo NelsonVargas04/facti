@@ -39,11 +39,11 @@ export default function Clientes() {
       {lista.dato && !qDemorado && (
         <div className="cascada grid gap-[18px] [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
           <div className="flex flex-col gap-1 rounded-tarjeta bg-superficie px-6 py-5 shadow-tarjeta">
-            <span className="text-[14px] font-semibold text-texto-tenue">Clientes</span>
+            <span className="text-base font-semibold text-texto-tenue">Clientes</span>
             <span className="font-display text-[30px] font-semibold tabular-nums"><Numero valor={clientes.length} formato={String} /></span>
           </div>
           <div className="flex flex-col gap-1 rounded-tarjeta bg-superficie px-6 py-5 shadow-tarjeta">
-            <span className="text-[14px] font-semibold text-texto-tenue">Comprobantes emitidos</span>
+            <span className="text-base font-semibold text-texto-tenue">Comprobantes emitidos</span>
             <span className="font-display text-[30px] font-semibold tabular-nums"><Numero valor={totalComprobantes} formato={String} /></span>
           </div>
         </div>
@@ -63,9 +63,9 @@ export default function Clientes() {
           <TablaSkeleton filas={4} />
         ) : clientes.length > 0 ? (
           <div className="overflow-y-hidden overflow-x-auto">
-            <table className="w-full min-w-[640px] border-collapse text-[15px]">
+            <table className="w-full min-w-[640px] border-collapse text-base">
               <thead>
-                <tr className="text-[13px] text-texto-tenue">
+                <tr className="text-base text-texto-tenue">
                   <th className={`${th} text-left`}>Cliente</th>
                   <th className={`${th} text-left`}>Condición IVA</th>
                   <th className={`${th} text-center`}>Comprobantes</th>
@@ -79,7 +79,7 @@ export default function Clientes() {
                     <td className={`${td} whitespace-nowrap`}>
                       <span className="block font-semibold">{c.nombre ? nombrePropio(c.nombre) : formatearCuit(c.docNro)}</span>
                       {/* Documento debajo del nombre: una columna menos y todo entra en una línea. */}
-                      <span className="block text-[13px] tabular-nums text-texto-tenue">
+                      <span className="block text-base tabular-nums text-texto-tenue">
                         {DOC[c.docTipo] ?? 'Doc.'} {c.docTipo === 96 ? c.docNro : formatearCuit(c.docNro)}
                         {c.ultimo && <> · última {fecha(c.ultimo)}</>}
                       </span>

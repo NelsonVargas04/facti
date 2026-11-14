@@ -33,7 +33,7 @@ export function AvisoApi({ error, onReintentar, compacto }: { error: ErrorApi; o
     error.codigo === 'sin_sesion' ? { href: '/ingresar', texto: 'Iniciar sesión' } : error.codigo === 'falta_cuit' ? { href: '/onboarding/perfil', texto: 'Cargar mi CUIT' } : null;
   if (accion) {
     return (
-      <div role="alert" className={`aviso-entra flex ${compacto ? 'flex-wrap items-center justify-between rounded-[16px] bg-aviso-suave px-4 py-3 text-sm text-aviso-texto' : 'flex-col items-center px-4 py-12 text-center'} gap-3`}>
+      <div role="alert" className={`aviso-entra flex ${compacto ? 'flex-wrap items-center justify-between rounded-[16px] bg-aviso-suave px-4 py-3 text-base text-aviso-texto' : 'flex-col items-center px-4 py-12 text-center'} gap-3`}>
         {!compacto && <Facti pose="senalando" size={130} animated={false} />}
         <span className={compacto ? '' : 'flex flex-col gap-1'}>
           {compacto ? <strong>{titulo}. </strong> : <h2 className="text-[20px] font-bold text-texto">{titulo}</h2>}
@@ -47,7 +47,7 @@ export function AvisoApi({ error, onReintentar, compacto }: { error: ErrorApi; o
   }
   if (compacto) {
     return (
-      <div role="alert" className="aviso-entra flex flex-wrap items-center justify-between gap-3 rounded-[16px] bg-aviso-suave px-4 py-3 text-sm text-aviso-texto">
+      <div role="alert" className="aviso-entra flex flex-wrap items-center justify-between gap-3 rounded-[16px] bg-aviso-suave px-4 py-3 text-base text-aviso-texto">
         <span>
           <strong>{titulo}.</strong> {detalle}
         </span>

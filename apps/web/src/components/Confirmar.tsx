@@ -85,7 +85,7 @@ function Dialogo({ titulo, children, icono = 'check-circulo', tono = 'primario',
             type="button"
             disabled={cargando}
             onClick={onCancelar}
-            className="btn-lift inline-flex h-11 items-center justify-center rounded-full border-[1.5px] border-borde bg-white px-5 text-[15px] font-bold text-texto hover:border-primario hover:text-primario-oscuro disabled:opacity-60"
+            className="btn-lift inline-flex h-11 items-center justify-center rounded-full border-[1.5px] border-borde bg-white px-5 text-base font-bold text-texto hover:border-primario hover:text-primario-oscuro disabled:opacity-60"
           >
             {textoCancelar}
           </button>
@@ -93,7 +93,7 @@ function Dialogo({ titulo, children, icono = 'check-circulo', tono = 'primario',
             type="button"
             disabled={cargando}
             onClick={onConfirmar}
-            className={`btn-lift inline-flex h-11 items-center justify-center gap-2 rounded-full px-5 text-[15px] font-bold disabled:cursor-wait disabled:opacity-80 ${t.boton}`}
+            className={`btn-lift inline-flex h-11 items-center justify-center gap-2 rounded-full px-5 text-base font-bold disabled:cursor-wait disabled:opacity-80 ${t.boton}`}
           >
             {cargando ? (<><Girando size={16} />Guardando…</>) : textoConfirmar}
           </button>

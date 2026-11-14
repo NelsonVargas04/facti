@@ -183,7 +183,7 @@ export function Select({ value, onChange, options, placeholder = 'Elegí una opc
                     }}
                     onKeyDown={navKeys}
                     placeholder="Buscar…"
-                    className="h-10 w-full bg-transparent text-[15px] text-texto outline-none placeholder:text-texto-tenue"
+                    className="h-10 w-full bg-transparent text-base text-texto outline-none placeholder:text-texto-tenue"
                   />
                 </div>
               </div>
@@ -191,7 +191,7 @@ export function Select({ value, onChange, options, placeholder = 'Elegí una opc
 
             <div className="scroll-fino flex flex-col gap-0.5 overflow-auto p-2">
               {filtradas.length === 0 ? (
-                <div className="px-3 py-3 text-sm text-texto-tenue">Sin resultados</div>
+                <div className="px-3 py-3 text-base text-texto-tenue">Sin resultados</div>
               ) : (
                 filtradas.map((o, i) => {
                   const sel = o.value === value;
@@ -205,7 +205,7 @@ export function Select({ value, onChange, options, placeholder = 'Elegí una opc
                       aria-selected={sel}
                       onMouseEnter={() => setResaltado(i)}
                       onClick={() => elegir(o.value)}
-                      className={`flex w-full items-center justify-between gap-2 rounded-[12px] px-3 py-2.5 text-left text-[15px] transition-colors ${
+                      className={`flex w-full items-center justify-between gap-2 rounded-[12px] px-3 py-2.5 text-left text-base transition-colors ${
                         sel ? 'bg-primario-suave font-bold text-primario-oscuro' : hl ? 'bg-fondo text-texto' : 'text-texto'
                       }`}
                     >

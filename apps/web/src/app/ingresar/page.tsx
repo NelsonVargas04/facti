@@ -88,27 +88,27 @@ function Ingresar() {
 
       <BotonGoogle volver={volver} onError={setError} />
 
-      <div className="flex items-center gap-3 text-sm text-texto-tenue">
+      <div className="flex items-center gap-3 text-base text-texto-tenue">
         <span className="flex-1 border-t-[1.5px] border-borde" />o con tu email<span className="flex-1 border-t-[1.5px] border-borde" />
       </div>
 
       <form noValidate onSubmit={entrar} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="email" className="text-sm font-bold">Email</label>
+          <label htmlFor="email" className="text-base font-bold">Email</label>
           <input id="email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" spellCheck={false} placeholder="tu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} />
         </div>
         <div className="flex flex-col gap-1.5">
           <div className="flex items-baseline justify-between">
-            <label htmlFor="clave" className="text-sm font-bold">Contraseña</label>
-            <button type="button" onClick={olvide} className="text-[13px] font-extrabold text-primario-oscuro underline-offset-2 hover:underline">
+            <label htmlFor="clave" className="text-base font-bold">Contraseña</label>
+            <button type="button" onClick={olvide} className="text-base font-extrabold text-primario-oscuro underline-offset-2 hover:underline">
               ¿Te la olvidaste?
             </button>
           </div>
           <input id="clave" type="password" autoComplete="current-password" value={clave} onChange={(e) => setClave(e.target.value)} className={inputCls} />
         </div>
 
-        {error && <p role="alert" className="aviso-entra rounded-[14px] bg-error-suave px-4 py-3 text-sm font-bold text-error">{error}</p>}
-        {aviso && <p role="status" className="aviso-entra rounded-[14px] bg-exito-suave px-4 py-3 text-sm font-bold text-exito-texto">{aviso}</p>}
+        {error && <p role="alert" className="aviso-entra rounded-[14px] bg-error-suave px-4 py-3 text-base font-bold text-error">{error}</p>}
+        {aviso && <p role="status" className="aviso-entra rounded-[14px] bg-exito-suave px-4 py-3 text-base font-bold text-exito-texto">{aviso}</p>}
 
         <button type="submit" disabled={enviando} className="btn-lift flex h-[54px] items-center justify-center gap-2 rounded-full bg-primario text-[17px] font-extrabold text-white shadow-boton disabled:cursor-wait disabled:opacity-80">
           {enviando ? (<><Girando />Entrando…</>) : 'Iniciar sesión'}
@@ -128,7 +128,7 @@ function Ingresar() {
         </button>
       )}
 
-      <p className="text-center text-[15px] text-texto-suave">
+      <p className="text-center text-base text-texto-suave">
         ¿Todavía no tenés cuenta?{' '}
         <Link href="/registro" className="font-extrabold text-primario-oscuro underline-offset-2 hover:underline">Creala gratis</Link>
       </p>

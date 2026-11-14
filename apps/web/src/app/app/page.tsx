@@ -30,14 +30,14 @@ function EstadoArca({ estado }: { estado: keyof typeof ESTADOS_ARCA }) {
         </span>
         <div className="flex min-w-0 flex-col">
           <h2 className="text-[17px] font-bold leading-tight">Conexión con ARCA</h2>
-          <span className="flex items-center gap-1.5 whitespace-nowrap text-[14px] text-texto-suave">
+          <span className="flex items-center gap-1.5 whitespace-nowrap text-base text-texto-suave">
             <span className={`h-2 w-2 flex-none rounded-full ${e.punto}`} />
             {e.texto}
           </span>
         </div>
       </div>
       {estado === 'sin_conectar' && (
-        <Link href="/onboarding/arca" className="btn-lift inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primario px-5 text-[15px] font-bold text-white shadow-boton">
+        <Link href="/onboarding/arca" className="btn-lift inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primario px-5 text-base font-bold text-white shadow-boton">
           Conectar con ARCA
         </Link>
       )}
@@ -77,7 +77,7 @@ export default function Inicio() {
         </div>
         {r && (
           <div className="entra flex items-center gap-1">
-            <div className="f-pop max-w-[300px] rounded-[20px_20px_6px_20px] bg-white px-4 py-3 text-[15px] font-semibold shadow-[0_8px_20px_rgba(21,25,58,0.08)]">
+            <div className="f-pop max-w-[300px] rounded-[20px_20px_6px_20px] bg-white px-4 py-3 text-base font-semibold shadow-[0_8px_20px_rgba(21,25,58,0.08)]">
               {r.delMes.emitidos === 0 && pendientes === 0 ? (
                 <>Todavía no emitiste facturas este mes. <Link href="/app/facturas/nueva" className="text-primario-oscuro underline">¿Hacemos la primera?</Link></>
               ) : pendientes > 0 ? (
@@ -104,14 +104,14 @@ export default function Inicio() {
                   href={s.href}
                   className="card-hover group flex flex-col gap-1.5 rounded-tarjeta bg-superficie px-6 py-[22px] shadow-tarjeta outline-none focus-visible:ring-2 focus-visible:ring-primario"
                 >
-                  <span className="flex items-center justify-between gap-2 text-[14px] font-semibold text-texto-tenue">
+                  <span className="flex items-center justify-between gap-2 text-base font-semibold text-texto-tenue">
                     <span className="whitespace-nowrap">{s.label}</span>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="flex-none opacity-0 transition-[opacity,transform] duration-150 group-hover:translate-x-0.5 group-hover:opacity-100">
                       <path d="M9 6l6 6-6 6" />
                     </svg>
                   </span>
                   <span className="whitespace-nowrap font-display text-[32px] font-semibold tabular-nums"><Numero valor={s.valor} formato={pesos} /></span>
-                  <span className="text-sm text-texto-suave">{s.nota}</span>
+                  <span className="text-base text-texto-suave">{s.nota}</span>
                 </Link>
               ))
             : [0, 1, 2, 3].map((i) => <div key={i} className="skeleton h-[122px] rounded-tarjeta" />)}

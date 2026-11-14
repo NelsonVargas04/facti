@@ -54,7 +54,7 @@ export default function Landing() {
         </Link>
         {/* En celular el menú se oculta: las secciones están a un scroll y el encabezado queda en un renglón. */}
         {/* Hover: píldora lila suave con texto índigo, como el ítem activo del menú de la app. */}
-        <nav aria-label="Principal" className="hidden gap-1 text-[15px] font-semibold text-texto-suave md:flex">
+        <nav aria-label="Principal" className="hidden gap-1 text-base font-semibold text-texto-suave md:flex">
           {[
             ['#como', 'Cómo funciona'],
             ['#comprobantes', 'Comprobantes'],
@@ -71,8 +71,8 @@ export default function Landing() {
           ))}
         </nav>
         <div className="flex items-center gap-1 sm:gap-3">
-          <Link href="/ingresar" className="whitespace-nowrap px-3 py-3 text-[15px] font-bold text-texto transition-colors hover:text-primario sm:px-4">Iniciar sesión</Link>
-          <Link href="/registro" className="btn-lift whitespace-nowrap rounded-full bg-primario px-5 py-3 text-[15px] font-extrabold text-white shadow-[0_8px_20px_rgba(59,63,216,0.25)] hover:shadow-[0_12px_28px_rgba(59,63,216,0.38)] sm:px-6">
+          <Link href="/ingresar" className="whitespace-nowrap px-3 py-3 text-base font-bold text-texto transition-colors hover:text-primario sm:px-4">Iniciar sesión</Link>
+          <Link href="/registro" className="btn-lift whitespace-nowrap rounded-full bg-primario px-5 py-3 text-base font-extrabold text-white shadow-[0_8px_20px_rgba(59,63,216,0.25)] hover:shadow-[0_12px_28px_rgba(59,63,216,0.38)] sm:px-6">
             Empezar gratis
           </Link>
         </div>
@@ -96,7 +96,7 @@ export default function Landing() {
               Ver cómo funciona
             </a>
           </div>
-          <p className="text-[15px] font-semibold text-texto-tenue">Monotributo, responsable inscripto y exento · Facturas A, B, C y E</p>
+          <p className="text-base font-semibold text-texto-tenue">Monotributo, responsable inscripto y exento · Facturas A, B, C y E</p>
         </Reveal>
 
         {/* Composición de la derecha. La factura va adelante (z-20) para que nunca se tape el monto;
@@ -105,28 +105,28 @@ export default function Landing() {
         <Reveal delay={140} className="relative mx-auto flex min-h-[470px] w-full min-w-0 max-w-[560px] items-center justify-center sm:min-h-[580px]">
           <div className="absolute left-0 top-2.5 z-20 flex w-[min(330px,88%)] flex-col gap-3.5 rounded-[24px] bg-white p-6 shadow-tarjeta-lg">
             <div className="flex items-center justify-between">
-              <span className="rounded-full bg-primario-suave px-3 py-1.5 text-[13px] font-extrabold text-primario-oscuro">Factura C</span>
-              <span className="text-[13px] font-semibold text-texto-tenue">N° 00003-00000128</span>
+              <span className="rounded-full bg-primario-suave px-3 py-1.5 text-base font-extrabold text-primario-oscuro">Factura C</span>
+              <span className="text-base font-semibold text-texto-tenue">N° 00003-00000128</span>
             </div>
             <div>
-              <div className="text-[13px] text-texto-tenue">Cliente</div>
+              <div className="text-base text-texto-tenue">Cliente</div>
               <div className="font-extrabold">Estudio Lumen SRL</div>
             </div>
             <div className="flex items-end justify-between border-t-[1.5px] border-dashed border-borde pt-3.5">
-              <div className="text-sm text-texto-suave">Diseño de logo</div>
+              <div className="text-base text-texto-suave">Diseño de logo</div>
               <div className="font-display text-[30px] font-bold">$85.000</div>
             </div>
-            <div className="flex items-center gap-2.5 rounded-input bg-exito-suave px-3.5 py-2.5 text-sm font-bold text-exito-texto">
+            <div className="flex items-center gap-2.5 rounded-input bg-exito-suave px-3.5 py-2.5 text-base font-bold text-exito-texto">
               <Tilde color="#0E5C38" size={18} />
-              <span>Autorizada por ARCA<br /><span className="text-xs font-semibold">CAE 76419283746521 · vence 24/10</span></span>
+              <span>Autorizada por ARCA<br /><span className="text-base font-semibold">CAE 76419283746521 · vence 24/10</span></span>
             </div>
           </div>
 
           <div className="absolute -right-4 top-[330px] z-10 hidden w-[230px] flex-col gap-2.5 rounded-[22px] bg-white p-5 shadow-tarjeta-lg sm:flex">
-            <div className="text-[13px] font-bold text-texto-tenue">Tu monotributo</div>
+            <div className="text-base font-bold text-texto-tenue">Tu monotributo</div>
             <div className="font-display text-[22px] font-bold">Categoría D</div>
             <div className="h-3 overflow-hidden rounded-full bg-[#ECEFF5]"><div className="h-full w-[68%] rounded-full bg-primario" /></div>
-            <div className="text-[13px] text-texto-suave">68% del tope anual</div>
+            <div className="text-base text-texto-suave">68% del tope anual</div>
           </div>
 
           <div className="relative top-24 z-30 origin-bottom scale-[0.78] sm:top-32 sm:-translate-x-20 sm:scale-100">
@@ -134,7 +134,7 @@ export default function Landing() {
           </div>
 
           <div className="absolute bottom-[-10px] left-1/2 z-30 w-max max-w-full -translate-x-1/2">
-            <div className="f-pop rounded-full bg-exito-suave px-5 py-3 text-center text-[15px] font-extrabold text-exito-texto shadow-tarjeta-lg sm:px-6 sm:py-3.5 sm:text-[17px]">
+            <div className="f-pop rounded-full bg-exito-suave px-5 py-3 text-center text-base font-extrabold text-exito-texto shadow-tarjeta-lg sm:px-6 sm:py-3.5 sm:text-[17px]">
               ¡Factura autorizada y enviada al cliente!
             </div>
           </div>
@@ -170,7 +170,7 @@ export default function Landing() {
               >
                 <div className="flex items-baseline gap-3">
                   <span aria-hidden="true" className="font-display text-[52px] font-bold leading-none text-primario">{p.n}</span>
-                  <span className="text-[14px] font-bold text-texto-tenue">{p.chip}</span>
+                  <span className="text-base font-bold text-texto-tenue">{p.chip}</span>
                 </div>
                 <h3 className="text-[22px] font-bold leading-tight">
                   <span className="sr-only">Paso {p.n}: </span>
@@ -210,13 +210,13 @@ export default function Landing() {
         <Reveal delay={120} className="relative min-w-0 flex-1 basis-[420px] pt-[30px]">
           <div className="flex flex-col gap-5 rounded-tarjeta-lg bg-white p-7 shadow-tarjeta-lg sm:p-[34px]">
             <div>
-              <div className="text-[14px] font-bold text-texto-tenue">Tu monotributo</div>
+              <div className="text-base font-bold text-texto-tenue">Tu monotributo</div>
               <div className="font-display text-[28px] font-bold">Categoría D</div>
             </div>
             <div className="flex flex-col gap-2">
               <div className="flex justify-between gap-3 font-bold"><span>Facturado en 12 meses</span><span>68% del tope</span></div>
               <div className="h-4 overflow-hidden rounded-full bg-[#ECEFF5]"><div className="h-full w-[68%] rounded-full bg-primario" /></div>
-              <div className="text-sm text-texto-suave">A este ritmo llegás al tope en marzo.</div>
+              <div className="text-base text-texto-suave">A este ritmo llegás al tope en marzo.</div>
             </div>
             <div className="flex items-start gap-3 rounded-[18px] bg-aviso-suave px-[18px] py-4 font-bold text-aviso-texto">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="mt-0.5 flex-none"><path d="M12 8v5M12 16.5v.5" /><circle cx="12" cy="12" r="9" /></svg>
@@ -278,7 +278,7 @@ export default function Landing() {
         </Reveal>
       </section>
 
-      <footer className="mx-auto flex max-w-[1200px] flex-wrap justify-between gap-4 px-4 pb-12 sm:px-8 text-sm text-texto-tenue">
+      <footer className="mx-auto flex max-w-[1200px] flex-wrap justify-between gap-4 px-4 pb-12 sm:px-8 text-base text-texto-tenue">
         <span>© 2026 Facti</span>
         <span>Facti es un servicio independiente y no pertenece a ARCA.</span>
       </footer>

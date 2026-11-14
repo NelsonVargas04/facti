@@ -87,7 +87,7 @@ export default function EstadoPage() {
           <p style={{ color: 'var(--gris-suave)' }}>
             {arca.error}
             <br />
-            <span style={{ fontSize: '0.9rem' }}>
+            <span style={{ fontSize: '1rem' }}>
               (Es lo esperado hasta cargar el certificado y el <code>.env</code> de homologación.)
             </span>
           </p>

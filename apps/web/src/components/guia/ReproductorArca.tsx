@@ -91,11 +91,11 @@ export function ReproductorArca() {
           aria-label="Avanzar o retroceder la guía"
           className="h-2 flex-1 cursor-pointer accent-primario"
         />
-        <span className="w-[86px] flex-none text-right text-[14px] tabular-nums text-texto-suave">{fmt(t)} / {fmt(total)}</span>
+        <span className="w-[86px] flex-none text-right text-base tabular-nums text-texto-suave">{fmt(t)} / {fmt(total)}</span>
         <button
           type="button"
           onClick={() => setVelocidad((v) => (v === 1 ? 0.75 : v === 0.75 ? 0.5 : 1))}
-          className="h-9 flex-none rounded-full border-[1.5px] border-borde bg-white px-3 text-[14px] font-semibold text-texto hover:border-primario"
+          className="h-9 flex-none rounded-full border-[1.5px] border-borde bg-white px-3 text-base font-semibold text-texto hover:border-primario"
           aria-label="Cambiar la velocidad"
         >
           {velocidad === 1 ? 'Normal' : velocidad === 0.75 ? 'Lento' : 'Muy lento'}

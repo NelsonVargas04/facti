@@ -26,7 +26,7 @@ function validar(v: Valores): Partial<Record<CampoId, string>> {
 function MensajeError({ id, children }: { id: string; children?: string }) {
   if (!children) return null;
   return (
-    <p id={id} className="aviso-entra flex items-center gap-1.5 text-[13px] font-semibold text-error">
+    <p id={id} className="aviso-entra flex items-center gap-1.5 text-base font-semibold text-error">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true" className="flex-none">
         <circle cx="12" cy="12" r="9" />
         <path d="M12 7.5v5.5M12 16.5v.01" />
@@ -51,7 +51,7 @@ function Campo({
 }) {
   return (
     <div className="flex flex-col gap-1.5 lg:gap-1">
-      <label htmlFor={id} className="text-sm font-bold">
+      <label htmlFor={id} className="text-base font-bold">
         {label}
       </label>
       {children}
@@ -131,7 +131,7 @@ export default function Registro() {
           Te mandamos un link a <strong className="text-texto">{revisarEmail}</strong> para confirmar tu cuenta. Abrilo desde este mismo
           navegador y seguimos con tu CUIT.
         </p>
-        <p className="text-sm text-texto-tenue">¿No llegó? Fijate en spam o promociones.</p>
+        <p className="text-base text-texto-tenue">¿No llegó? Fijate en spam o promociones.</p>
         <Link href="/ingresar" className="font-extrabold text-primario-oscuro underline-offset-2 hover:underline">Ya lo confirmé, iniciar sesión</Link>
       </main>
     );
@@ -147,7 +147,7 @@ export default function Registro() {
         <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
           <div className="relative">
             <div className="absolute -right-[150px] -top-2.5">
-              <div className="f-pop whitespace-nowrap rounded-[22px_22px_22px_6px] bg-white px-[18px] py-3 text-[15px] font-extrabold text-texto shadow-tarjeta-lg">
+              <div className="f-pop whitespace-nowrap rounded-[22px_22px_22px_6px] bg-white px-[18px] py-3 text-base font-extrabold text-texto shadow-tarjeta-lg">
                 ¡Qué bueno verte por acá!
               </div>
             </div>
@@ -185,16 +185,16 @@ export default function Registro() {
 
           <BotonGoogle volver="/onboarding/perfil" onError={setErrorGeneral} />
           {errorGeneral && (
-            <p role="alert" className="aviso-entra rounded-[14px] bg-error-suave px-4 py-3 text-sm font-bold text-error">
+            <p role="alert" className="aviso-entra rounded-[14px] bg-error-suave px-4 py-3 text-base font-bold text-error">
               {errorGeneral}
             </p>
           )}
 
-          <div className="flex items-center gap-3 text-sm text-texto-tenue">
+          <div className="flex items-center gap-3 text-base text-texto-tenue">
             <span className="flex-1 border-t-[1.5px] border-borde" />o con tu email<span className="flex-1 border-t-[1.5px] border-borde" />
           </div>
 
-          <form noValidate onSubmit={enviar} className="flex flex-col gap-5 lg:gap-3.5">
+          <form noValidate onSubmit={enviar} className="flex flex-col gap-5 lg:gap-3">
             <Campo id="nombre" label="Nombre y apellido" error={mostrar('nombre')}>
               <input
                 id="nombre"
@@ -258,7 +258,7 @@ export default function Registro() {
               </div>
             </Campo>
 
-            <div className="flex items-start gap-2.5 rounded-[14px] bg-aviso-suave px-3.5 py-2.5 text-[13px] leading-snug text-aviso-texto">
+            <div className="flex items-start gap-2.5 rounded-[14px] bg-aviso-suave px-3.5 py-2.5 text-base leading-snug text-aviso-texto">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="mt-px flex-none">
                 <circle cx="12" cy="12" r="9" />
                 <path d="M12 11v5M12 8v.5" />
@@ -269,7 +269,7 @@ export default function Registro() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="flex cursor-pointer items-start gap-2.5 text-sm text-texto-suave">
+              <label className="flex cursor-pointer items-start gap-2.5 text-base text-texto-suave">
                 <input
                   id="terminos"
                   type="checkbox"

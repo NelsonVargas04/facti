@@ -75,16 +75,16 @@ function FacturaEmitida() {
           <div className="flex items-center gap-[18px] rounded-tarjeta-lg bg-exito-suave p-7">
             <Facti pose="festejo" size={160} animated />
             <div className="flex flex-col gap-1.5 text-exito-texto">
-              <span className="flex items-center gap-1.5 text-sm font-bold"><Ic><path d="M5 12.5l4.5 4.5L19 7.5" /></Ic>Autorizada por ARCA</span>
+              <span className="flex items-center gap-1.5 text-base font-bold"><Ic><path d="M5 12.5l4.5 4.5L19 7.5" /></Ic>Autorizada por ARCA</span>
               <h1 className="text-[32px] font-bold leading-tight text-texto">¡Listo! Tu factura ya es válida</h1>
-              <span className="text-[15px] text-exito-texto">Ya quedó guardada. Descargala o compartila con tu cliente.</span>
+              <span className="text-base text-exito-texto">Ya quedó guardada. Descargala o compartila con tu cliente.</span>
             </div>
           </div>
 
           <section className="grid grid-cols-2 gap-4 rounded-tarjeta bg-superficie p-7 shadow-tarjeta">
             {DATOS.map(([k, v]) => (
               <div key={k}>
-                <div className="text-[13px] text-texto-tenue">{k}</div>
+                <div className="text-base text-texto-tenue">{k}</div>
                 <strong className="break-words">{v}</strong>
               </div>
             ))}
@@ -111,26 +111,26 @@ function FacturaEmitida() {
             <div className="flex flex-wrap gap-3">
               <Link href={`/app/facturas/${f.id}`} className="flex-1 basis-[200px] rounded-[16px] bg-fondo p-4 transition-colors hover:bg-primario-suave">
                 <strong className="block">Registrar el cobro</strong>
-                <span className="text-sm text-texto-suave">Cuando te paguen, marcala como cobrada</span>
+                <span className="text-base text-texto-suave">Cuando te paguen, marcala como cobrada</span>
               </Link>
               <Link href="/app/facturas/nueva" className="flex-1 basis-[200px] rounded-[16px] bg-fondo p-4 transition-colors hover:bg-primario-suave">
                 <strong className="block">Emitir otra factura</strong>
-                <span className="text-sm text-texto-suave">Con los mismos datos o para otro cliente</span>
+                <span className="text-base text-texto-suave">Con los mismos datos o para otro cliente</span>
               </Link>
             </div>
-            <p className="text-sm text-texto-suave">Guardamos el PDF y la respuesta de ARCA durante 10 años. También podés verificarla en ARCA escaneando el QR.</p>
+            <p className="text-base text-texto-suave">Guardamos el PDF y la respuesta de ARCA durante 10 años. También podés verificarla en ARCA escaneando el QR.</p>
           </section>
         </div>
 
         {/* Columna derecha: vista previa en formato oficial */}
         <div className="flex flex-[0_1_460px] flex-col gap-2.5">
-          <span className="text-[14px] font-semibold text-texto-tenue">Vista previa del PDF (formato oficial)</span>
+          <span className="text-base font-semibold text-texto-tenue">Vista previa del PDF (formato oficial)</span>
           <div className="overflow-hidden rounded-xl shadow-tarjeta-lg" style={{ width: 445, height: 629 }}>
             <div style={{ width: 794, transformOrigin: 'top left', transform: 'scale(0.56)' }}>
               <ComprobanteC datos={datos} />
             </div>
           </div>
-          <button type="button" onClick={() => window.print()} className="self-start text-[15px] font-bold text-primario-oscuro transition-colors hover:text-texto">Descargar / imprimir PDF →</button>
+          <button type="button" onClick={() => window.print()} className="self-start text-base font-bold text-primario-oscuro transition-colors hover:text-texto">Descargar / imprimir PDF →</button>
         </div>
       </div>
 

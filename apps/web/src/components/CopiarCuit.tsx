@@ -19,7 +19,7 @@ export function CopiarCuit({ value }: { value: string }) {
     <button
       type="button"
       onClick={copiar}
-      className="btn-lift flex h-[46px] items-center gap-2 rounded-full border-[1.5px] border-texto bg-white px-5 text-[15px] font-bold text-texto"
+      className="btn-lift flex h-[46px] items-center gap-2 rounded-full border-[1.5px] border-texto bg-white px-5 text-base font-bold text-texto"
     >
       {copiado ? (
         <>

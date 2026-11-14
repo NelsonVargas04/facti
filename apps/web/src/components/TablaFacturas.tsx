@@ -21,7 +21,7 @@ const TONO: Record<Tono, { cls: string; dot: string }> = {
 
 function Estado({ tono, children }: { tono: Tono; children: React.ReactNode }) {
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12.5px] font-semibold ring-1 ring-inset ${TONO[tono].cls}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-base font-semibold ring-1 ring-inset ${TONO[tono].cls}`}>
       <span className="h-[7px] w-[7px] flex-none rounded-full" style={{ background: TONO[tono].dot }} />
       {children}
     </span>
@@ -69,10 +69,10 @@ export function TablaFacturas({ rows, compacta = false }: { rows: Comprobante[];
   const router = useRouter();
   return (
     <div className="overflow-y-hidden overflow-x-auto">
-      <table className={`w-full border-collapse text-[15px] ${compacta ? 'min-w-[420px] [&_td]:px-3 [&_th]:px-3' : 'min-w-[620px]'}`}>
+      <table className={`w-full border-collapse text-base ${compacta ? 'min-w-[420px] [&_td]:px-3 [&_th]:px-3' : 'min-w-[620px]'}`}>
         <thead>
           {/* Sin columna "ARCA": Facti solo guarda comprobantes que ARCA ya autorizó, así que siempre decía lo mismo. */}
-          <tr className="text-[13px] text-texto-tenue">
+          <tr className="text-base text-texto-tenue">
             <th className={`${th} text-center`}>Tipo</th>
             {!compacta && <th className={`${th} text-left`}>Número</th>}
             <th className={`${th} w-full text-left`}>Cliente</th>
@@ -96,12 +96,12 @@ export function TablaFacturas({ rows, compacta = false }: { rows: Comprobante[];
               className="group cursor-pointer border-b border-[#F0F2F7] transition-colors last:border-0 hover:bg-fondo focus-visible:bg-fondo focus-visible:outline-none"
             >
               <td className={`${td} text-center`}>
-                <span className={`inline-flex h-8 min-w-[34px] items-center justify-center rounded-[10px] px-2 text-[13px] font-bold ${colorTipo(f.sigla)}`}>{f.sigla}</span>
+                <span className={`inline-flex h-8 min-w-[34px] items-center justify-center rounded-[10px] px-2 text-base font-bold ${colorTipo(f.sigla)}`}>{f.sigla}</span>
               </td>
               {!compacta && <td className={`${td} whitespace-nowrap tabular-nums text-texto-suave`}>{numeroComprobante(f.puntoVenta, f.numero)}</td>}
               <td className={`${td} whitespace-nowrap`}>
                 <span className="block font-semibold">{nombreCliente(f)}</span>
-                {compacta && <span className="block text-[13px] tabular-nums text-texto-tenue">{numeroComprobante(f.puntoVenta, f.numero)}</span>}
+                {compacta && <span className="block text-base tabular-nums text-texto-tenue">{numeroComprobante(f.puntoVenta, f.numero)}</span>}
               </td>
               <td className={`${td} whitespace-nowrap text-center tabular-nums text-texto-suave`}>{fechaCorta(f.fecha)}</td>
               <td className={`${td} whitespace-nowrap text-right font-semibold tabular-nums ${total < 0 ? 'text-[#B4232B]' : ''}`}>{importe(total, f.moneda)}</td>

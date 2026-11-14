@@ -19,7 +19,7 @@ export function Stepper({ actual }: { actual: number }) {
         return (
           <li key={label} className="flex flex-1 items-center gap-2.5" style={{ minWidth: 0 }}>
             <div
-              className={`flex items-center gap-2 text-[15px] font-bold ${
+              className={`flex items-center gap-2 text-base font-bold ${
                 done ? 'text-exito-texto' : current ? 'text-texto' : 'text-texto-tenue'
               }`}
             >

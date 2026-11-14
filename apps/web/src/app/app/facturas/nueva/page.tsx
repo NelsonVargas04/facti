@@ -91,14 +91,14 @@ function Tilde({ color = '#0E5C38' }: { color?: string }) {
 
 
 const inputCls = 'h-12 w-full rounded-input border-[1.5px] border-borde bg-white px-4 text-base text-texto outline-none transition-colors focus:border-primario';
-const labelCls = 'flex flex-col gap-2 text-sm font-semibold';
+const labelCls = 'flex flex-col gap-2 text-base font-semibold';
 
 let proximoId = 3;
 
 function Aviso({ res }: { res: ErrorApi }) {
   if (res.codigo === 'configuracion') {
     return (
-      <div role="alert" className="aviso-entra flex flex-col gap-1 rounded-[14px] bg-aviso-suave px-4 py-3 text-sm font-semibold text-aviso-texto">
+      <div role="alert" className="aviso-entra flex flex-col gap-1 rounded-[14px] bg-aviso-suave px-4 py-3 text-base font-semibold text-aviso-texto">
         <span>Todavía no conectaste Facti con ARCA. {res.mensaje}</span>
         <Link href="/onboarding/arca" className="font-bold text-primario-oscuro underline">Conectar ahora</Link>
       </div>
@@ -107,16 +107,16 @@ function Aviso({ res }: { res: ErrorApi }) {
   if (res.codigo === 'base_datos' || res.codigo === 'sin_conexion') return <AvisoApi error={res} compacto />;
   if (res.codigo === 'limite_plan') {
     return (
-      <div role="alert" className="aviso-entra flex flex-col gap-1 rounded-[14px] bg-aviso-suave px-4 py-3 text-sm font-semibold text-aviso-texto">
+      <div role="alert" className="aviso-entra flex flex-col gap-1 rounded-[14px] bg-aviso-suave px-4 py-3 text-base font-semibold text-aviso-texto">
         <span>{res.mensaje}</span>
         <Link href="/app/plan" className="font-bold text-primario-oscuro underline">Ver el plan Pro</Link>
       </div>
     );
   }
   if (res.estado === 501) {
-    return <div role="alert" className="aviso-entra rounded-[14px] bg-aviso-suave px-4 py-3 text-sm font-semibold text-aviso-texto">{res.mensaje}</div>;
+    return <div role="alert" className="aviso-entra rounded-[14px] bg-aviso-suave px-4 py-3 text-base font-semibold text-aviso-texto">{res.mensaje}</div>;
   }
-  return <div role="alert" className="aviso-entra rounded-[14px] bg-[#FDE8EA] px-4 py-3 text-sm font-semibold text-[#B4232B]">{res.mensaje}</div>;
+  return <div role="alert" className="aviso-entra rounded-[14px] bg-[#FDE8EA] px-4 py-3 text-base font-semibold text-[#B4232B]">{res.mensaje}</div>;
 }
 
 export default function NuevaFactura() {
@@ -249,34 +249,41 @@ export default function NuevaFactura() {
           <section className="flex flex-col gap-4 rounded-tarjeta bg-superficie p-7 shadow-tarjeta">
             <div>
               <h2 className="text-[20px] font-bold">Tipo de comprobante</h2>
-              <p className="text-sm text-texto-suave">Según tu condición (monotributo) podés emitir C y E. Cada tipo pide solo los datos que le corresponden. Las demás son para responsables inscriptos.</p>
+              <p className="text-base text-texto-suave">Según tu condición (monotributo) podés emitir C y E. Cada tipo pide solo los datos que le corresponden.</p>
             </div>
-            <div className="flex flex-wrap gap-3">
-              {TIPOS.map((t) => {
+            <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]">
+              {TIPOS.filter((t) => t.hab).map((t) => {
                 const on = t.id === tipo;
                 return (
                   <button
                     key={t.id}
                     type="button"
                     title={t.detalle}
-                    disabled={!t.hab}
-                    onClick={() => {
-                      if (!t.hab) return;
-                      setTipo(t.id as Tipo);
-                    }}
-                    className={`flex min-w-[130px] flex-1 items-center gap-3 rounded-[16px] border-2 p-3 text-left transition-colors ${
+                    aria-pressed={on}
+                    onClick={() => setTipo(t.id as Tipo)}
+                    className={`flex items-center gap-3 rounded-[16px] border-2 p-3.5 text-left transition-colors hover:border-primario ${
                       on ? 'border-primario bg-[#F4F4FF]' : 'border-[#E1E5EE] bg-white'
-                    } ${t.hab ? 'cursor-pointer hover:border-primario' : 'cursor-not-allowed opacity-60'}`}
+                    }`}
                   >
-                    <span className={`flex h-10 w-10 flex-none items-center justify-center rounded-lg font-mono text-xl font-semibold ${t.letra === 'E' ? 'bg-acento text-texto' : on ? 'bg-primario text-white' : 'bg-primario-suave text-primario-oscuro'}`}>{t.letra}</span>
-                    <span>
-                      <strong className="block text-[15px]">{t.nombre}</strong>
-                      <span className="text-xs text-texto-tenue">{t.nota}</span>
+                    <span className={`flex h-11 w-11 flex-none items-center justify-center rounded-[12px] font-mono text-xl font-semibold ${t.letra === 'E' ? 'bg-acento text-texto' : on ? 'bg-primario text-white' : 'bg-primario-suave text-primario-oscuro'}`}>{t.letra}</span>
+                    <span className="min-w-0">
+                      <strong className="block">{t.nombre}</strong>
+                      <span className="text-texto-tenue">{t.nota}</span>
                     </span>
                   </button>
                 );
               })}
             </div>
+            {TIPOS.some((t) => !t.hab) && (
+              <div className="flex flex-wrap items-center gap-2 text-texto-tenue">
+                <span>Para responsables inscriptos, próximamente:</span>
+                {TIPOS.filter((t) => !t.hab).map((t) => (
+                  <span key={t.id} title={t.detalle} className="inline-flex h-8 items-center rounded-full bg-fondo px-3 font-semibold text-texto-suave">
+                    {t.nombre}
+                  </span>
+                ))}
+              </div>
+            )}
           </section>
 
           {/* 1. Cliente */}
@@ -302,25 +309,25 @@ export default function NuevaFactura() {
 
                 {!esCF && (
                   <div>
-                    <button type="button" onClick={buscar} disabled={buscando} className="btn-lift flex h-11 items-center gap-2 rounded-full bg-primario px-5 text-[15px] font-bold text-white disabled:opacity-60 shadow-boton">
+                    <button type="button" onClick={buscar} disabled={buscando} className="btn-lift flex h-11 items-center gap-2 rounded-full bg-primario px-5 text-base font-bold text-white disabled:opacity-60 shadow-boton">
                       <Lupa />{buscando ? 'Buscando…' : 'Buscar en ARCA'}
                     </button>
                   </div>
                 )}
 
                 {esCF ? (
-                  <p className="rounded-[18px] bg-fondo px-5 py-4 text-sm text-texto-suave">Consumidor final. Solo se pide identificación cuando la factura es de <strong>$10.000.000</strong> o más.</p>
+                  <p className="rounded-[18px] bg-fondo px-5 py-4 text-base text-texto-suave">Consumidor final. Solo se pide identificación cuando la factura es de <strong>$10.000.000</strong> o más.</p>
                 ) : padron ? (
                   <div className="grid gap-4 rounded-[18px] bg-fondo p-5 [grid-template-columns:repeat(auto-fit,minmax(180px,1fr))]">
-                    <div className="col-span-full flex items-center gap-2 text-sm font-bold text-exito-texto"><Tilde />Encontrado en el padrón de ARCA</div>
-                    <div><div className="text-[13px] text-texto-tenue">Nombre / Razón social</div><strong>{padron.nombre}</strong></div>
-                    <div><div className="text-[13px] text-texto-tenue">Condición frente al IVA</div><strong>{COND_LABEL[padron.condicion]}{padron.categoriaMonotributo ? ` · ${padron.categoriaMonotributo}` : ''}</strong></div>
-                    {padron.domicilio && <div><div className="text-[13px] text-texto-tenue">Domicilio</div><strong>{padron.domicilio}</strong></div>}
+                    <div className="col-span-full flex items-center gap-2 text-base font-bold text-exito-texto"><Tilde />Encontrado en el padrón de ARCA</div>
+                    <div><div className="text-base text-texto-tenue">Nombre / Razón social</div><strong>{padron.nombre}</strong></div>
+                    <div><div className="text-base text-texto-tenue">Condición frente al IVA</div><strong>{COND_LABEL[padron.condicion]}{padron.categoriaMonotributo ? ` · ${padron.categoriaMonotributo}` : ''}</strong></div>
+                    {padron.domicilio && <div><div className="text-base text-texto-tenue">Domicilio</div><strong>{padron.domicilio}</strong></div>}
                   </div>
                 ) : padronMsg ? (
                   <Aviso res={padronMsg} />
                 ) : (
-                  <p className="rounded-[18px] bg-fondo px-5 py-4 text-sm text-texto-suave">Escribí el CUIT y tocá <strong>Buscar en ARCA</strong> para traer los datos del cliente y su condición frente al IVA.</p>
+                  <p className="rounded-[18px] bg-fondo px-5 py-4 text-base text-texto-suave">Escribí el CUIT y tocá <strong>Buscar en ARCA</strong> para traer los datos del cliente y su condición frente al IVA.</p>
                 )}
 
                 <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
@@ -331,7 +338,7 @@ export default function NuevaFactura() {
             ) : (
               // Receptor del exterior (Factura E)
               <>
-                <div className="flex items-start gap-2 rounded-[14px] bg-aviso-suave px-4 py-3 text-sm font-semibold text-aviso-texto">
+                <div className="flex items-start gap-2 rounded-[14px] bg-aviso-suave px-4 py-3 text-base font-semibold text-aviso-texto">
                   <Tilde color="#6B4600" />El cliente del exterior no está en el padrón de ARCA: cargá sus datos a mano.
                 </div>
                 <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
@@ -350,16 +357,16 @@ export default function NuevaFactura() {
 
             {esE ? (
               <div className="flex flex-col gap-2">
-                <span className="text-sm font-semibold">Concepto</span>
-                <span className="inline-flex items-center gap-2 self-start rounded-input bg-primario-suave px-4 py-2.5 text-[15px] font-bold text-primario-oscuro">
+                <span className="text-base font-semibold">Concepto</span>
+                <span className="inline-flex items-center gap-2 self-start rounded-input bg-primario-suave px-4 py-2.5 text-base font-bold text-primario-oscuro">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
                   Servicios · Exportación
                 </span>
-                <span className="text-xs text-texto-tenue">La Factura E es por exportación de servicios: el período va en la descripción de cada ítem.</span>
+                <span className="text-base text-texto-tenue">La Factura E es por exportación de servicios: el período va en la descripción de cada ítem.</span>
               </div>
             ) : (
               <div className="flex flex-col gap-2">
-                <span className="text-sm font-semibold">¿Es un servicio?</span>
+                <span className="text-base font-semibold">¿Es un servicio?</span>
                 <button
                   type="button"
                   role="switch"
@@ -373,7 +380,7 @@ export default function NuevaFactura() {
                   </span>
                   <span className="font-semibold text-texto">{incluyeServicio ? 'Sí, cobro por un período de trabajo' : 'No, vendo productos'}</span>
                 </button>
-                <span className="text-xs text-texto-tenue">Si está activado, sumamos el período facturado (desde/hasta). Apagalo si vendés productos. Los ítems los agregás abajo como más te convenga.</span>
+                <span className="text-base text-texto-tenue">Si está activado, sumamos el período facturado (desde/hasta). Apagalo si vendés productos. Los ítems los agregás abajo como más te convenga.</span>
               </div>
             )}
 
@@ -399,11 +406,11 @@ export default function NuevaFactura() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <span className="text-sm font-semibold">Detalle</span>
+              <span className="text-base font-semibold">Detalle</span>
               <div className="overflow-y-hidden overflow-x-auto">
                 <table className="w-full min-w-[640px] border-separate border-spacing-y-2">
                   <thead>
-                    <tr className="text-left text-[13px] text-texto-tenue">
+                    <tr className="text-left text-base text-texto-tenue">
                       <th className="px-1 pb-1">Descripción</th>
                       <th className="w-[80px] px-1 pb-1">Cant.</th>
                       <th className="w-[130px] px-1 pb-1">U. medida</th>
@@ -430,7 +437,7 @@ export default function NuevaFactura() {
                   </tbody>
                 </table>
               </div>
-              <button type="button" onClick={agregar} className="flex items-center gap-2 self-start rounded-input border-[1.5px] border-dashed border-[#B9BED3] px-[18px] py-3 text-[15px] font-bold text-primario-oscuro transition-colors hover:border-primario hover:bg-fondo">
+              <button type="button" onClick={agregar} className="flex items-center gap-2 self-start rounded-input border-[1.5px] border-dashed border-[#B9BED3] px-[18px] py-3 text-base font-bold text-primario-oscuro transition-colors hover:border-primario hover:bg-fondo">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
                 Agregar ítem
               </button>
@@ -457,7 +464,7 @@ export default function NuevaFactura() {
 
           <div className="flex items-center gap-3.5 rounded-tarjeta bg-texto p-[22px] text-white">
             <Facti pose="factura" size={110} animated={false} />
-            <p className="text-[15px] font-semibold leading-snug">
+            <p className="text-base font-semibold leading-snug">
               {esE
                 ? <>Para exportar usás la <span className="text-acento">Factura E</span>. Cargá el país y la moneda del exterior.</>
                 : <>Te puse <span className="text-acento">Factura C</span> porque sos monotributista. Revisá el monto y yo le pido el CAE a ARCA.</>}

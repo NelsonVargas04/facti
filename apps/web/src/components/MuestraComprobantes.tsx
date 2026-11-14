@@ -409,12 +409,12 @@ export function MuestraComprobantes() {
                   sel ? 'border-primario text-primario' : 'border-texto text-texto'
                 }`}
               >
-                <span className={`font-display font-bold ${c.letra.length > 1 ? 'text-[15px]' : 'text-[22px]'}`}>{c.letra}</span>
+                <span className={`font-display font-bold ${c.letra.length > 1 ? 'text-base' : 'text-[22px]'}`}>{c.letra}</span>
                 <span className="text-[8px] font-extrabold">COD. {c.cod}</span>
               </span>
               <span className="flex min-w-0 flex-col">
                 <strong className="whitespace-nowrap text-[16px] lg:text-[17px]">{c.nombre}</strong>
-                <span className="hidden text-[14px] leading-snug text-texto-suave lg:block">{c.cuando}</span>
+                <span className="hidden text-base leading-snug text-texto-suave lg:block">{c.cuando}</span>
               </span>
             </button>
           );
@@ -434,7 +434,7 @@ export function MuestraComprobantes() {
           ))}
         </div>
         <div className="relative mt-4 flex min-w-0 flex-1 flex-col lg:mt-0">
-          <span className="absolute -top-4 right-3 z-10 rounded-full bg-acento px-4 py-1.5 text-[13px] font-extrabold text-texto shadow-chip sm:right-6 sm:text-[14px]">
+          <span className="absolute -top-4 right-3 z-10 rounded-full bg-acento px-4 py-1.5 text-base font-extrabold text-texto shadow-chip sm:right-6 sm:text-base">
             {m.diferencia}
           </span>
           <div ref={hoja} className="grid w-full min-w-0 flex-1 overflow-hidden rounded-[20px] bg-white shadow-tarjeta-lg ring-1 ring-borde">
@@ -452,7 +452,7 @@ export function MuestraComprobantes() {
         </div>
       </div>
 
-      <p className="flex items-start gap-2 text-[15px] text-texto-suave lg:col-span-2 lg:justify-center">
+      <p className="flex items-start gap-2 text-base text-texto-suave lg:col-span-2 lg:justify-center">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1E9E63" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="mt-0.5 flex-none">
           <path d="M5 12.5l4.5 4.5L19 7.5" />
         </svg>

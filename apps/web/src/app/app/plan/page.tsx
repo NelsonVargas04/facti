@@ -21,7 +21,7 @@ const BENEFICIOS: { f: string; gratis: Valor; pro: Valor }[] = [
 ];
 
 function Celda({ v, pro }: { v: Valor; pro?: boolean }) {
-  if (typeof v === 'string') return <span className={`text-sm font-bold ${pro ? 'text-primario-oscuro' : 'text-texto'}`}>{v}</span>;
+  if (typeof v === 'string') return <span className={`text-base font-bold ${pro ? 'text-primario-oscuro' : 'text-texto'}`}>{v}</span>;
   if (!v) return <Icon name="cerrar" size={16} strokeWidth={2.6} className="text-[#B9BED3]" />;
   return <Icon name="check" size={18} strokeWidth={3} className={pro ? 'text-primario-oscuro' : 'text-exito'} />;
 }
@@ -38,7 +38,7 @@ export default function PlanPro() {
       <div style={{ animationDelay: '15ms' }} className="aparece flex flex-wrap items-center justify-center gap-6 rounded-tarjeta-lg bg-primario p-8 text-center text-white sm:justify-start sm:text-left">
         <Facti pose="festejo" size={150} animated />
         <div className="flex flex-col gap-2">
-          <span className="self-center rounded-full bg-acento px-3 py-1 text-[13px] font-bold text-texto sm:self-start">Facti Pro</span>
+          <span className="self-center rounded-full bg-acento px-3 py-1 text-base font-bold text-texto sm:self-start">Facti Pro</span>
           <h1 className="text-[34px] font-bold leading-tight text-white">Hacé más, sin límites</h1>
           <p className="max-w-[460px] text-[#E4E5FF]">Facturás todo lo que necesites, sumás recordatorios de cobro y Facti te cuida el monotributo. Cancelás cuando quieras.</p>
         </div>
@@ -61,12 +61,12 @@ export default function PlanPro() {
         {/* Comparación */}
         <section style={{ animationDelay: '30ms' }} className="aparece min-w-0 flex-[2_1_440px] rounded-tarjeta bg-superficie p-6 shadow-tarjeta">
           <div className="grid grid-cols-[1fr_auto_auto] items-center gap-x-6 gap-y-1">
-            <div className="pb-3 text-[13px] font-semibold text-texto-tenue">Qué incluye</div>
-            <div className="pb-3 text-center text-[13px] font-semibold text-texto-tenue">Gratis</div>
-            <div className="rounded-t-xl bg-primario-suave px-4 pb-3 pt-2 text-center text-[13px] font-semibold text-primario-oscuro">Pro</div>
+            <div className="pb-3 text-base font-semibold text-texto-tenue">Qué incluye</div>
+            <div className="pb-3 text-center text-base font-semibold text-texto-tenue">Gratis</div>
+            <div className="rounded-t-xl bg-primario-suave px-4 pb-3 pt-2 text-center text-base font-semibold text-primario-oscuro">Pro</div>
             {BENEFICIOS.map((b, i) => (
               <div key={b.f} className="contents">
-                <div style={{ animationDelay: `${150 + i * 70}ms` }} className="pop-in border-t border-[#F0F2F7] py-3.5 text-[15px] font-semibold">{b.f}</div>
+                <div style={{ animationDelay: `${150 + i * 70}ms` }} className="pop-in border-t border-[#F0F2F7] py-3.5 text-base font-semibold">{b.f}</div>
                 <div style={{ animationDelay: `${150 + i * 70}ms` }} className="pop-in flex justify-center border-t border-[#F0F2F7] py-3.5"><Celda v={b.gratis} /></div>
                 <div style={{ animationDelay: `${150 + i * 70}ms` }} className={`pop-in flex justify-center border-t border-[#E6E7FF] bg-primario-suave px-4 py-3.5 ${i === BENEFICIOS.length - 1 ? 'rounded-b-xl' : ''}`}><Celda v={b.pro} pro /></div>
               </div>
@@ -78,7 +78,7 @@ export default function PlanPro() {
         <aside style={{ animationDelay: '50ms' }} className="aparece flex min-w-0 flex-1 basis-[300px] flex-col gap-4 rounded-tarjeta-lg bg-texto p-7 text-white shadow-tarjeta-lg">
           <h2 className="font-display text-[26px] font-bold text-white">Pro</h2>
           <div className="font-display text-[44px] font-semibold">{PLAN_DEMO.precioPro}<span className="text-[18px] font-semibold text-[#C9CCE8]"> / mes</span></div>
-          <ul className="flex flex-col gap-2.5 text-[15px] text-[#DADCF2]">
+          <ul className="flex flex-col gap-2.5 text-base text-[#DADCF2]">
             {['Facturas A, B, C y E ilimitadas', 'Recordatorios de cobro', 'Multi-CUIT', 'Soporte prioritario'].map((t) => (
               <li key={t} className="flex items-center gap-2.5"><Icon name="check" size={18} strokeWidth={3} className="flex-none text-acento" />{t}</li>
             ))}
@@ -86,7 +86,7 @@ export default function PlanPro() {
           <button type="button" className="btn-lift pulse-cta mt-auto flex h-12 items-center justify-center rounded-full bg-acento text-base font-bold text-texto">
             Pasar a Pro
           </button>
-          <p className="text-center text-xs text-[#9CA0C8]">Sin permanencia. Cancelás cuando quieras.</p>
+          <p className="text-center text-base text-[#9CA0C8]">Sin permanencia. Cancelás cuando quieras.</p>
         </aside>
       </div>
 
