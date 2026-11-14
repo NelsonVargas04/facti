@@ -81,11 +81,17 @@ func (s *Servidor) asignarCuit(w http.ResponseWriter, r *http.Request) error {
 	padron := false
 	if cl, err := s.arca(); err == nil {
 		p, err := arca.ConsultarPadron(r.Context(), cl.Cfg, cl.Tickets, nuevo)
-		if err != nil {
+		var errArca *arca.Error
+		switch {
+		case err == nil:
+			perfil = datos.Perfil{Nombre: p.Nombre, Domicilio: p.Domicilio, Condicion: string(p.Condicion), Categoria: p.CategoriaMonotributo}
+			padron = true
+		case cl.Cfg.Entorno == arca.Homologacion && errors.As(err, &errArca) && errArca.Servicio == "Padron A5":
+			// El padrón de homologación casi no tiene personas reales ("No existe persona con ese Id"):
+			// en pruebas se guarda el CUIT igual, sin datos del padrón.
+		default:
 			return err
 		}
-		perfil = datos.Perfil{Nombre: p.Nombre, Domicilio: p.Domicilio, Condicion: string(p.Condicion), Categoria: p.CategoriaMonotributo}
-		padron = true
 	}
 	act, err := d.AsignarCuit(r.Context(), c.ID, nuevo, perfil)
 	if errors.Is(err, datos.ErrCuitEnUso) {
