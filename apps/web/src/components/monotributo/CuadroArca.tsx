@@ -73,20 +73,20 @@ export function CuadroArca({ escala, tuya, ideal }: { escala: EscalaMonotributo;
             <tr>
               <th rowSpan={2} scope="col" className={`${th} ${fija} border-l-0 bg-[#232A5C] text-center`}>Categoría</th>
               {SUELTAS_1.map((c) => (
-                <th key={c.t} rowSpan={2} scope="col" className={`${th} ${c.texto ? 'text-center' : 'text-right'}`}>{c.t}</th>
+                <th key={c.t} rowSpan={2} scope="col" className={`${th} text-center`}>{c.t}</th>
               ))}
               <th colSpan={2} scope="colgroup" className={`${th} text-center`}>Impuesto integrado</th>
               {SUELTAS_2.map((c) => (
-                <th key={c.t} rowSpan={2} scope="col" className={`${th} text-right`}>{c.t}</th>
+                <th key={c.t} rowSpan={2} scope="col" className={`${th} text-center`}>{c.t}</th>
               ))}
               <th colSpan={2} scope="colgroup" className={`${th} bg-[#2E3778] text-center`}>Cuota mensual total</th>
             </tr>
             <tr>
               {IMPUESTO.map((c) => (
-                <th key={c.t} scope="col" className={`${th} text-right font-medium`}>{c.t}</th>
+                <th key={c.t} scope="col" className={`${th} text-center font-medium`}>{c.t}</th>
               ))}
               {TOTAL.map((c) => (
-                <th key={c.t} scope="col" className={`${th} bg-[#2E3778] text-right font-medium`}>{c.t}</th>
+                <th key={c.t} scope="col" className={`${th} bg-[#2E3778] text-center font-medium`}>{c.t}</th>
               ))}
             </tr>
           </thead>
@@ -109,7 +109,7 @@ export function CuadroArca({ escala, tuya, ideal }: { escala: EscalaMonotributo;
                     </span>
                   </th>
                   {todas.map((col, j) => (
-                    <td key={j} className={`${td} ${col.texto ? 'text-center' : 'text-right'} ${col.fuerte ? 'font-semibold text-texto' : 'text-texto-suave'}`}>
+                    <td key={j} className={`${td} text-center ${col.fuerte ? 'font-semibold text-texto' : 'text-texto-suave'}`}>
                       {col.v(c)}
                     </td>
                   ))}
