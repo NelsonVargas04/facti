@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { AnimatePresence, motion } from 'motion/react';
 import { CATEGORIAS_MONOTRIBUTO, obtenerParametro } from '@facti/shared/src/parametros';
 import { Icon } from '@/components/Icon';
@@ -27,7 +28,7 @@ export function categoriaQueCorresponde(ingresos: number, t: Record<string, numb
   return null;
 }
 
-const fechaAR = (iso: string) => iso.split('-').reverse().join('/');
+export const fechaAR = (iso: string) => iso.split('-').reverse().join('/');
 
 /**
  * Barra como la de ARCA: lo facturado contra el tope de tu categoría, con la marca de dónde estás,
@@ -119,6 +120,10 @@ const valor = (c: CategoriaMonotributo, col: (typeof COLUMNAS)[number]) => (col.
 /** Una categoría: fila con tope y cuotas; al tocarla se abre el detalle completo. */
 function FilaCategoria({ c, tuya, corresponde }: { c: CategoriaMonotributo; tuya: boolean; corresponde: boolean }) {
   const [abierta, setAbierta] = useState(tuya);
+  // Tu categoría se abre sola cuando llegan tus datos (pueden llegar después que la tabla).
+  useEffect(() => {
+    if (tuya) setAbierta(true);
+  }, [tuya]);
   const detalle = COLUMNAS.filter((col) => !['tope', 'cuotaServicios', 'cuotaVentas'].includes(col.k));
   const cuotas = COLUMNAS.filter((col) => col.k === 'cuotaServicios' || col.k === 'cuotaVentas');
   return (
@@ -131,8 +136,8 @@ function FilaCategoria({ c, tuya, corresponde }: { c: CategoriaMonotributo; tuya
       >
         <span className="flex min-w-0 items-center gap-3">
           <span className={`flex h-10 w-10 flex-none items-center justify-center rounded-full text-[18px] font-bold text-white ${tuya ? 'bg-primario' : 'bg-texto'}`}>{c.letra}</span>
-          {tuya && <span className="truncate rounded-full bg-white px-2.5 py-0.5 font-semibold text-primario-oscuro">Tu categoría</span>}
-          {corresponde && <span className="truncate rounded-full bg-white px-2.5 py-0.5 font-semibold text-aviso-texto">Te corresponde</span>}
+          {tuya && <span className="whitespace-nowrap rounded-full bg-white px-2.5 py-0.5 font-semibold text-primario-oscuro"><span className="sm:hidden">Tuya</span><span className="hidden sm:inline">Tu categoría</span></span>}
+          {corresponde && <span className="whitespace-nowrap rounded-full bg-white px-2.5 py-0.5 font-semibold text-aviso-texto"><span className="sm:hidden">Ideal</span><span className="hidden sm:inline">Te corresponde</span></span>}
         </span>
         <span className="text-right font-bold tabular-nums">{exacto(c.tope)}</span>
         <span className="hidden text-right tabular-nums md:block">{exacto(c.cuotaServicios)}</span>
@@ -173,82 +178,45 @@ function FilaCategoria({ c, tuya, corresponde }: { c: CategoriaMonotributo; tuya
 }
 
 
-/** Botón "Ver categorías": abre el cuadro oficial completo, con tu categoría marcada. */
-export function VerCategorias({ escala, categoria, corresponde }: { escala?: EscalaMonotributo | null; categoria?: string; corresponde?: string | null }) {
-  const [abierto, setAbierto] = useState(false);
+/** Botón "Ver categorías": lleva a la página con el cuadro oficial completo. */
+export function VerCategorias() {
   return (
-    <>
-      <button
-        type="button"
-        onClick={() => setAbierto(true)}
-        disabled={!escala}
-        className="btn-lift inline-flex h-11 items-center gap-2 rounded-full border-[1.5px] border-borde bg-white px-5 font-bold text-texto hover:border-primario hover:text-primario-oscuro disabled:opacity-50"
-      >
-        <Icon name="monotributo" size={18} />
-        Ver categorías
-      </button>
-      <AnimatePresence>{abierto && escala && <Cuadro escala={escala} categoria={categoria?.toUpperCase()} corresponde={corresponde} onCerrar={() => setAbierto(false)} />}</AnimatePresence>
-    </>
+    <Link
+      href="/app/monotributo/categorias"
+      className="btn-lift inline-flex h-11 items-center gap-2 rounded-full border-[1.5px] border-borde bg-white px-5 font-bold text-texto hover:border-primario hover:text-primario-oscuro"
+    >
+      <Icon name="monotributo" size={18} />
+      Ver categorías
+    </Link>
   );
 }
 
-function Cuadro({ escala, categoria, corresponde, onCerrar }: { escala: EscalaMonotributo; categoria?: string; corresponde?: string | null; onCerrar: () => void }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const esc = (e: KeyboardEvent) => e.key === 'Escape' && onCerrar();
-    window.addEventListener('keydown', esc);
-    ref.current?.focus();
-    return () => window.removeEventListener('keydown', esc);
-  }, [onCerrar]);
-
+/** Cuadro oficial de categorías: una fila por categoría (tope y cuotas) con el detalle desplegable. */
+export function TablaCategorias({ escala, categoria, corresponde }: { escala: EscalaMonotributo; categoria?: string; corresponde?: string | null }) {
+  const tuya = categoria?.toUpperCase();
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-labelledby="cuadro-titulo">
-      <motion.button type="button" aria-label="Cerrar" onClick={onCerrar} className="absolute inset-0 bg-[#15193A]/40" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
-      <motion.div
-        ref={ref}
-        tabIndex={-1}
-        className="relative flex max-h-[90vh] w-full max-w-[960px] flex-col overflow-hidden rounded-t-[28px] bg-superficie shadow-tarjeta outline-none sm:rounded-tarjeta"
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 24 }}
-        transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-      >
-        <div className="flex items-start justify-between gap-4 border-b border-[#EDF0F6] p-5 sm:p-6">
-          <div>
-            <h2 id="cuadro-titulo" className="text-[22px] font-bold">Categorías del monotributo</h2>
-            <p className="text-texto-suave">
-              Valores de ARCA vigentes desde el {fechaAR(escala.vigenteDesde)}.{' '}
-              {escala.origen === 'arca' ? 'Se actualizan solos desde ARCA.' : 'No pudimos consultar ARCA ahora: mostramos la última tabla conocida.'}
-            </p>
-          </div>
-          <button type="button" onClick={onCerrar} aria-label="Cerrar" className="flex h-10 w-10 flex-none items-center justify-center rounded-full text-texto-suave hover:bg-fondo hover:text-texto">
-            <Icon name="cerrar" size={20} />
-          </button>
+    <section className="flex flex-col overflow-hidden rounded-tarjeta bg-superficie shadow-tarjeta">
+      <div className="px-3 py-2 sm:px-6 sm:py-3">
+        {/* Encabezado de columnas (compu) */}
+        <div className="hidden grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_32px] gap-4 border-b border-[#EDF0F6] px-3 pb-3 pt-2 font-semibold text-texto-tenue md:grid">
+          <span>Categoría</span>
+          <span className="text-right">Ingresos brutos (tope anual)</span>
+          <span className="text-right">Cuota servicios</span>
+          <span className="text-right">Cuota venta de cosas</span>
+          <span />
         </div>
-
-        <div className="overflow-y-auto px-4 py-3 sm:px-6">
-          {/* Encabezado de columnas (compu) */}
-          <div className="hidden grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_32px] gap-4 border-b border-[#EDF0F6] px-3 pb-3 font-semibold text-texto-tenue md:grid">
-            <span>Categoría</span>
-            <span className="text-right">Ingresos brutos (tope anual)</span>
-            <span className="text-right">Cuota servicios</span>
-            <span className="text-right">Cuota venta de cosas</span>
-            <span />
-          </div>
-          <ul className="flex flex-col">
-            {escala.categorias.map((c) => (
-              <FilaCategoria key={c.letra} c={c} tuya={c.letra === categoria} corresponde={c.letra === corresponde && c.letra !== categoria} />
-            ))}
-          </ul>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#EDF0F6] px-5 py-4 sm:px-6">
-          <p className="text-texto-tenue">Fuente: ARCA. Tocá una categoría para ver todo el detalle. La cuota es el total por mes.</p>
-          <a href={escala.fuente} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 font-bold text-primario-oscuro hover:underline">
-            Ver en ARCA <Icon name="link-externo" size={16} />
-          </a>
-        </div>
-      </motion.div>
-    </div>
+        <ul className="flex flex-col">
+          {escala.categorias.map((c) => (
+            <FilaCategoria key={c.letra} c={c} tuya={c.letra === tuya} corresponde={c.letra === corresponde && c.letra !== tuya} />
+          ))}
+        </ul>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#EDF0F6] px-5 py-4 sm:px-6">
+        <p className="text-texto-tenue">Fuente: ARCA. Tocá una categoría para ver todo el detalle. La cuota es el total por mes.</p>
+        <a href={escala.fuente} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 font-bold text-primario-oscuro hover:underline">
+          Ver en ARCA <Icon name="link-externo" size={16} />
+        </a>
+      </div>
+    </section>
   );
 }

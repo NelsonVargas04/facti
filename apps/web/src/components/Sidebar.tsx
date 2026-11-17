@@ -38,6 +38,8 @@ const MAS: Item[] = [CLIENTES, MONOTRIBUTO, CONFIGURACION];
 function esActivo(pathname: string, href: string) {
   if (href === '/app') return pathname === '/app';
   if (href === '/app/facturas' && pathname === '/app/facturas/nueva') return false;
+  // Monotributo agrupa varias páginas (pagos, categorías).
+  if (href.startsWith('/app/monotributo')) return pathname.startsWith('/app/monotributo');
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
