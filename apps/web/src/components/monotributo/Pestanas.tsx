@@ -1,20 +1,15 @@
 'use client';
 
-import { obtenerParametro } from '@facti/shared/src/parametros';
 import { AvisoApi } from '@/components/AvisoApi';
 import { GraficoFacturacion } from '@/components/GraficoFacturacion';
 import { Icon } from '@/components/Icon';
-import type { Cuenta, ErrorApi, Resumen } from '@/lib/api';
+import type { Cuenta, ErrorApi, EscalaMonotributo, Resumen } from '@/lib/api';
+import { BarraTope, categoriaQueCorresponde, topes, VerCategorias } from '@/components/monotributo/Categorias';
 import { pesos } from '@/lib/formato';
 
-/** Tope anual de facturación de la categoría (null si todavía no está cargado en los parámetros). */
-export function topeCategoria(categoria?: string): number | null {
-  if (!categoria) return null;
-  try {
-    return obtenerParametro(`monotributo.tope_anual.${categoria.toUpperCase()}`);
-  } catch {
-    return null;
-  }
+/** Hoy en AAAA-MM-DD (hora de Argentina). */
+function hoyISO() {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' });
 }
 
 /** La recategorización es semestral: en enero (con lo facturado hasta diciembre) y en julio (hasta junio). */
@@ -23,16 +18,6 @@ export function proximaRecategorizacion(hoy = new Date()): { mes: string; anio: 
   if (m === 0) return { mes: 'enero', anio: hoy.getFullYear(), cierre: `31/12/${hoy.getFullYear() - 1}` };
   if (m <= 6) return { mes: 'julio', anio: hoy.getFullYear(), cierre: `30/06/${hoy.getFullYear()}` };
   return { mes: 'enero', anio: hoy.getFullYear() + 1, cierre: `31/12/${hoy.getFullYear()}` };
-}
-
-function Dato({ k, v, nota }: { k: string; v: string; nota?: string }) {
-  return (
-    <div className="row-span-3 grid grid-rows-subgrid content-start gap-y-1.5 rounded-tarjeta bg-superficie px-4 py-4 shadow-tarjeta sm:px-6 sm:py-[22px] [&:last-child:nth-child(odd)]:col-span-2 lg:[&:last-child:nth-child(odd)]:col-span-1">
-      <span className="font-semibold text-texto-tenue">{k}</span>
-      <span className="self-end font-display text-[22px] font-semibold leading-tight tabular-nums sm:text-[30px]">{v}</span>
-      {nota && <span className="text-texto-suave">{nota}</span>}
-    </div>
-  );
 }
 
 type Estado<T> = { estado: 'cargando' } | { estado: 'error'; error: ErrorApi } | { estado: 'ok'; dato: T };
@@ -49,43 +34,37 @@ function Esqueleto() {
 }
 
 /** Pestaña Resumen: lo facturado en los últimos 12 meses contra el tope de tu categoría. */
-export function ResumenMonotributo({ resumen, cuenta }: { resumen: Estado<Resumen>; cuenta?: Cuenta }) {
+export function ResumenMonotributo({ resumen, cuenta, escala }: { resumen: Estado<Resumen>; cuenta?: Cuenta; escala?: EscalaMonotributo | null }) {
   if (resumen.estado === 'error') return <AvisoApi error={resumen.error} />;
   if (resumen.estado === 'cargando') return <Esqueleto />;
   const r = resumen.dato;
   const total = r.ultimos12Meses.facturado;
-  const tope = topeCategoria(cuenta?.categoria);
-  const usado = tope ? Math.round((total / tope) * 100) : null;
+  const t = topes(escala);
   return (
     <>
-      <div className="cascada grid grid-cols-2 gap-3 sm:gap-[18px] lg:grid-cols-3">
-        <Dato k="Últimos 12 meses" v={pesos(total)} nota="Lo que cuenta para tu categoría" />
-        <Dato k={`Tope de la categoría ${cuenta?.categoria || '—'}`} v={tope ? pesos(tope) : 'Sin dato'} nota={tope ? 'Facturación anual máxima' : 'Revisalo en la tabla de ARCA'} />
-        <Dato k="Usaste" v={usado !== null ? `${usado}%` : '—'} nota={usado !== null ? (usado >= 100 ? 'Te pasaste del tope' : usado >= 80 ? 'Estás cerca del tope' : 'Vas bien') : 'Cuando tengamos el tope, lo calculo'} />
-      </div>
-      <GraficoFacturacion porMes={r.ultimos12Meses.porMes} total={total} categoria={cuenta?.categoria} />
+      <section className="flex flex-col gap-5 rounded-tarjeta bg-superficie p-5 shadow-tarjeta sm:p-7">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-[22px] font-bold">Tu facturación</h2>
+            <p className="text-texto-suave">Últimos 12 meses: lo que ARCA mira para tu categoría.</p>
+          </div>
+          <VerCategorias escala={escala} categoria={cuenta?.categoria} corresponde={categoriaQueCorresponde(total, t)} />
+        </div>
+        <BarraTope facturado={total} categoria={cuenta?.categoria} escala={escala} desde={r.ultimos12Meses.desde} hasta={hoyISO()} />
+      </section>
+      <GraficoFacturacion porMes={r.ultimos12Meses.porMes} total={total} categoria={cuenta?.categoria} conTope={false} />
     </>
   );
 }
 
 /** Pestaña Recategorización: cuándo toca y cómo venís. */
-export function Recategorizacion({ resumen, cuenta }: { resumen: Estado<Resumen>; cuenta?: Cuenta }) {
+export function Recategorizacion({ resumen, cuenta, escala }: { resumen: Estado<Resumen>; cuenta?: Cuenta; escala?: EscalaMonotributo | null }) {
   if (resumen.estado === 'error') return <AvisoApi error={resumen.error} />;
   if (resumen.estado === 'cargando') return <Esqueleto />;
   const total = resumen.dato.ultimos12Meses.facturado;
-  const tope = topeCategoria(cuenta?.categoria);
-  const usado = tope ? Math.min(100, Math.round((total / tope) * 100)) : null;
+  const t = topes(escala);
+  const corresponde = categoriaQueCorresponde(total, t);
   const prox = proximaRecategorizacion();
-  const tono = usado === null ? 'bg-fondo text-texto-suave' : usado >= 100 ? 'bg-error-suave text-error' : usado >= 80 ? 'bg-aviso-suave text-aviso-texto' : 'bg-exito-suave text-exito-texto';
-  const mensaje =
-    usado === null
-      ? 'Todavía no tenemos cargado el tope de tu categoría. Comparalo con la tabla oficial de ARCA.'
-      : usado >= 100
-        ? 'Facturaste más que el tope de tu categoría: en la próxima recategorización te corresponde subir.'
-        : usado >= 80
-          ? 'Estás cerca del tope de tu categoría. Revisá si te conviene recategorizarte.'
-          : 'Venís bien: estás dentro del tope de tu categoría.';
-
   return (
     <div className="cascada flex flex-col gap-6">
       <section className="flex flex-col gap-5 rounded-tarjeta bg-superficie p-7 shadow-tarjeta">
@@ -100,24 +79,15 @@ export function Recategorizacion({ resumen, cuenta }: { resumen: Estado<Resumen>
           </span>
         </div>
 
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <span className="font-semibold">Categoría {cuenta?.categoria || '—'}</span>
-            <span className="tabular-nums text-texto-suave">
-              {pesos(total)} {tope ? `de ${pesos(tope)}` : ''}
-            </span>
-          </div>
-          {usado !== null && (
-            <div className="h-3 overflow-hidden rounded-full bg-[#ECEFF5]">
-              <div
-                className={`h-full w-full rounded-full transition-transform duration-700 ease-salida ${usado >= 100 ? 'bg-[#E5484D]' : usado >= 80 ? 'bg-[#E0A100]' : 'bg-primario'}`}
-                style={{ transform: `translateX(${usado - 100}%)` }}
-              />
-            </div>
-          )}
+        <BarraTope facturado={total} categoria={cuenta?.categoria} escala={escala} />
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#EDF0F6] pt-4">
+          <p className="text-texto-suave">
+            {corresponde && cuenta?.categoria && corresponde !== cuenta.categoria.toUpperCase()
+              ? `En ${prox.mes} te convendría pasar a la categoría ${corresponde}.`
+              : 'Por ahora seguís en tu categoría: no hace falta cambiar nada.'}
+          </p>
+          <VerCategorias escala={escala} categoria={cuenta?.categoria} corresponde={corresponde} />
         </div>
-
-        <p className={`rounded-[16px] px-5 py-4 font-semibold ${tono}`}>{mensaje}</p>
       </section>
 
       <section className="flex flex-col gap-3 rounded-tarjeta bg-superficie p-7 shadow-tarjeta">

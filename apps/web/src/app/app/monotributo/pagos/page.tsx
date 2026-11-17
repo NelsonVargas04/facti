@@ -8,7 +8,7 @@ import { Select } from '@/components/Select';
 import { ComprobantePagoVEP, type DatosPagoVEP } from '@/components/ComprobantePagoVEP';
 import { PLAN_DEMO } from '@/lib/plan-demo';
 import { Recategorizacion, ResumenMonotributo } from '@/components/monotributo/Pestanas';
-import { verCuenta, verResumen } from '@/lib/api';
+import { verCategorias, verCuenta, verResumen } from '@/lib/api';
 import { formatearCuit } from '@/lib/formato';
 import { useApi } from '@/lib/useApi';
 
@@ -94,6 +94,7 @@ export default function MonotributoPagos() {
   const [tab, setTab] = useState('resumen');
   const cuenta = useApi(verCuenta, []);
   const resumen = useApi(() => verResumen(), []);
+  const categorias = useApi(verCategorias, []);
   const c = cuenta.dato?.cuenta;
   const [q, setQ] = useState('');
   const [estado, setEstado] = useState('todos');
@@ -141,8 +142,8 @@ export default function MonotributoPagos() {
         </nav>
       </div>
 
-      {tab === 'resumen' && <ResumenMonotributo resumen={resumen} cuenta={c} />}
-      {tab === 'recategorizacion' && <Recategorizacion resumen={resumen} cuenta={c} />}
+      {tab === 'resumen' && <ResumenMonotributo resumen={resumen} cuenta={c} escala={categorias.dato} />}
+      {tab === 'recategorizacion' && <Recategorizacion resumen={resumen} cuenta={c} escala={categorias.dato} />}
 
       {tab === 'pagos' && (
       <>

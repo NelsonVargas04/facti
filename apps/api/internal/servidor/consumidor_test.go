@@ -1,10 +1,12 @@
 package servidor
 
 import (
+	"context"
 	"regexp"
 	"testing"
 
 	"facti/api/internal/datos"
+	"facti/api/internal/monotributo"
 )
 
 func TestSolicitudesDelConsumidor(t *testing.T) {
@@ -41,5 +43,18 @@ func TestSolicitudesDelConsumidor(t *testing.T) {
 	}
 	if res, j := pedir(t, h, "POST", "/consumidor/solicitudes", `{"tipo":"baja","nombre":"Ana","email":"ana@example.com"}`); res.StatusCode != 429 {
 		t.Errorf("límite: %d %v", res.StatusCode, j)
+	}
+}
+
+type escalaFija struct{}
+
+func (escalaFija) Escala(context.Context) monotributo.Escala { return monotributo.Respaldo }
+
+func TestCategoriasMonotributo(t *testing.T) {
+	h := Nuevo(Opciones{Datos: FijarDatos(datos.NuevaMemoria()), Auth: authFalso{}, Categorias: escalaFija{}})
+	res, j := pedir(t, h, "GET", "/monotributo/categorias", "")
+	cats, _ := j["categorias"].([]any)
+	if res.StatusCode != 200 || len(cats) != 11 || j["vigenteDesde"] != "2026-08-01" {
+		t.Fatalf("categorías: %d %v", res.StatusCode, j)
 	}
 }

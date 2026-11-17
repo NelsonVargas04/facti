@@ -296,3 +296,32 @@ export interface SolicitudReq {
 export function crearSolicitud(body: SolicitudReq) {
   return pedir<{ codigo: string; tipo: TipoSolicitud; creadaEn: string }>('/consumidor/solicitudes', { method: 'POST', body: JSON.stringify(body) });
 }
+
+// ---------- Monotributo: tabla oficial de categorías (se actualiza sola desde ARCA) ----------
+
+export interface CategoriaMonotributo {
+  letra: string;
+  tope: number;
+  cuotaServicios: number;
+  cuotaVentas: number;
+  superficie: string;
+  energia: string;
+  alquileres: number;
+  precioMaximo: number;
+  impServicios: number;
+  impVentas: number;
+  sipa: number;
+  obraSocial: number;
+}
+
+export interface EscalaMonotributo {
+  vigenteDesde: string; // AAAA-MM-DD
+  fuente: string;
+  origen: 'arca' | 'respaldo';
+  consultadaEn: string;
+  categorias: CategoriaMonotributo[];
+}
+
+export function verCategorias() {
+  return pedir<EscalaMonotributo>('/monotributo/categorias');
+}

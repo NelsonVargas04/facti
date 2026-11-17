@@ -2,6 +2,7 @@
 package servidor
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -11,6 +12,7 @@ import (
 
 	"facti/api/internal/arca"
 	"facti/api/internal/datos"
+	"facti/api/internal/monotributo"
 )
 
 // Servidor HTTP de la API.
@@ -25,6 +27,10 @@ type Servidor struct {
 	ahora       func() time.Time
 	// limiteSolicitudes: hasta 5 pedidos de arrepentimiento o baja por hora y por IP.
 	limiteSolicitudes limitador
+	// categorias: tabla oficial de monotributo, leída de ARCA con caché.
+	categorias interface {
+		Escala(ctx context.Context) monotributo.Escala
+	}
 }
 
 // Opciones para construir el servidor.
@@ -39,6 +45,10 @@ type Opciones struct {
 	OrigenesWeb []string // vacío = cualquier origen
 	Log         *slog.Logger
 	Ahora       func() time.Time // para tests
+	// Categorias: de dónde sale la tabla de monotributo. Si es nil, se usa la de ARCA (monotributo.NuevaFuente).
+	Categorias interface {
+		Escala(ctx context.Context) monotributo.Escala
+	}
 }
 
 // Nuevo devuelve el http.Handler con todas las rutas.
@@ -47,6 +57,10 @@ func Nuevo(o Opciones) http.Handler {
 		arca: o.Arca, datos: o.Datos, auth: o.Auth, puntoVenta: o.PuntoVenta,
 		entorno: o.Entorno, origenesWeb: o.OrigenesWeb, log: o.Log, ahora: o.Ahora,
 		limiteSolicitudes: limitador{max: 5, ventana: time.Hour},
+		categorias:        o.Categorias,
+	}
+	if s.categorias == nil {
+		s.categorias = monotributo.NuevaFuente()
 	}
 	if s.puntoVenta == 0 {
 		s.puntoVenta = 1
@@ -69,6 +83,11 @@ func Nuevo(o Opciones) http.Handler {
 	mux.Handle("GET /arca/estado", s.ruta(s.arcaEstado))
 	// Botón de arrepentimiento y de baja: sin sesión (Disposición 954/2025).
 	mux.Handle("POST /consumidor/solicitudes", s.ruta(s.crearSolicitud))
+	// Tabla oficial de categorías de monotributo (pública, se actualiza sola desde ARCA).
+	mux.HandleFunc("GET /monotributo/categorias", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "public, max-age=3600")
+		responderJSON(w, http.StatusOK, s.categorias.Escala(r.Context()))
+	})
 	// El resto necesita sesión (401 si no hay) y, según la ruta, ARCA o la base (503 si faltan).
 	mux.Handle("GET /arca/puntos-venta", s.ruta(s.arcaPuntosVenta))
 	mux.Handle("GET /arca/condiciones-iva", s.ruta(s.arcaCondicionesIva))

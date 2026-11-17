@@ -42,7 +42,7 @@ function Globo({ active, payload }: { active?: boolean; payload?: { payload: Mes
  * El mes actual va en índigo y los anteriores en lila; si se conoce el tope de la categoría,
  * abajo se ve cuánto falta para llegar.
  */
-export function GraficoFacturacion({ porMes, total, categoria }: { porMes: Mes[]; total: number; categoria?: string }) {
+export function GraficoFacturacion({ porMes, total, categoria, conTope = true }: { porMes: Mes[]; total: number; categoria?: string; conTope?: boolean }) {
   const datos = porMes.map((m) => {
     const [a, mm] = m.mes.split('-');
     const i = Number(mm) - 1;
@@ -93,7 +93,7 @@ export function GraficoFacturacion({ porMes, total, categoria }: { porMes: Mes[]
         </ResponsiveContainer>
       </div>
 
-      {tope && pct !== null && (
+      {conTope && tope && pct !== null && (
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap justify-between gap-2 text-base">
             <span className="font-semibold">Usaste el {pct}% del tope de tu categoría</span>
