@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { cerrarSesion } from '@/lib/sesion';
 import { AvisoApi } from '@/components/AvisoApi';
 import { CargarPerfil } from '@/components/CargarPerfil';
-import { PieLegal } from '@/components/legal/PieLegal';
+import { LEGAL } from '@/lib/legal';
 import { Icon, type IconName } from '@/components/Icon';
 import { UsoPlan } from '@/components/UsoPlan';
 import { verCuenta, verEstadoArca } from '@/lib/api';
@@ -116,7 +116,7 @@ export default function Configuracion() {
             </section>
           )}
 
-          <div className="grid items-stretch gap-6 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]">
+          <div className="grid items-stretch gap-6 md:grid-cols-2">
             <Tarjeta titulo="Datos fiscales" icono="cliente">
               <dl className="flex flex-col divide-y divide-[#EEF1F6]">
                 <Fila k="Condición" v={c.condicion ? CONDICION[c.condicion] ?? c.condicion : ''} />
@@ -151,32 +151,45 @@ export default function Configuracion() {
             </Tarjeta>
 
             {plan && <UsoPlan plan={plan} />}
+
+            <Tarjeta titulo="Tu cuenta y lo legal" icono="escudo">
+              <ul className="flex flex-col divide-y divide-[#EEF1F6]">
+                {(
+                  [
+                    ['/legal/terminos', 'Términos y Condiciones', false],
+                    ['/legal/privacidad', 'Política de Privacidad', false],
+                    ['/arrepentimiento', 'Botón de arrepentimiento', false],
+                    [LEGAL.defensaConsumidor, 'Defensa del Consumidor', true],
+                  ] as const
+                ).map(([href, texto, externo]) => (
+                  <li key={href} className="py-3 first:pt-0">
+                    <a
+                      href={href}
+                      {...(externo ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                      className="group flex items-center justify-between gap-3 font-semibold text-texto hover:text-primario-oscuro"
+                    >
+                      {texto}
+                      <Icon name={externo ? 'link-externo' : 'chevron-derecha'} size={18} className="text-texto-tenue transition-transform group-hover:translate-x-0.5 group-hover:text-primario-oscuro" />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+              <Link href="/baja" className="btn-lift mt-auto flex h-11 items-center justify-center rounded-full border-[1.5px] border-borde font-bold text-texto hover:border-error hover:text-error">
+                Botón de baja de servicio
+              </Link>
+            </Tarjeta>
           </div>
         </div>
       ) : (
         cuenta.estado === 'cargando' && (
           <div className="flex flex-col gap-6">
             <div className="skeleton h-[112px] rounded-tarjeta" />
-            <div className="grid gap-6 [grid-template-columns:repeat(auto-fit,minmax(300px,1fr))]">
-              {[0, 1, 2].map((i) => <div key={i} className="skeleton h-[240px] rounded-tarjeta" />)}
+            <div className="grid gap-6 md:grid-cols-2">
+              {[0, 1, 2, 3].map((i) => <div key={i} className="skeleton h-[240px] rounded-tarjeta" />)}
             </div>
           </div>
         )
       )}
-
-      {c && (
-        <section className="flex flex-wrap items-center justify-between gap-4 rounded-tarjeta bg-superficie p-6 shadow-tarjeta">
-          <div>
-            <h2 className="text-[18px] font-bold">Dar de baja tu cuenta</h2>
-            <p className="text-texto-suave">Podés irte cuando quieras, sin trámites. Antes, descargá los PDF de tus comprobantes.</p>
-          </div>
-          <Link href="/baja" className="btn-lift inline-flex h-11 items-center rounded-full border-[1.5px] border-borde px-5 font-bold text-texto hover:border-error hover:text-error">
-            Botón de baja de servicio
-          </Link>
-        </section>
-      )}
-
-      <PieLegal />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-base text-texto-tenue">Facti es una herramienta complementaria y de ayuda. No es ARCA ni un organismo oficial.</p>

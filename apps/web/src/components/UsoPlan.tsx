@@ -87,7 +87,7 @@ export function UsoPlan({ plan }: { plan: Plan }) {
       <Uso label="Factura E" usadas={plan.uso.exportacion} limite={plan.limites?.exportacion ?? null} />
       {a.alguno && <p className="text-base font-semibold text-[#B4232B]">Se te acabó un cupo este mes. Pasá a Pro para seguir facturando.</p>}
       {!esPro && (
-        <Link href="/app/plan" className="btn-lift flex h-11 items-center justify-center gap-2 rounded-full bg-primario font-bold text-white shadow-boton">
+        <Link href="/app/plan" className="btn-lift mt-auto flex h-11 items-center justify-center gap-2 rounded-full bg-primario font-bold text-white shadow-boton">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z" /></svg>
           {a.alguno ? 'Mejorar plan' : 'Pasar a Pro'}
         </Link>
