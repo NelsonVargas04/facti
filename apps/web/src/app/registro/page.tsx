@@ -284,11 +284,11 @@ export default function Registro() {
                 />
                 <span>
                   Leí y acepto los{' '}
-                  <a href="#terminos" className="font-extrabold text-primario-oscuro underline-offset-2 hover:underline">
+                  <a href="/legal/terminos" target="_blank" rel="noopener" className="font-extrabold text-primario-oscuro underline-offset-2 hover:underline">
                     Términos y Condiciones
                   </a>{' '}
                   y la{' '}
-                  <a href="#privacidad" className="font-extrabold text-primario-oscuro underline-offset-2 hover:underline">
+                  <a href="/legal/privacidad" target="_blank" rel="noopener" className="font-extrabold text-primario-oscuro underline-offset-2 hover:underline">
                     Política de Privacidad
                   </a>
                   .

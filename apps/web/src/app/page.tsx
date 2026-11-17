@@ -3,6 +3,7 @@ import { Facti } from '@/components/Facti';
 import { FactiWordmark } from '@/components/FactiLogo';
 import { MuestraComprobantes } from '@/components/MuestraComprobantes';
 import { Reveal } from '@/components/Reveal';
+import { PieLegal } from '@/components/legal/PieLegal';
 
 function Flecha() {
   return (
@@ -278,9 +279,12 @@ export default function Landing() {
         </Reveal>
       </section>
 
-      <footer className="mx-auto flex max-w-[1200px] flex-wrap justify-between gap-4 px-4 pb-12 sm:px-8 text-base text-texto-tenue">
-        <span>© 2026 Facti</span>
-        <span>Facti es un servicio independiente y no pertenece a ARCA.</span>
+      <footer className="mx-auto flex max-w-[1200px] flex-col gap-6 border-t border-[#E3E7F0] px-4 pb-12 pt-8 sm:px-8">
+        <PieLegal />
+        <div className="flex flex-wrap justify-between gap-4 text-texto-tenue">
+          <span>© 2026 Facti</span>
+          <span>Facti es un servicio independiente y no pertenece a ARCA.</span>
+        </div>
       </footer>
     </div>
   );

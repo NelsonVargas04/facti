@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { cerrarSesion } from '@/lib/sesion';
 import { AvisoApi } from '@/components/AvisoApi';
 import { CargarPerfil } from '@/components/CargarPerfil';
+import { PieLegal } from '@/components/legal/PieLegal';
 import { Icon, type IconName } from '@/components/Icon';
 import { UsoPlan } from '@/components/UsoPlan';
 import { verCuenta, verEstadoArca } from '@/lib/api';
@@ -162,6 +163,20 @@ export default function Configuracion() {
           </div>
         )
       )}
+
+      {c && (
+        <section className="flex flex-wrap items-center justify-between gap-4 rounded-tarjeta bg-superficie p-6 shadow-tarjeta">
+          <div>
+            <h2 className="text-[18px] font-bold">Dar de baja tu cuenta</h2>
+            <p className="text-texto-suave">Podés irte cuando quieras, sin trámites. Antes, descargá los PDF de tus comprobantes.</p>
+          </div>
+          <Link href="/baja" className="btn-lift inline-flex h-11 items-center rounded-full border-[1.5px] border-borde px-5 font-bold text-texto hover:border-error hover:text-error">
+            Botón de baja de servicio
+          </Link>
+        </section>
+      )}
+
+      <PieLegal />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-base text-texto-tenue">Facti es una herramienta complementaria y de ayuda. No es ARCA ni un organismo oficial.</p>

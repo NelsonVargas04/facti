@@ -277,3 +277,20 @@ export interface NuevaFacturaReq {
 export function emitirFactura(body: NuevaFacturaReq) {
   return pedir<FacturaEmitida>('/facturas', { method: 'POST', body: JSON.stringify(body) });
 }
+
+// ---------- Botón de arrepentimiento y de baja (sin sesión) ----------
+
+export type TipoSolicitud = 'arrepentimiento' | 'baja';
+
+export interface SolicitudReq {
+  tipo: TipoSolicitud;
+  nombre: string;
+  email: string;
+  cuit?: string;
+  detalle?: string;
+}
+
+/** Registra el pedido y devuelve el código que identifica la solicitud (Disposición 954/2025). */
+export function crearSolicitud(body: SolicitudReq) {
+  return pedir<{ codigo: string; tipo: TipoSolicitud; creadaEn: string }>('/consumidor/solicitudes', { method: 'POST', body: JSON.stringify(body) });
+}

@@ -16,6 +16,7 @@ type Memoria struct {
 	usuarios     map[string]int64 // usuario de Supabase → id de cuenta
 	clientes     []delaCuenta[Cliente]
 	comprobantes []delaCuenta[Comprobante]
+	solicitudes  []Solicitud
 	ahora        func() time.Time
 }
 
@@ -277,3 +278,17 @@ func (m *Memoria) Uso(_ context.Context, cuentaID int64, desde, hasta string) (U
 }
 
 var _ Datos = (*Memoria)(nil)
+
+func (m *Memoria) GuardarSolicitud(_ context.Context, s *Solicitud) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, o := range m.solicitudes {
+		if o.Codigo == s.Codigo {
+			return ErrCodigoRepetido
+		}
+	}
+	s.ID = int64(len(m.solicitudes) + 1)
+	s.CreadaEn = m.ahora()
+	m.solicitudes = append(m.solicitudes, *s)
+	return nil
+}

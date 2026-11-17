@@ -10,32 +10,6 @@ import { asignarCuit, verCuenta, type Cuenta, type ErrorApi } from '@/lib/api';
 import { formatearCuit } from '@/lib/formato';
 import { useApi } from '@/lib/useApi';
 
-type Tipo = 'humana' | 'sociedad' | 'asociacion';
-
-const TIPOS: { id: Tipo; titulo: string; desc: string; icon: React.ReactNode; disponible: boolean }[] = [
-  {
-    id: 'humana',
-    titulo: 'Persona humana',
-    desc: 'Monotributo, responsable inscripto o exento',
-    disponible: true,
-    icon: (<><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" /></>),
-  },
-  {
-    id: 'sociedad',
-    titulo: 'Sociedad',
-    desc: 'SAS, SRL, SA u otra persona jurídica',
-    disponible: false,
-    icon: (<><rect x="4" y="3" width="16" height="18" rx="2" /><path d="M9 7h2M13 7h2M9 11h2M13 11h2M10 21v-4h4v4" /></>),
-  },
-  {
-    id: 'asociacion',
-    titulo: 'Asociación o fundación',
-    desc: 'Entidades sin fines de lucro',
-    disponible: false,
-    icon: (<path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z" />),
-  },
-];
-
 function Tilde({ size = 16, color = '#1E9E63' }: { size?: number; color?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -53,7 +27,6 @@ const CONDICION: Record<string, string> = {
 };
 
 export default function PerfilFiscal() {
-  const [tipo, setTipo] = useState<Tipo>('humana');
   const actual = useApi(verCuenta, []);
   const [cuit, setCuit] = useState<string | null>(null); // null = todavía no escribió nada
   const [guardado, setGuardado] = useState<{ cuenta: Cuenta; padron: boolean } | null>(null);
@@ -82,42 +55,8 @@ export default function PerfilFiscal() {
         <section className="flex min-w-0 flex-[999_1_560px] flex-col gap-6 rounded-tarjeta bg-superficie p-9 shadow-tarjeta">
           <div className="flex flex-col gap-1.5">
             <span className="text-base font-semibold text-texto-tenue">Paso 1 de 5</span>
-            <h1 className="text-[34px] font-bold leading-tight">¿Para quién vas a facturar?</h1>
-            <p className="text-[17px] text-texto-suave">Con tu CUIT consultamos el padrón de ARCA y configuramos todo según tu situación.</p>
-          </div>
-
-          {/* Tipos de cuenta */}
-          <div className="flex flex-wrap gap-3.5">
-            {TIPOS.map((t) => {
-              const activo = tipo === t.id;
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  aria-pressed={activo}
-                  disabled={!t.disponible}
-                  onClick={() => t.disponible && setTipo(t.id)}
-                  className={`relative flex flex-1 basis-[220px] flex-col gap-2.5 rounded-[20px] border-2 p-5 text-left transition-colors ${
-                    activo ? 'border-primario bg-[#F4F4FF]' : 'border-[#E1E5EE] bg-white'
-                  } ${t.disponible ? 'cursor-pointer hover:border-primario' : 'cursor-not-allowed opacity-70'}`}
-                >
-                  <span className="flex w-full items-center justify-between">
-                    <span className="text-primario-oscuro">
-                      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{t.icon}</svg>
-                    </span>
-                    {t.disponible ? (
-                      <span className={`flex h-6 w-6 items-center justify-center rounded-full ${activo ? 'bg-primario text-white' : 'border-2 border-[#C9CEDD]'}`}>
-                        {activo && <Tilde size={16} color="#fff" />}
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-aviso-suave px-2.5 py-1 text-base font-bold text-aviso-texto">Próximamente</span>
-                    )}
-                  </span>
-                  <strong className="text-[17px]">{t.titulo}</strong>
-                  <span className="text-base text-texto-suave">{t.desc}</span>
-                </button>
-              );
-            })}
+            <h1 className="text-[34px] font-bold leading-tight">Cargá tu CUIT</h1>
+            <p className="text-[17px] text-texto-suave">Con tu CUIT consultamos el padrón de ARCA y configuramos todo según tu situación. Por ahora Facti es para personas humanas: monotributo, responsable inscripto o exento.</p>
           </div>
 
           {/* CUIT + consultar */}
@@ -217,15 +156,6 @@ export default function PerfilFiscal() {
               Vas a necesitar tu<br /><span className="text-acento">clave fiscal nivel 3</span>.
             </div>
             <Facti pose="buscando" size={190} animated />
-          </div>
-          <div className="flex flex-col gap-2.5 rounded-tarjeta bg-superficie p-7 shadow-tarjeta">
-            <h2 className="text-[18px] font-bold">¿Facturás por una sociedad?</h2>
-            <p className="text-base text-texto-suave">La conexión la hace el representante legal, con su clave fiscal nivel 3 y dado de alta como Administrador de Relaciones de la sociedad en ARCA.</p>
-            <a href="#sociedades" className="text-base font-bold text-primario-oscuro">Ver qué necesito</a>
-          </div>
-          <div className="flex flex-col gap-2.5 rounded-tarjeta bg-superficie p-7 shadow-tarjeta">
-            <h2 className="text-[18px] font-bold">¿Sos contador?</h2>
-            <p className="text-base text-texto-suave">Podés administrar varios CUIT desde una sola cuenta, si cada cliente te autoriza.</p>
           </div>
         </aside>
       </div>

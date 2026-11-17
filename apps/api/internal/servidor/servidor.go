@@ -23,6 +23,8 @@ type Servidor struct {
 	origenesWeb []string
 	log         *slog.Logger
 	ahora       func() time.Time
+	// limiteSolicitudes: hasta 5 pedidos de arrepentimiento o baja por hora y por IP.
+	limiteSolicitudes limitador
 }
 
 // Opciones para construir el servidor.
@@ -44,6 +46,7 @@ func Nuevo(o Opciones) http.Handler {
 	s := &Servidor{
 		arca: o.Arca, datos: o.Datos, auth: o.Auth, puntoVenta: o.PuntoVenta,
 		entorno: o.Entorno, origenesWeb: o.OrigenesWeb, log: o.Log, ahora: o.Ahora,
+		limiteSolicitudes: limitador{max: 5, ventana: time.Hour},
 	}
 	if s.puntoVenta == 0 {
 		s.puntoVenta = 1
@@ -64,6 +67,8 @@ func Nuevo(o Opciones) http.Handler {
 	mux.HandleFunc("GET /salud", s.salud)
 	// Estado de ARCA: no necesita sesión. Si falta configuración, responde 503.
 	mux.Handle("GET /arca/estado", s.ruta(s.arcaEstado))
+	// Botón de arrepentimiento y de baja: sin sesión (Disposición 954/2025).
+	mux.Handle("POST /consumidor/solicitudes", s.ruta(s.crearSolicitud))
 	// El resto necesita sesión (401 si no hay) y, según la ruta, ARCA o la base (503 si faltan).
 	mux.Handle("GET /arca/puntos-venta", s.ruta(s.arcaPuntosVenta))
 	mux.Handle("GET /arca/condiciones-iva", s.ruta(s.arcaCondicionesIva))

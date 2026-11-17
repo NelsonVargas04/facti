@@ -2,6 +2,7 @@ package datos
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/rand/v2"
 	"os"
@@ -184,5 +185,20 @@ func probarContrato(t *testing.T, d Datos) {
 	}
 	if u, _ := d.Uso(ctx, cuenta.ID, "2026-10-01", "2026-10-31"); u != (Uso{Facturas: 2}) {
 		t.Errorf("uso (las notas no cuentan): %+v", u)
+	}
+
+	// Solicitudes del botón de arrepentimiento y de baja: con o sin sesión; el código no se repite.
+	codigo := fmt.Sprintf("BAJ-%06d", rand.IntN(1_000_000))
+	sol := &Solicitud{Codigo: codigo, Tipo: SolicitudBaja, Nombre: "Lucía Fernández", Email: "lucia@example.com", UsuarioID: usuario}
+	if err := d.GuardarSolicitud(ctx, sol); err != nil || sol.ID == 0 || sol.CreadaEn.IsZero() {
+		t.Fatalf("guardar solicitud: %v %+v", err, sol)
+	}
+	otra := &Solicitud{Codigo: codigo, Tipo: SolicitudArrepentimiento, Nombre: "Otra", Email: "otra@example.com"}
+	if err := d.GuardarSolicitud(ctx, otra); !errors.Is(err, ErrCodigoRepetido) {
+		t.Errorf("código repetido: %v", err)
+	}
+	otra.Codigo = codigo + "X"
+	if err := d.GuardarSolicitud(ctx, otra); err != nil {
+		t.Errorf("solicitud sin sesión: %v", err)
 	}
 }

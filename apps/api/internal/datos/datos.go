@@ -204,5 +204,31 @@ type Datos interface {
 	Resumen(ctx context.Context, cuentaID int64, desde, hasta string) (Resumen, error)
 	Uso(ctx context.Context, cuentaID int64, desde, hasta string) (Uso, error)
 
+	// GuardarSolicitud guarda un pedido de arrepentimiento o de baja. Completa ID y CreadaEn.
+	// ErrCodigoRepetido si el código ya existe (se genera otro y se reintenta).
+	GuardarSolicitud(ctx context.Context, s *Solicitud) error
+
 	Cerrar()
 }
+
+// Tipos de solicitud del consumidor (Disposición 954/2025).
+const (
+	SolicitudArrepentimiento = "arrepentimiento"
+	SolicitudBaja            = "baja"
+)
+
+// Solicitud es un pedido del botón de arrepentimiento o del botón de baja.
+type Solicitud struct {
+	ID        int64     `json:"id"`
+	Codigo    string    `json:"codigo"`
+	Tipo      string    `json:"tipo"`
+	Nombre    string    `json:"nombre"`
+	Email     string    `json:"email"`
+	Cuit      string    `json:"cuit"`
+	Detalle   string    `json:"detalle"`
+	UsuarioID string    `json:"-"` // vacío si la hizo sin sesión
+	CreadaEn  time.Time `json:"creadaEn"`
+}
+
+// ErrCodigoRepetido indica que el código de la solicitud ya existe.
+var ErrCodigoRepetido = errors.New("código de solicitud repetido")

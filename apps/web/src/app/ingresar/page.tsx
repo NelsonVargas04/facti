@@ -132,6 +132,12 @@ function Ingresar() {
         ¿Todavía no tenés cuenta?{' '}
         <Link href="/registro" className="font-extrabold text-primario-oscuro underline-offset-2 hover:underline">Creala gratis</Link>
       </p>
+      <nav aria-label="Información legal" className="flex flex-wrap justify-center gap-x-5 gap-y-1 text-texto-tenue">
+        <Link href="/arrepentimiento" className="hover:text-primario-oscuro hover:underline">Botón de arrepentimiento</Link>
+        <Link href="/baja" className="hover:text-primario-oscuro hover:underline">Botón de baja de servicio</Link>
+        <Link href="/legal/terminos" className="hover:text-primario-oscuro hover:underline">Términos</Link>
+        <Link href="/legal/privacidad" className="hover:text-primario-oscuro hover:underline">Privacidad</Link>
+      </nav>
     </main>
   );
 }

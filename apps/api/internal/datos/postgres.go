@@ -398,3 +398,19 @@ func (p *Postgres) Uso(ctx context.Context, cuentaID int64, desde, hasta string)
 }
 
 var _ Datos = (*Postgres)(nil)
+
+func (p *Postgres) GuardarSolicitud(ctx context.Context, s *Solicitud) error {
+	var usuario any
+	if s.UsuarioID != "" {
+		usuario = s.UsuarioID
+	}
+	err := p.pool.QueryRow(ctx, `
+		insert into facti.solicitudes_consumidor (codigo, tipo, nombre, email, cuit, detalle, usuario_id)
+		values ($1, $2, $3, $4, $5, $6, $7)
+		returning id, creada_en`, s.Codigo, s.Tipo, s.Nombre, s.Email, s.Cuit, s.Detalle, usuario).Scan(&s.ID, &s.CreadaEn)
+	var pg *pgconn.PgError
+	if errors.As(err, &pg) && pg.Code == "23505" { // unique_violation: el código ya existe
+		return ErrCodigoRepetido
+	}
+	return err
+}
