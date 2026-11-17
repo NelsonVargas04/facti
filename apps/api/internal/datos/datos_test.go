@@ -123,6 +123,16 @@ func probarContrato(t *testing.T, d Datos) {
 	if err != nil || pag.Total != 4 || pag.Comprobantes[0].ID != nc.ID || pag.Comprobantes[0].Items != nil {
 		t.Fatalf("listado: %+v %v", pag, err)
 	}
+	// Número interno: correlativo por cuenta, del 1 en adelante, en el orden en que se guardaron.
+	if p, _ := d.ListarComprobantes(ctx, cuenta.ID, Filtro{Orden: "antigua"}); len(p.Comprobantes) == 4 {
+		vistos := map[int64]bool{}
+		for _, c := range p.Comprobantes {
+			if c.NumeroInterno < 1 || c.NumeroInterno > 4 || vistos[c.NumeroInterno] {
+				t.Errorf("número interno inválido o repetido: %d", c.NumeroInterno)
+			}
+			vistos[c.NumeroInterno] = true
+		}
+	}
 	casos := []struct {
 		f    Filtro
 		want int
@@ -130,6 +140,7 @@ func probarContrato(t *testing.T, d Datos) {
 		{Filtro{Desde: "2026-10-01", Hasta: "2026-10-31"}, 3},
 		{Filtro{Q: "lumen"}, 3},
 		{Filtro{Q: "00003-00000002"}, 1},
+		{Filtro{Q: "#2"}, 1}, // número interno
 		{Filtro{Q: "305000"}, 3},
 		{Filtro{Cobro: Pendiente}, 3},
 		{Filtro{Limite: 2, Saltar: 3}, 1},

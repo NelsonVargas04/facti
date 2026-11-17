@@ -62,84 +62,103 @@ export function TablaSkeleton({ filas = 5 }: { filas?: number }) {
   );
 }
 
-const th = 'whitespace-nowrap border-b border-[#EDF0F6] px-4 pb-3 font-semibold';
-const td = 'px-4 py-3.5 align-middle';
+/** Clases compartidas por todas las tablas de la app (facturas, cobros, clientes). */
+export const th = 'whitespace-nowrap border-b border-[#EDF0F6] px-3 pb-3 pt-1 font-semibold text-texto-tenue first:pl-0 last:pr-0';
+export const td = 'px-3 py-3.5 align-middle first:pl-0 last:pr-0';
+export const fila = 'group border-b border-[#F0F2F7] transition-colors last:border-0 hover:bg-fondo/70';
 
-/** `compacta` (para el inicio, donde la tarjeta es angosta): el número va debajo del cliente y no hay columna aparte. */
-export function TablaFacturas({ rows, compacta = false }: { rows: Comprobante[]; compacta?: boolean }) {
+/** Número corto de la app: "#12". El oficial (00001-00000012) queda en el detalle y el PDF. */
+export const nroCorto = (f: Comprobante) => `#${f.numeroInterno}`;
+
+/** Chip con la sigla del comprobante (C, E, NC…). */
+export function ChipTipo({ sigla }: { sigla: string }) {
+  return <span className={`inline-flex h-9 min-w-[36px] flex-none items-center justify-center rounded-[10px] px-2 font-bold ${colorTipo(sigla)}`}>{sigla}</span>;
+}
+
+/**
+ * Lista de comprobantes: tabla si entra, lista si no (celular o tarjeta angosta).
+ * `accion`: lo que va en la última columna en vez del estado de cobro (por ejemplo, "Marcar cobrada").
+ * `compacta`: para tarjetas angostas como la del inicio (cambia antes a lista y no muestra la fecha).
+ */
+export function TablaFacturas({
+  rows,
+  compacta = false,
+  accion,
+}: {
+  rows: Comprobante[];
+  compacta?: boolean;
+  accion?: (f: Comprobante) => React.ReactNode;
+}) {
   const router = useRouter();
-  // Con poco ancho (celular, o la tarjeta angosta del inicio) se muestra como lista; si entra, como tabla.
-  const tabla = compacta ? 'hidden @min-[520px]:block' : 'hidden @min-[820px]:block';
-  const lista = compacta ? '@min-[520px]:hidden' : '@min-[820px]:hidden';
+  const tabla = compacta ? 'hidden @min-[560px]:block' : 'hidden @min-[760px]:block';
+  const lista = compacta ? '@min-[560px]:hidden' : '@min-[760px]:hidden';
+  const ultima = (f: Comprobante) => (accion ? accion(f) : <ChipCobro estado={f.cobro} />);
+
   return (
     <div className="@container">
-    <ul className={`cascada flex flex-col divide-y divide-[#F0F2F7] ${lista}`}>
-      {rows.map((f) => {
-        const total = totalFirmado(f);
-        return (
-          <li key={f.id}>
-            <Link href={`/app/facturas/${f.id}`} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 rounded-[12px] py-3 transition-colors hover:bg-fondo">
-              <span className={`row-span-2 inline-flex h-10 min-w-[40px] items-center justify-center rounded-[12px] px-2 font-bold ${colorTipo(f.sigla)}`}>{f.sigla}</span>
-              <span className="truncate font-semibold">{nombreCliente(f)}</span>
-              <span className={`whitespace-nowrap text-right font-semibold tabular-nums ${total < 0 ? 'text-[#B4232B]' : ''}`}>{importe(total, f.moneda)}</span>
-              <span className="truncate tabular-nums text-texto-tenue">{numeroComprobante(f.puntoVenta, f.numero)} · {fechaCorta(f.fecha)}</span>
-              <span className="justify-self-end"><ChipCobro estado={f.cobro} /></span>
-            </Link>
-          </li>
-        );
-      })}
-    </ul>
-    <div className={`overflow-y-hidden overflow-x-auto ${tabla}`}>
-      <table className={`w-full border-collapse text-base ${compacta ? '[&_td]:px-3 [&_th]:px-3' : ''}`}>
-        <thead>
-          {/* Sin columna "ARCA": Facti solo guarda comprobantes que ARCA ya autorizó, así que siempre decía lo mismo. */}
-          <tr className="text-base text-texto-tenue">
-            <th className={`${th} text-center`}>Tipo</th>
-            {!compacta && <th className={`${th} text-left`}>Número</th>}
-            <th className={`${th} w-full text-left`}>Cliente</th>
-            <th className={`${th} text-center`}>Fecha</th>
-            <th className={`${th} text-right`}>Total</th>
-            <th className={`${th} text-center`}>Cobro</th>
-            {!compacta && <th className={`${th} w-10`} aria-label="Ver" />}
-          </tr>
-        </thead>
-        <tbody className="cascada">
-          {rows.map((f) => {
-            const total = totalFirmado(f);
-            const ir = () => router.push(`/app/facturas/${f.id}`);
-            return (
-            <tr
-              key={f.id}
-              onClick={ir}
-              onKeyDown={(e) => e.key === 'Enter' && ir()}
-              tabIndex={0}
-              aria-label={`Ver ${f.sigla} ${numeroComprobante(f.puntoVenta, f.numero)}`}
-              className="group cursor-pointer border-b border-[#F0F2F7] transition-colors last:border-0 hover:bg-fondo focus-visible:bg-fondo focus-visible:outline-none"
-            >
-              <td className={`${td} text-center`}>
-                <span className={`inline-flex h-8 min-w-[34px] items-center justify-center rounded-[10px] px-2 text-base font-bold ${colorTipo(f.sigla)}`}>{f.sigla}</span>
-              </td>
-              {!compacta && <td className={`${td} whitespace-nowrap tabular-nums text-texto-suave`}>{numeroComprobante(f.puntoVenta, f.numero)}</td>}
-              <td className={`${td} whitespace-nowrap`}>
-                <span className="block font-semibold">{nombreCliente(f)}</span>
-                {compacta && <span className="block text-base tabular-nums text-texto-tenue">{numeroComprobante(f.puntoVenta, f.numero)}</span>}
-              </td>
-              <td className={`${td} whitespace-nowrap text-center tabular-nums text-texto-suave`}>{fechaCorta(f.fecha)}</td>
-              <td className={`${td} whitespace-nowrap text-right font-semibold tabular-nums ${total < 0 ? 'text-[#B4232B]' : ''}`}>{importe(total, f.moneda)}</td>
-              <td className={`${td} text-center`}><ChipCobro estado={f.cobro} /></td>
-              {!compacta && (
-              <td className={`${td} text-center text-texto-tenue`}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="opacity-0 transition-opacity group-hover:opacity-100">
-                    <path d="M9 6l6 6-6 6" />
-                  </svg>
-                </td>
-              )}
+      <ul className={`flex flex-col divide-y divide-[#F0F2F7] ${lista}`}>
+        {rows.map((f) => {
+          const total = totalFirmado(f);
+          const contenido = (
+            <>
+              <Link href={`/app/facturas/${f.id}`} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 rounded-[12px] py-3.5 transition-colors hover:bg-fondo/70">
+                <span className="row-span-2"><ChipTipo sigla={f.sigla} /></span>
+                <span className="truncate font-semibold">{nombreCliente(f)}</span>
+                <span className={`whitespace-nowrap text-right font-semibold tabular-nums ${total < 0 ? 'text-[#B4232B]' : ''}`}>{importe(total, f.moneda)}</span>
+                <span className="truncate tabular-nums text-texto-tenue">{nroCorto(f)} · {fechaCorta(f.fecha)}</span>
+                {!accion && <span className="justify-self-end"><ChipCobro estado={f.cobro} /></span>}
+              </Link>
+              {accion && <div className="flex justify-end pb-3.5">{accion(f)}</div>}
+            </>
+          );
+          return <li key={f.id}>{contenido}</li>;
+        })}
+      </ul>
+
+      <div className={tabla}>
+        <table className="w-full border-collapse">
+          <thead>
+            <tr>
+              <th className={`${th} text-left`}>Comprobante</th>
+              <th className={`${th} w-full text-left`}>Cliente</th>
+              {!compacta && <th className={`${th} text-left`}>Fecha</th>}
+              <th className={`${th} text-right`}>Total</th>
+              <th className={`${th} text-right`}>{accion ? '' : 'Cobro'}</th>
             </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {rows.map((f) => {
+              const total = totalFirmado(f);
+              const ir = () => router.push(`/app/facturas/${f.id}`);
+              const celdas = (
+                <>
+                  <td className={td}>
+                    <span className="flex items-center gap-2.5">
+                      <ChipTipo sigla={f.sigla} />
+                      <span className="whitespace-nowrap font-semibold tabular-nums text-texto-suave" title={`${f.sigla} ${numeroComprobante(f.puntoVenta, f.numero)}`}>{nroCorto(f)}</span>
+                    </span>
+                  </td>
+                  <td className={`${td} max-w-0`}>
+                    <span className="block truncate font-semibold">{nombreCliente(f)}</span>
+                    {compacta && <span className="block truncate tabular-nums text-texto-tenue">{fechaCorta(f.fecha)}</span>}
+                  </td>
+                  {!compacta && <td className={`${td} whitespace-nowrap tabular-nums text-texto-suave`}>{fechaCorta(f.fecha)}</td>}
+                  <td className={`${td} whitespace-nowrap text-right font-semibold tabular-nums ${total < 0 ? 'text-[#B4232B]' : ''}`}>{importe(total, f.moneda)}</td>
+                  <td className={`${td} whitespace-nowrap text-right`} onClick={accion ? (e) => e.stopPropagation() : undefined}>{ultima(f)}</td>
+                </>
+              );
+              const props = {
+                onClick: ir,
+                onKeyDown: (e: React.KeyboardEvent) => e.key === 'Enter' && ir(),
+                tabIndex: 0,
+                'aria-label': `Ver ${f.sigla} ${nroCorto(f)}`,
+                className: `${fila} cursor-pointer focus-visible:bg-fondo focus-visible:outline-none`,
+              };
+              return <tr key={f.id} {...props}>{celdas}</tr>;
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

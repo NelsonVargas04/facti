@@ -180,22 +180,29 @@ func (p *Postgres) GuardarComprobante(ctx context.Context, cuentaID int64, c *Co
 	if c.Periodo != nil {
 		desde, hasta, vto = c.Periodo.Desde, c.Periodo.Hasta, c.Periodo.VtoPago
 	}
+	// Número interno correlativo por cuenta: el lock de la transacción evita que dos emisiones
+	// simultáneas tomen el mismo.
+	if _, err := tx.Exec(ctx, `select pg_advisory_xact_lock(hashtextextended('numero-interno-' || $1::text, 0))`, cuentaID); err != nil {
+		return err
+	}
 	err = tx.QueryRow(ctx, `
 		insert into facti.comprobantes (
+			numero_interno,
 			cuenta_id, cliente_id, tipo, punto_venta, numero, fecha, concepto, moneda, cotizacion,
 			importe_total, importe_neto, importe_iva, cae, cae_vto, qr_url,
 			periodo_desde, periodo_hasta, vto_pago, condicion_venta,
 			receptor_doc_tipo, receptor_doc_nro, receptor_nombre, receptor_condicion_iva_id,
 			receptor_condicion, receptor_domicilio, receptor_email, cobro, respuesta_arca)
-		values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19,
+		values ((select coalesce(max(numero_interno), 0) + 1 from facti.comprobantes where cuenta_id = $1),
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19,
 			$20, $21, $22, $23, $24, $25, $26, $27, $28)
-		returning id, creado_en`,
+		returning id, numero_interno, creado_en`,
 		cuentaID, c.ClienteID, c.Tipo, c.PuntoVenta, c.Numero, c.Fecha, c.Concepto, c.Moneda, c.Cotizacion,
 		c.Total, c.Neto, c.IVA, c.CAE, nulo(c.CAEVto), c.QR,
 		nulo(desde), nulo(hasta), nulo(vto), c.CondicionVenta,
 		r.DocTipo, r.DocNro, r.Nombre, r.CondicionIvaID, r.Condicion, r.Domicilio, r.Email,
 		string(c.Cobro), c.Respuesta,
-	).Scan(&c.ID, &c.CreadoEn)
+	).Scan(&c.ID, &c.NumeroInterno, &c.CreadoEn)
 	if err != nil {
 		return fmt.Errorf("guardar comprobante: %w", err)
 	}
@@ -210,7 +217,7 @@ func (p *Postgres) GuardarComprobante(ctx context.Context, cuentaID int64, c *Co
 	return tx.Commit(ctx)
 }
 
-const columnasComprobante = `c.id, c.tipo, c.punto_venta, c.numero, to_char(c.fecha, 'YYYY-MM-DD'), c.concepto,
+const columnasComprobante = `c.id, c.numero_interno, c.tipo, c.punto_venta, c.numero, to_char(c.fecha, 'YYYY-MM-DD'), c.concepto,
 	c.moneda, c.cotizacion::float8, c.importe_total::float8, c.importe_neto::float8, c.importe_iva::float8,
 	c.cae, coalesce(to_char(c.cae_vto, 'YYYY-MM-DD'), ''), c.qr_url,
 	coalesce(to_char(c.periodo_desde, 'YYYY-MM-DD'), ''), coalesce(to_char(c.periodo_hasta, 'YYYY-MM-DD'), ''),
@@ -222,7 +229,7 @@ func scanComprobante(row pgx.Row) (Comprobante, error) {
 	var c Comprobante
 	var desde, hasta, vto, cobro string
 	r := &c.Receptor
-	err := row.Scan(&c.ID, &c.Tipo, &c.PuntoVenta, &c.Numero, &c.Fecha, &c.Concepto,
+	err := row.Scan(&c.ID, &c.NumeroInterno, &c.Tipo, &c.PuntoVenta, &c.Numero, &c.Fecha, &c.Concepto,
 		&c.Moneda, &c.Cotizacion, &c.Total, &c.Neto, &c.IVA,
 		&c.CAE, &c.CAEVto, &c.QR, &desde, &hasta, &vto, &c.CondicionVenta,
 		&r.DocTipo, &r.DocNro, &r.Nombre, &r.CondicionIvaID, &r.Condicion, &r.Domicilio, &r.Email,
@@ -290,6 +297,10 @@ func (p *Postgres) ListarComprobantes(ctx context.Context, cuentaID int64, f Fil
 	if q := strings.TrimSpace(f.Q); q != "" {
 		agregar(`(c.receptor_nombre ilike ? or c.receptor_doc_nro like ?
 			or lpad(c.punto_venta::text, 5, '0') || '-' || lpad(c.numero::text, 8, '0') like ?)`, "%"+escaparLike(q)+"%")
+		// "#12" o "12" también busca por número interno.
+		if n, err := strconv.Atoi(strings.TrimPrefix(q, "#")); err == nil {
+			where[len(where)-1] = strings.TrimSuffix(where[len(where)-1], ")") + " or c.numero_interno = " + strconv.Itoa(n) + ")"
+		}
 	}
 	orden, ok := ordenes[f.Orden]
 	if !ok {

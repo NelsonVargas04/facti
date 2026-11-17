@@ -71,7 +71,12 @@ export default function DetalleFactura() {
       <div className="aparece">
         <BackLink href="/app/facturas">Volver a facturas</BackLink>
         <div className="mt-1 flex flex-wrap items-center justify-between gap-4">
-          <h1 className="text-[32px] font-bold">{titulo}</h1>
+          <div>
+            <h1 className="text-[28px] font-bold leading-tight sm:text-[32px]">
+              {NOMBRES[f.sigla] ?? `Factura ${f.sigla}`} #{f.numeroInterno}
+            </h1>
+            <p className="tabular-nums text-texto-suave">Nº oficial {numeroComprobante(f.puntoVenta, f.numero)}</p>
+          </div>
           {!esE && (
             <button type="button" onClick={() => window.print()} className="btn-lift flex h-12 items-center gap-2 rounded-full bg-primario px-6 font-bold text-white shadow-boton">
               <Ic><path d="M12 4v11M7 10l5 5 5-5M5 20h14" /></Ic>Descargar PDF

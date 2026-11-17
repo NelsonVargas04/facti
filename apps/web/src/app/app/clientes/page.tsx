@@ -5,13 +5,14 @@ import { useState } from 'react';
 import { Numero } from '@/components/Animado';
 import { AvisoApi } from '@/components/AvisoApi';
 import { Facti } from '@/components/Facti';
-import { TablaSkeleton } from '@/components/TablaFacturas';
+import { fila, TablaSkeleton, td, th } from '@/components/TablaFacturas';
+import { Buscador, TarjetaLista } from '@/components/TarjetaLista';
+import { Paginacion } from '@/components/Paginacion';
 import { condicionTexto, listarClientes } from '@/lib/api';
 import { fecha, formatearCuit, nombrePropio, pesos } from '@/lib/formato';
 import { useApi, useDemorado } from '@/lib/useApi';
 
-const th = 'whitespace-nowrap border-b border-[#EDF0F6] px-4 pb-3 font-semibold';
-const td = 'px-4 py-4 align-middle';
+const POR_PAGINA = 10;
 
 const DOC: Record<number, string> = { 80: 'CUIT', 86: 'CUIL', 96: 'DNI' };
 
@@ -21,6 +22,8 @@ export default function Clientes() {
   const lista = useApi(() => listarClientes(qDemorado), [qDemorado]);
   const clientes = lista.dato?.clientes ?? [];
   const totalComprobantes = clientes.reduce((a, c) => a + c.comprobantes, 0);
+  const [pagina, setPagina] = useState(1);
+  const visibles = clientes.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
 
   return (
     <>
@@ -49,14 +52,12 @@ export default function Clientes() {
         </div>
       )}
 
-      {/* Buscador */}
-      <div style={{ animationDelay: '40ms' }} className="aparece flex min-w-[240px] max-w-[440px] items-center gap-2 rounded-input border-[1.5px] border-borde bg-white px-4 transition-colors focus-within:border-primario">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="flex-none text-texto-tenue"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
-        <input value={q} onChange={(e) => setQ(e.target.value)} aria-label="Buscar clientes" placeholder="Buscar por nombre o CUIT…" className="h-12 w-full bg-transparent text-base text-texto outline-none placeholder:text-texto-tenue" />
-      </div>
-
       {/* Tabla */}
-      <section style={{ animationDelay: '60ms' }} aria-busy={lista.estado === 'cargando'} className="aparece rounded-tarjeta bg-superficie p-6 shadow-tarjeta">
+      <TarjetaLista
+        ocupado={lista.estado === 'cargando'}
+        barra={<Buscador valor={q} onCambio={(v) => { setQ(v); setPagina(1); }} placeholder="Buscar por nombre o CUIT…" className="sm:max-w-[440px]" />}
+        pie={clientes.length > 0 ? <Paginacion total={clientes.length} pagina={pagina} porPagina={POR_PAGINA} onPagina={setPagina} singular="cliente" plural="clientes" /> : undefined}
+      >
         {lista.estado === 'error' && !lista.dato ? (
           <AvisoApi error={lista.error} onReintentar={lista.recargar} />
         ) : !lista.dato ? (
@@ -65,7 +66,7 @@ export default function Clientes() {
           <div className="@container">
             {/* Con poco ancho, lista; si entra, tabla. */}
             <ul className="cascada flex flex-col divide-y divide-[#F0F2F7] @min-[960px]:hidden" key={`l-${qDemorado}`}>
-              {clientes.map((c) => (
+              {visibles.map((c) => (
                 <li key={c.id} className="flex items-start gap-3 py-3.5">
                   <span className="flex min-w-0 flex-1 flex-col">
                     <span className="truncate font-semibold">{c.nombre ? nombrePropio(c.nombre) : formatearCuit(c.docNro)}</span>
@@ -95,8 +96,8 @@ export default function Clientes() {
                 </tr>
               </thead>
               <tbody className="cascada" key={qDemorado}>
-                {clientes.map((c) => (
-                  <tr key={c.id} className="border-b border-[#F0F2F7] transition-colors last:border-0 hover:bg-fondo">
+                {visibles.map((c) => (
+                  <tr key={c.id} className={fila}>
                     <td className={`${td} whitespace-nowrap`}>
                       <span className="block font-semibold">{c.nombre ? nombrePropio(c.nombre) : formatearCuit(c.docNro)}</span>
                       {/* Documento debajo del nombre: una columna menos y todo entra en una línea. */}
@@ -118,15 +119,15 @@ export default function Clientes() {
             </div>
           </div>
         ) : qDemorado ? (
-          <p className="py-10 text-center text-texto-suave">No encontramos clientes con esa búsqueda.</p>
+          <p className="flex flex-1 items-center justify-center py-10 text-center text-texto-suave">No encontramos clientes con esa búsqueda.</p>
         ) : (
-          <div className="entra flex flex-col items-center gap-3 py-10 text-center">
+          <div className="entra flex flex-1 flex-col items-center justify-center gap-3 py-10 text-center">
             <Facti pose="buscando" size={130} animated={false} />
             <h2 className="text-[20px] font-bold">Todavía no tenés clientes</h2>
             <p className="max-w-[380px] text-texto-suave">Cuando le hagas una factura a alguien con CUIT o DNI, lo guardamos acá con todo lo que le facturaste.</p>
           </div>
         )}
-      </section>
+      </TarjetaLista>
     </>
   );
 }

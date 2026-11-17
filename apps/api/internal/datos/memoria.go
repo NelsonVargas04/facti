@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -116,6 +117,12 @@ func (m *Memoria) GuardarComprobante(_ context.Context, cuentaID int64, c *Compr
 		completarReceptor(&c.Receptor, cl.Nombre, cl.Condicion, cl.Domicilio, cl.Email)
 	}
 	c.ID = int64(len(m.comprobantes) + 1)
+	c.NumeroInterno = 1
+	for _, x := range m.comprobantes {
+		if x.cuentaID == cuentaID && x.v.NumeroInterno >= c.NumeroInterno {
+			c.NumeroInterno = x.v.NumeroInterno + 1
+		}
+	}
 	c.CreadoEn = m.ahora()
 	completarSigla(c)
 	guardado := *c
@@ -150,7 +157,8 @@ func (m *Memoria) ListarComprobantes(_ context.Context, cuentaID int64, f Filtro
 		if f.Cobro != "" && c.Cobro != f.Cobro {
 			continue
 		}
-		if q != "" && !strings.Contains(strings.ToLower(c.Receptor.Nombre), q) && !strings.Contains(c.Receptor.DocNro, q) && !strings.Contains(numeroDe(c), q) {
+		if q != "" && !strings.Contains(strings.ToLower(c.Receptor.Nombre), q) && !strings.Contains(c.Receptor.DocNro, q) && !strings.Contains(numeroDe(c), q) &&
+			strings.TrimPrefix(q, "#") != strconv.FormatInt(c.NumeroInterno, 10) {
 			continue
 		}
 		c.Items = nil

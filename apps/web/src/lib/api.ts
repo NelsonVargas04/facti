@@ -142,6 +142,8 @@ export interface Receptor {
 
 export interface Comprobante {
   id: number;
+  /** Número corto de la app (#1, #2…), correlativo por cuenta. El oficial es puntoVenta + numero. */
+  numeroInterno: number;
   tipo: number;
   sigla: string; // A, B, C, M, E, NC, ND
   puntoVenta: number;

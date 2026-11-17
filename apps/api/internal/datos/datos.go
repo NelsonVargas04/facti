@@ -99,6 +99,7 @@ type Item struct {
 // Comprobante autorizado por ARCA.
 type Comprobante struct {
 	ID             int64      `json:"id"`
+	NumeroInterno  int64      `json:"numeroInterno"` // #1, #2… por cuenta; lo asigna GuardarComprobante
 	Tipo           int        `json:"tipo"`
 	Sigla          string     `json:"sigla"` // A, B, C, M, E, NC, ND
 	PuntoVenta     int        `json:"puntoVenta"`

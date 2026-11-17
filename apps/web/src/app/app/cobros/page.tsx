@@ -1,15 +1,16 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import Link from 'next/link';
-import { AnimatePresence, motion } from 'motion/react';
 import { Girando, Numero } from '@/components/Animado';
 import { AvisoApi } from '@/components/AvisoApi';
 import { Confirmar } from '@/components/Confirmar';
-import { ChipCobro, colorTipo, TablaSkeleton } from '@/components/TablaFacturas';
+import { ChipCobro, TablaFacturas, TablaSkeleton } from '@/components/TablaFacturas';
+import { Buscador, Segmentos, TarjetaLista } from '@/components/TarjetaLista';
+import { Paginacion } from '@/components/Paginacion';
+import { Facti } from '@/components/Facti';
 import { listarComprobantes, marcarCobro, verResumen, type Cobro, type Comprobante, type ErrorApi } from '@/lib/api';
 import { nombreCliente } from '@/lib/comprobante';
-import { fechaCorta, importe, numeroComprobante, pesos } from '@/lib/formato';
+import { importe, numeroComprobante, pesos } from '@/lib/formato';
 import { useApi } from '@/lib/useApi';
 
 type Filtro = 'pendientes' | 'cobradas' | 'todas';
@@ -20,8 +21,7 @@ const FILTROS: { id: Filtro; label: string; cobro: Cobro }[] = [
   { id: 'todas', label: 'Todas', cobro: '' },
 ];
 
-const th = 'whitespace-nowrap border-b border-[#EDF0F6] px-4 pb-3 font-semibold';
-const td = 'px-4 py-4 align-middle';
+const POR_PAGINA = 10;
 
 export default function Cobros() {
   const [filtro, setFiltro] = useState<Filtro>('pendientes');
@@ -35,6 +35,14 @@ export default function Cobros() {
   const [aConfirmar, setAConfirmar] = useState<Comprobante | null>(null);
 
   const filas = useMemo(() => (lista.dato?.comprobantes ?? []).filter((f) => f.cobro !== ''), [lista.dato]);
+  const [q, setQ] = useState('');
+  const [pagina, setPagina] = useState(1);
+  const buscadas = useMemo(() => {
+    const t = q.trim().toLowerCase().replace(/^#/, '');
+    if (!t) return filas;
+    return filas.filter((f) => nombreCliente(f).toLowerCase().includes(t) || f.receptor.docNro.includes(t) || String(f.numeroInterno) === t);
+  }, [filas, q]);
+  const visibles = buscadas.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
 
   async function marcar(id: number, estado: 'cobrada' | 'pendiente') {
     setMarcando(id);
@@ -95,100 +103,40 @@ export default function Cobros() {
         ) : null}
       </div>
 
-      {/* Filtros */}
-      <div style={{ animationDelay: '40ms' }} role="group" aria-label="Filtrar por estado de cobro" className="aparece inline-flex gap-1 self-start rounded-input bg-fondo p-1">
-        {FILTROS.map((f) => {
-          const on = filtro === f.id;
-          return (
-            <button key={f.id} type="button" aria-pressed={on} onClick={() => setFiltro(f.id)}
-              className={`rounded-xl px-4 py-2.5 text-base transition-colors ${on ? 'bg-white font-bold text-texto shadow-[0_2px_8px_rgba(21,25,58,0.08)]' : 'font-semibold text-texto-suave hover:text-texto'}`}>
-              {f.label}
-            </button>
-          );
-        })}
-      </div>
-
       {errMarcar && <AvisoApi error={errMarcar} compacto />}
 
-      {/* Tabla */}
-      <section style={{ animationDelay: '60ms' }} aria-busy={lista.estado === 'cargando'} className="aparece rounded-tarjeta bg-superficie p-6 shadow-tarjeta">
+      {/* Listado: mismas piezas que Facturas (pestañas y buscador arriba, cantidad y páginas abajo). */}
+      <TarjetaLista
+        ocupado={lista.estado === 'cargando'}
+        barra={
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <Segmentos etiqueta="Filtrar por estado de cobro" opciones={FILTROS.map((f) => [f.id, f.label] as [Filtro, string])} valor={filtro} onCambio={(v) => { setFiltro(v); setPagina(1); }} />
+            <Buscador valor={q} onCambio={(v) => { setQ(v); setPagina(1); }} placeholder="Buscar cliente o #número…" className="lg:w-[340px]" />
+          </div>
+        }
+        pie={
+          buscadas.length > 0 ? (
+            <Paginacion total={buscadas.length} pagina={pagina} porPagina={POR_PAGINA} onPagina={setPagina} singular="factura" plural="facturas" />
+          ) : undefined
+        }
+      >
         {lista.estado === 'error' && !lista.dato ? (
           <AvisoApi error={lista.error} onReintentar={lista.recargar} />
         ) : !lista.dato ? (
           <TablaSkeleton filas={4} />
-        ) : filas.length > 0 ? (
-          <div key={filtro} className="entra @container">
-            {/* Con poco ancho, lista; si entra, tabla. */}
-            <ul className="flex flex-col divide-y divide-[#F0F2F7] @min-[720px]:hidden">
-              <AnimatePresence initial={false}>
-                {filas.map((f) => (
-                  <motion.li
-                    key={f.id}
-                    layout
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, x: 24 }}
-                    transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-                    className="flex flex-col gap-3 py-3.5"
-                  >
-                    <Link href={`/app/facturas/${f.id}`} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1">
-                      <span className={`row-span-2 inline-flex h-10 min-w-[40px] items-center justify-center rounded-[12px] px-2 font-bold ${colorTipo(f.sigla)}`}>{f.sigla}</span>
-                      <span className="truncate font-semibold">{nombreCliente(f)}</span>
-                      <span className="whitespace-nowrap text-right font-semibold tabular-nums">{importe(f.total, f.moneda)}</span>
-                      <span className="col-span-2 truncate tabular-nums text-texto-tenue">{numeroComprobante(f.puntoVenta, f.numero)} · {fechaCorta(f.fecha)}</span>
-                    </Link>
-                    <div className="flex justify-end">{accion(f)}</div>
-                  </motion.li>
-                ))}
-              </AnimatePresence>
-            </ul>
-            <div className="hidden overflow-x-auto @min-[720px]:block">
-            <table className="w-full border-collapse text-base">
-              <thead>
-                <tr className="text-base text-texto-tenue">
-                  <th className={`${th} text-center`}>Tipo</th>
-                  <th className={`${th} text-left`}>Número</th>
-                  <th className={`${th} text-left`}>Cliente</th>
-                  <th className={`${th} text-left`}>Fecha</th>
-                  <th className={`${th} text-right`}>Total</th>
-                  <th className={`${th} text-right`}>Acción</th>
-                </tr>
-              </thead>
-              <tbody>
-                {/* Al marcar una factura como cobrada en "Pendientes", la fila se va hacia la derecha y las demás suben solas. */}
-                <AnimatePresence initial={false}>
-                {filas.map((f) => (
-                  <motion.tr
-                    key={f.id}
-                    layout
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, x: 24 }}
-                    transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-                    className="border-b border-[#F0F2F7] transition-colors last:border-0 hover:bg-fondo"
-                  >
-                    <td className={`${td} text-center`}><span className={`inline-flex h-8 min-w-[34px] items-center justify-center rounded-[10px] px-2 text-base font-bold ${colorTipo(f.sigla)}`}>{f.sigla}</span></td>
-                    <td className={`${td} whitespace-nowrap tabular-nums text-texto-suave`}>
-                      <Link href={`/app/facturas/${f.id}`} className="hover:text-primario-oscuro hover:underline">{numeroComprobante(f.puntoVenta, f.numero)}</Link>
-                    </td>
-                    <td className={`${td} whitespace-nowrap font-semibold`}>{nombreCliente(f)}</td>
-                    <td className={`${td} whitespace-nowrap tabular-nums text-texto-suave`}>{fechaCorta(f.fecha)}</td>
-                    <td className={`${td} text-right font-semibold tabular-nums`}>{importe(f.total, f.moneda)}</td>
-                    <td className={`${td} text-right`}>{accion(f)}
-                    </td>
-                  </motion.tr>
-                ))}
-                </AnimatePresence>
-              </tbody>
-            </table>
-            </div>
+        ) : visibles.length > 0 ? (
+          <div key={filtro} className="entra">
+            <TablaFacturas rows={visibles} accion={accion} />
           </div>
         ) : (
-          <p className="py-10 text-center text-texto-suave">
-            {filtro === 'pendientes' ? '¡No tenés facturas pendientes de cobro!' : filtro === 'cobradas' ? 'Todavía no marcaste facturas como cobradas.' : 'Todavía no emitiste facturas.'}
-          </p>
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 py-12 text-center">
+            <Facti pose={filtro === 'pendientes' && !q ? 'festejo' : 'buscando'} size={130} animated={false} />
+            <p className="text-texto-suave">
+              {q ? 'No encontramos facturas con esa búsqueda.' : filtro === 'pendientes' ? '¡No tenés facturas pendientes de cobro!' : filtro === 'cobradas' ? 'Todavía no marcaste facturas como cobradas.' : 'Todavía no emitiste facturas.'}
+            </p>
+          </div>
         )}
-      </section>
+      </TarjetaLista>
 
       <Confirmar
         abierto={aConfirmar !== null}
@@ -204,7 +152,7 @@ export default function Cobros() {
           <div className="flex flex-col gap-3">
             <dl className="flex flex-col gap-2 rounded-[18px] bg-fondo px-4 py-3.5 text-base">
               <div className="flex justify-between gap-4"><dt className="text-texto-suave">Cliente</dt><dd className="truncate font-semibold">{nombreCliente(aConfirmar)}</dd></div>
-              <div className="flex justify-between gap-4"><dt className="text-texto-suave">Factura</dt><dd className="tabular-nums">{aConfirmar.sigla} {numeroComprobante(aConfirmar.puntoVenta, aConfirmar.numero)}</dd></div>
+              <div className="flex justify-between gap-4"><dt className="text-texto-suave">Factura</dt><dd className="tabular-nums">{aConfirmar.sigla} #{aConfirmar.numeroInterno} · {numeroComprobante(aConfirmar.puntoVenta, aConfirmar.numero)}</dd></div>
               <div className="flex justify-between gap-4"><dt className="text-texto-suave">Total</dt><dd className="font-bold tabular-nums">{importe(aConfirmar.total, aConfirmar.moneda)}</dd></div>
             </dl>
             <p className="text-base text-texto-suave">Pasa a &quot;Cobradas&quot; y deja de sumar en lo que te deben. Si te equivocás, la podés volver a pendiente.</p>
