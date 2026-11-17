@@ -9,11 +9,11 @@ type Col = { t: string; v: (c: CategoriaMonotributo) => string; texto?: boolean;
 
 /** Columnas en el mismo orden que el cuadro de ARCA, con títulos más cortos. */
 const SUELTAS_1: Col[] = [
-  { t: 'Ingresos brutos (anual)', v: (c) => exacto(c.tope), fuerte: true },
+  { t: 'Ingresos brutos', v: (c) => exacto(c.tope), fuerte: true },
   { t: 'Superficie', v: (c) => c.superficie.replace(/^Hasta /, 'hasta '), texto: true },
-  { t: 'Energía (anual)', v: (c) => c.energia.replace(/^Hasta /, 'hasta '), texto: true },
-  { t: 'Alquileres (anual)', v: (c) => exacto(c.alquileres) },
-  { t: 'Precio unitario máx.', v: (c) => exacto(c.precioMaximo) },
+  { t: 'Energía', v: (c) => c.energia.replace(/^Hasta /, 'hasta '), texto: true },
+  { t: 'Alquileres', v: (c) => exacto(c.alquileres) },
+  { t: 'Precio máximo', v: (c) => exacto(c.precioMaximo) },
 ];
 const IMPUESTO: Col[] = [
   { t: 'Servicios', v: (c) => exacto(c.impServicios) },
@@ -43,15 +43,15 @@ export function CuadroArca({ escala, tuya, ideal }: { escala: EscalaMonotributo;
     return () => el.removeEventListener('scroll', ver);
   }, []);
 
-  const th = 'border-b border-l border-white/15 px-3 py-3 font-semibold leading-tight';
-  const td = 'border-b border-l border-[#E8EBF2] px-3 py-3 tabular-nums whitespace-nowrap';
+  const th = 'whitespace-nowrap border-b border-l border-white/15 px-2.5 py-3 font-semibold leading-tight';
+  const td = 'border-b border-l border-[#E8EBF2] px-2.5 py-3 tabular-nums whitespace-nowrap';
   const fija = `sticky left-0 z-10 transition-shadow ${desplazado ? 'shadow-[6px_0_10px_-6px_rgba(21,25,58,0.25)]' : ''}`;
   const todas = [...SUELTAS_1, ...IMPUESTO, ...SUELTAS_2, ...TOTAL];
   const ideal2 = ideal && ideal !== tuya ? ideal : undefined;
 
   return (
     <div className="flex flex-col gap-3">
-      {(tuya || ideal2) && (
+      {(
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-texto-suave">
           {tuya && (
             <span className="inline-flex items-center gap-2">
@@ -63,6 +63,7 @@ export function CuadroArca({ escala, tuya, ideal }: { escala: EscalaMonotributo;
               <span className="h-4 w-4 rounded-full bg-[#E0A100]" /> La que te corresponde por lo que facturaste ({ideal2})
             </span>
           )}
+          <span>Ingresos, energía y alquileres son anuales. El precio máximo es por unidad, para venta de cosas muebles.</span>
         </div>
       )}
 
