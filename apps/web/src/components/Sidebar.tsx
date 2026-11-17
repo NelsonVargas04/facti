@@ -100,6 +100,12 @@ export function Sidebar() {
     setDestino(null);
     setMasAbierto(false);
   }, [pathname]);
+  // Si la página no llega a cambiar (por ejemplo, sin conexión), el menú vuelve a marcar dónde estás.
+  useEffect(() => {
+    if (!destino) return;
+    const t = setTimeout(() => setDestino(null), 4000);
+    return () => clearTimeout(t);
+  }, [destino]);
   const actual = destino ?? pathname;
   const enMas = MAS.some((it) => esActivo(actual, it.href));
   const emitiendo = pathname === '/app/facturas/nueva';
@@ -134,12 +140,12 @@ export function Sidebar() {
         )}
         <button
           type="button"
-          aria-label="Cerrar sesión"
           title="Cerrar sesión"
           onClick={salir}
-          className="flex h-9 w-9 flex-none items-center justify-center rounded-full text-texto-tenue transition-colors hover:bg-error-suave hover:text-error focus-visible:outline-2 focus-visible:outline-primario"
+          className="inline-flex h-9 flex-none items-center gap-1.5 rounded-full bg-white px-3 font-semibold text-texto-suave ring-1 ring-inset ring-[#E3E7F0] transition-colors hover:bg-error-suave hover:text-error hover:ring-transparent focus-visible:outline-2 focus-visible:outline-primario"
         >
-          <Icon name="salir" size={20} />
+          <Icon name="salir" size={18} weight="bold" />
+          Salir
         </button>
       </div>
     </div>

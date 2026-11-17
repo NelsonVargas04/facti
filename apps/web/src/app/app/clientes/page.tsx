@@ -16,6 +16,11 @@ const POR_PAGINA = 10;
 
 const DOC: Record<number, string> = { 80: 'CUIT', 86: 'CUIL', 96: 'DNI' };
 
+function iniciales(nombre: string) {
+  const p = nombre.trim().split(/\s+/).filter(Boolean);
+  return ((p[0]?.[0] ?? '') + (p[1]?.[0] ?? '')).toUpperCase() || '?';
+}
+
 export default function Clientes() {
   const [q, setQ] = useState('');
   const qDemorado = useDemorado(q.trim());
@@ -66,23 +71,35 @@ export default function Clientes() {
           <div className="@container">
             {/* Con poco ancho, lista; si entra, tabla. */}
             <ul className="cascada flex flex-col divide-y divide-[#F0F2F7] @min-[960px]:hidden" key={`l-${qDemorado}`}>
-              {visibles.map((c) => (
-                <li key={c.id} className="flex items-start gap-3 py-3.5">
-                  <span className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate font-semibold">{c.nombre ? nombrePropio(c.nombre) : formatearCuit(c.docNro)}</span>
-                    <span className="truncate tabular-nums text-texto-tenue">
+              {visibles.map((c) => {
+                const nombre = c.nombre ? nombrePropio(c.nombre) : formatearCuit(c.docNro);
+                return (
+                  <li key={c.id} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 py-4">
+                    <span aria-hidden="true" className="row-span-2 flex h-11 w-11 items-center justify-center rounded-[14px] bg-primario-suave font-bold text-primario-oscuro">
+                      {iniciales(nombre)}
+                    </span>
+                    <span className="truncate font-semibold">{nombre}</span>
+                    <span className="whitespace-nowrap text-right font-semibold tabular-nums">{pesos(c.facturado)}</span>
+                    <span className="col-span-2 truncate tabular-nums text-texto-tenue">
                       {DOC[c.docTipo] ?? 'Doc.'} {c.docTipo === 96 ? c.docNro : formatearCuit(c.docNro)}
                     </span>
-                    <span className="truncate text-texto-suave">
-                      {condicionTexto(c)} · {c.comprobantes} {c.comprobantes === 1 ? 'comprobante' : 'comprobantes'}
+                    <span className="col-start-2 col-end-4 mt-1.5 flex flex-wrap items-center gap-2 text-texto-suave">
+                      {c.porCobrar > 0 ? (
+                        <span className="whitespace-nowrap rounded-full bg-[#FFF6E1] px-2.5 py-0.5 font-semibold tabular-nums text-[#7A5200] ring-1 ring-inset ring-[#F3E1A6]">
+                          Debe {pesos(c.porCobrar)}
+                        </span>
+                      ) : (
+                        <span className="whitespace-nowrap rounded-full bg-[#EAF8F0] px-2.5 py-0.5 font-semibold text-[#0E5C38] ring-1 ring-inset ring-[#C8EDD8]">Al día</span>
+                      )}
+                      <span className="whitespace-nowrap rounded-full bg-fondo px-2.5 py-0.5">{condicionTexto(c)}</span>
+                      <span className="whitespace-nowrap tabular-nums">
+                        {c.comprobantes} {c.comprobantes === 1 ? 'comprobante' : 'comprobantes'}
+                        {c.ultimo && <span className="hidden sm:inline"> · última {fecha(c.ultimo)}</span>}
+                      </span>
                     </span>
-                  </span>
-                  <span className="flex flex-none flex-col items-end">
-                    <span className="whitespace-nowrap font-semibold tabular-nums">{pesos(c.facturado)}</span>
-                    {c.porCobrar > 0 && <span className="whitespace-nowrap font-semibold tabular-nums text-aviso-texto">Debe {pesos(c.porCobrar)}</span>}
-                  </span>
-                </li>
-              ))}
+                  </li>
+                );
+              })}
             </ul>
             <div className="hidden overflow-y-hidden overflow-x-auto @min-[960px]:block">
             <table className="w-full border-collapse text-base">
