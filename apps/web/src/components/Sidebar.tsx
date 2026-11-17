@@ -140,12 +140,12 @@ export function Sidebar() {
         )}
         <button
           type="button"
+          aria-label="Cerrar sesión"
           title="Cerrar sesión"
           onClick={salir}
-          className="inline-flex h-9 flex-none items-center gap-1.5 rounded-full bg-white px-3 font-semibold text-texto-suave ring-1 ring-inset ring-[#E3E7F0] transition-colors hover:bg-error-suave hover:text-error hover:ring-transparent focus-visible:outline-2 focus-visible:outline-primario"
+          className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-white text-texto-suave ring-1 ring-inset ring-[#E3E7F0] transition-colors hover:bg-error-suave hover:text-error hover:ring-transparent focus-visible:outline-2 focus-visible:outline-primario"
         >
           <Icon name="salir" size={18} weight="bold" />
-          Salir
         </button>
       </div>
     </div>
