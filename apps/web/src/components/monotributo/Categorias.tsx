@@ -178,11 +178,14 @@ function FilaCategoria({ c, tuya, corresponde }: { c: CategoriaMonotributo; tuya
 }
 
 
-/** Botón "Ver categorías": lleva a la página con el cuadro oficial completo. */
-export function VerCategorias() {
+/** Botón "Ver categorías": lleva al cuadro oficial (sin el menú), con tu categoría y la que te corresponde marcadas. */
+export function VerCategorias({ categoria, corresponde }: { categoria?: string; corresponde?: string | null }) {
+  const q = new URLSearchParams();
+  if (categoria) q.set('cat', categoria.toUpperCase());
+  if (corresponde) q.set('ideal', corresponde);
   return (
     <Link
-      href="/app/monotributo/categorias"
+      href={`/monotributo/categorias${q.size ? `?${q}` : ''}`}
       className="btn-lift inline-flex h-11 items-center gap-2 rounded-full border-[1.5px] border-borde bg-white px-5 font-bold text-texto hover:border-primario hover:text-primario-oscuro"
     >
       <Icon name="monotributo" size={18} />

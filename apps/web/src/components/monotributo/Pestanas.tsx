@@ -49,7 +49,7 @@ export function ResumenMonotributo({ resumen, cuenta, escala }: { resumen: Estad
             <h2 className="text-[22px] font-bold">Tu facturación</h2>
             <p className="text-texto-suave">Últimos 12 meses: lo que ARCA mira para tu categoría.</p>
           </div>
-          <VerCategorias />
+          <VerCategorias categoria={cuenta?.categoria} corresponde={categoriaQueCorresponde(total, t)} />
         </div>
         <BarraTope facturado={total} categoria={cuenta?.categoria} escala={escala} desde={r.ultimos12Meses.desde} hasta={hoyISO()} />
       </section>
@@ -87,7 +87,7 @@ export function Recategorizacion({ resumen, cuenta, escala }: { resumen: Estado<
               ? `En ${prox.mes} te convendría pasar a la categoría ${corresponde}.`
               : 'Por ahora seguís en tu categoría: no hace falta cambiar nada.'}
           </p>
-          <VerCategorias />
+          <VerCategorias categoria={cuenta?.categoria} corresponde={corresponde} />
         </div>
       </section>
 
