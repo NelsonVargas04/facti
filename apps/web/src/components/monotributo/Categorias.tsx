@@ -112,7 +112,66 @@ const COLUMNAS: { k: keyof CategoriaMonotributo; t: string; dinero?: boolean }[]
   { k: 'cuotaVentas', t: 'Cuota ventas', dinero: true },
 ];
 
-const valor = (c: CategoriaMonotributo, col: (typeof COLUMNAS)[number]) => (col.dinero ? pesos(Number(c[col.k])) : String(c[col.k] || '—'));
+/** Monto con centavos, como en la tabla de ARCA. */
+const exacto = (n: number) => `$${n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const valor = (c: CategoriaMonotributo, col: (typeof COLUMNAS)[number]) => (col.dinero ? exacto(Number(c[col.k])) : String(c[col.k] || '—'));
+
+/** Una categoría: fila con tope y cuotas; al tocarla se abre el detalle completo. */
+function FilaCategoria({ c, tuya, corresponde }: { c: CategoriaMonotributo; tuya: boolean; corresponde: boolean }) {
+  const [abierta, setAbierta] = useState(tuya);
+  const detalle = COLUMNAS.filter((col) => !['tope', 'cuotaServicios', 'cuotaVentas'].includes(col.k));
+  const cuotas = COLUMNAS.filter((col) => col.k === 'cuotaServicios' || col.k === 'cuotaVentas');
+  return (
+    <li className={`border-b border-[#EDF0F6] last:border-0 ${tuya ? 'rounded-[16px] bg-primario-suave/50' : corresponde ? 'rounded-[16px] bg-aviso-suave/60' : ''}`}>
+      <button
+        type="button"
+        onClick={() => setAbierta((x) => !x)}
+        aria-expanded={abierta}
+        className="grid w-full grid-cols-[minmax(0,1fr)_auto_24px] items-center gap-3 rounded-[16px] px-3 py-3 text-left transition-colors hover:bg-fondo/70 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_32px] md:gap-4"
+      >
+        <span className="flex min-w-0 items-center gap-3">
+          <span className={`flex h-10 w-10 flex-none items-center justify-center rounded-full text-[18px] font-bold text-white ${tuya ? 'bg-primario' : 'bg-texto'}`}>{c.letra}</span>
+          {tuya && <span className="truncate rounded-full bg-white px-2.5 py-0.5 font-semibold text-primario-oscuro">Tu categoría</span>}
+          {corresponde && <span className="truncate rounded-full bg-white px-2.5 py-0.5 font-semibold text-aviso-texto">Te corresponde</span>}
+        </span>
+        <span className="text-right font-bold tabular-nums">{exacto(c.tope)}</span>
+        <span className="hidden text-right tabular-nums md:block">{exacto(c.cuotaServicios)}</span>
+        <span className="hidden text-right tabular-nums md:block">{exacto(c.cuotaVentas)}</span>
+        <span className={`flex justify-end text-texto-tenue transition-transform ${abierta ? 'rotate-180' : ''}`}>
+          <Icon name="chevron-abajo" size={20} />
+        </span>
+      </button>
+      <AnimatePresence initial={false}>
+        {abierta && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+            className="overflow-hidden"
+          >
+            <dl className="grid grid-cols-2 gap-x-6 gap-y-3 px-3 pb-4 pt-1 sm:grid-cols-3 md:pl-[64px] lg:grid-cols-4">
+              {/* En celular las cuotas van acá, porque no entran en la fila. */}
+              {cuotas.map((col) => (
+                <div key={col.k} className="flex flex-col md:hidden">
+                  <dt className="text-texto-tenue">{col.t}</dt>
+                  <dd className="font-semibold tabular-nums">{valor(c, col)}</dd>
+                </div>
+              ))}
+              {detalle.map((col) => (
+                <div key={col.k} className="flex flex-col">
+                  <dt className="text-texto-tenue">{col.t}</dt>
+                  <dd className="font-semibold tabular-nums">{valor(c, col)}</dd>
+                </div>
+              ))}
+            </dl>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </li>
+  );
+}
+
 
 /** Botón "Ver categorías": abre el cuadro oficial completo, con tu categoría marcada. */
 export function VerCategorias({ escala, categoria, corresponde }: { escala?: EscalaMonotributo | null; categoria?: string; corresponde?: string | null }) {
@@ -142,15 +201,13 @@ function Cuadro({ escala, categoria, corresponde, onCerrar }: { escala: EscalaMo
     return () => window.removeEventListener('keydown', esc);
   }, [onCerrar]);
 
-  const marca = (l: string) => (l === categoria ? 'Tu categoría' : l === corresponde ? 'Te corresponde' : '');
-
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-labelledby="cuadro-titulo">
       <motion.button type="button" aria-label="Cerrar" onClick={onCerrar} className="absolute inset-0 bg-[#15193A]/40" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} />
       <motion.div
         ref={ref}
         tabIndex={-1}
-        className="relative flex max-h-[90vh] w-full max-w-[1200px] flex-col overflow-hidden rounded-t-[28px] bg-superficie shadow-tarjeta outline-none sm:rounded-tarjeta"
+        className="relative flex max-h-[90vh] w-full max-w-[960px] flex-col overflow-hidden rounded-t-[28px] bg-superficie shadow-tarjeta outline-none sm:rounded-tarjeta"
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 24 }}
@@ -169,68 +226,24 @@ function Cuadro({ escala, categoria, corresponde, onCerrar }: { escala: EscalaMo
           </button>
         </div>
 
-        <div className="overflow-auto p-4 sm:p-6">
-          {/* Celular: una tarjeta por categoría */}
-          <ul className="flex flex-col gap-3 md:hidden">
+        <div className="overflow-y-auto px-4 py-3 sm:px-6">
+          {/* Encabezado de columnas (compu) */}
+          <div className="hidden grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_32px] gap-4 border-b border-[#EDF0F6] px-3 pb-3 font-semibold text-texto-tenue md:grid">
+            <span>Categoría</span>
+            <span className="text-right">Ingresos brutos (tope anual)</span>
+            <span className="text-right">Cuota servicios</span>
+            <span className="text-right">Cuota venta de cosas</span>
+            <span />
+          </div>
+          <ul className="flex flex-col">
             {escala.categorias.map((c) => (
-              <li key={c.letra} className={`rounded-[18px] border-[1.5px] p-4 ${c.letra === categoria ? 'border-primario bg-primario-suave/40' : c.letra === corresponde ? 'border-[#E0A100] bg-aviso-suave/50' : 'border-[#E6E9F1]'}`}>
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <span className="flex items-center gap-2">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-texto font-bold text-white">{c.letra}</span>
-                    <strong className="tabular-nums">{pesos(c.tope)}</strong>
-                  </span>
-                  {marca(c.letra) && <span className="rounded-full bg-white px-2.5 py-0.5 font-semibold text-primario-oscuro">{marca(c.letra)}</span>}
-                </div>
-                <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5">
-                  {COLUMNAS.slice(1).map((col) => (
-                    <div key={col.k} className="flex flex-col">
-                      <dt className="text-texto-tenue">{col.t}</dt>
-                      <dd className="font-semibold tabular-nums">{valor(c, col)}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </li>
+              <FilaCategoria key={c.letra} c={c} tuya={c.letra === categoria} corresponde={c.letra === corresponde && c.letra !== categoria} />
             ))}
           </ul>
-
-          {/* Compu: el cuadro completo */}
-          <table className="hidden w-full border-collapse md:table">
-            <thead>
-              <tr className="bg-texto text-white">
-                <th className="sticky left-0 rounded-tl-[12px] bg-texto px-3 py-3 text-left font-semibold">Cat.</th>
-                {COLUMNAS.map((col, i) => (
-                  <th key={col.k} className={`whitespace-nowrap px-3 py-3 text-right font-semibold ${i === COLUMNAS.length - 1 ? 'rounded-tr-[12px]' : ''}`}>
-                    {col.t}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {escala.categorias.map((c) => {
-                const tuya = c.letra === categoria;
-                const corr = c.letra === corresponde && !tuya;
-                return (
-                  <tr key={c.letra} className={`border-b border-[#EDF0F6] ${tuya ? 'bg-primario-suave/60' : corr ? 'bg-aviso-suave/60' : 'even:bg-fondo/60'}`}>
-                    <th scope="row" className="sticky left-0 bg-inherit px-3 py-3 text-left">
-                      <span className="flex items-center gap-2">
-                        <span className={`flex h-8 w-8 items-center justify-center rounded-full font-bold ${tuya ? 'bg-primario text-white' : 'bg-texto text-white'}`}>{c.letra}</span>
-                        {marca(c.letra) && <span className="whitespace-nowrap font-semibold text-primario-oscuro">{marca(c.letra)}</span>}
-                      </span>
-                    </th>
-                    {COLUMNAS.map((col) => (
-                      <td key={col.k} className={`whitespace-nowrap px-3 py-3 text-right tabular-nums ${col.k === 'tope' || col.k.startsWith('cuota') ? 'font-semibold text-texto' : 'text-texto-suave'}`}>
-                        {valor(c, col)}
-                      </td>
-                    ))}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#EDF0F6] px-5 py-4 sm:px-6">
-          <p className="text-texto-tenue">Fuente: ARCA. La cuota mensual es el total (impuesto integrado, SIPA y obra social).</p>
+          <p className="text-texto-tenue">Fuente: ARCA. Tocá una categoría para ver todo el detalle. La cuota es el total por mes.</p>
           <a href={escala.fuente} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 font-bold text-primario-oscuro hover:underline">
             Ver en ARCA <Icon name="link-externo" size={16} />
           </a>
