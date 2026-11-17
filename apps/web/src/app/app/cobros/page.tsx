@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { Girando, Numero } from '@/components/Animado';
 import { AvisoApi } from '@/components/AvisoApi';
 import { Confirmar } from '@/components/Confirmar';
-import { ChipCobro, TablaFacturas, TablaSkeleton } from '@/components/TablaFacturas';
+import { ChipCobro, TablaFacturas, TablaSkeleton, nroCorto } from '@/components/TablaFacturas';
 import { Buscador, Segmentos, TarjetaLista } from '@/components/TarjetaLista';
 import { Paginacion } from '@/components/Paginacion';
 import { Facti } from '@/components/Facti';
@@ -40,7 +40,7 @@ export default function Cobros() {
   const buscadas = useMemo(() => {
     const t = q.trim().toLowerCase().replace(/^#/, '');
     if (!t) return filas;
-    return filas.filter((f) => nombreCliente(f).toLowerCase().includes(t) || f.receptor.docNro.includes(t) || String(f.numeroInterno) === t);
+    return filas.filter((f) => nombreCliente(f).toLowerCase().includes(t) || f.receptor.docNro.includes(t) || (/^\d+$/.test(t) && f.numeroInterno === Number(t)));
   }, [filas, q]);
   const visibles = buscadas.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA);
 
@@ -152,7 +152,7 @@ export default function Cobros() {
           <div className="flex flex-col gap-3">
             <dl className="flex flex-col gap-2 rounded-[18px] bg-fondo px-4 py-3.5 text-base">
               <div className="flex justify-between gap-4"><dt className="text-texto-suave">Cliente</dt><dd className="truncate font-semibold">{nombreCliente(aConfirmar)}</dd></div>
-              <div className="flex justify-between gap-4"><dt className="text-texto-suave">Factura</dt><dd className="tabular-nums">{aConfirmar.sigla} #{aConfirmar.numeroInterno} · {numeroComprobante(aConfirmar.puntoVenta, aConfirmar.numero)}</dd></div>
+              <div className="flex justify-between gap-4"><dt className="text-texto-suave">Factura</dt><dd className="tabular-nums">{aConfirmar.sigla} {nroCorto(aConfirmar)} · {numeroComprobante(aConfirmar.puntoVenta, aConfirmar.numero)}</dd></div>
               <div className="flex justify-between gap-4"><dt className="text-texto-suave">Total</dt><dd className="font-bold tabular-nums">{importe(aConfirmar.total, aConfirmar.moneda)}</dd></div>
             </dl>
             <p className="text-base text-texto-suave">Pasa a &quot;Cobradas&quot; y deja de sumar en lo que te deben. Si te equivocás, la podés volver a pendiente.</p>

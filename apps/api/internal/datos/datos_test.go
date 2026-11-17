@@ -140,7 +140,8 @@ func probarContrato(t *testing.T, d Datos) {
 		{Filtro{Desde: "2026-10-01", Hasta: "2026-10-31"}, 3},
 		{Filtro{Q: "lumen"}, 3},
 		{Filtro{Q: "00003-00000002"}, 1},
-		{Filtro{Q: "#2"}, 1}, // número interno
+		{Filtro{Q: "#2"}, 1},    // número interno
+		{Filtro{Q: "#0002"}, 1}, // con los ceros, como se muestra
 		{Filtro{Q: "305000"}, 3},
 		{Filtro{Cobro: Pendiente}, 3},
 		{Filtro{Limite: 2, Saltar: 3}, 1},

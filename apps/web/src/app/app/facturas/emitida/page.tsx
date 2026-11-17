@@ -1,5 +1,6 @@
 'use client';
 
+import { nroCorto } from '@/components/TablaFacturas';
 import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -59,7 +60,7 @@ function FacturaEmitida() {
   }
 
   const DATOS: [string, string][] = [
-    ['Comprobante', `Factura ${f.sigla} #${f.numeroInterno} · ${numeroComprobante(f.puntoVenta, f.numero)}`],
+    ['Comprobante', `Factura ${f.sigla} ${nroCorto(f)} · ${numeroComprobante(f.puntoVenta, f.numero)}`],
     ['Total', pesos(f.total, true)],
     ['Cliente', nombreCliente(f)],
     ['Fecha de emisión', fecha(f.fecha)],

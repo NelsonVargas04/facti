@@ -9,7 +9,7 @@ import { BackLink } from '@/components/BackLink';
 import { Facti } from '@/components/Facti';
 import { ComprobanteC } from '@/components/ComprobanteC';
 import { EscalarComprobante } from '@/components/EscalarComprobante';
-import { ChipCobro, totalFirmado } from '@/components/TablaFacturas';
+import { ChipCobro, totalFirmado, nroCorto } from '@/components/TablaFacturas';
 import { marcarCobro, verComprobante, type ErrorApi } from '@/lib/api';
 import { datosComprobante, nombreCliente } from '@/lib/comprobante';
 import { fecha, importe, numeroComprobante } from '@/lib/formato';
@@ -73,7 +73,7 @@ export default function DetalleFactura() {
         <div className="mt-1 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-[28px] font-bold leading-tight sm:text-[32px]">
-              {NOMBRES[f.sigla] ?? `Factura ${f.sigla}`} #{f.numeroInterno}
+              {NOMBRES[f.sigla] ?? `Factura ${f.sigla}`} {nroCorto(f)}
             </h1>
             <p className="tabular-nums text-texto-suave">Nº oficial {numeroComprobante(f.puntoVenta, f.numero)}</p>
           </div>

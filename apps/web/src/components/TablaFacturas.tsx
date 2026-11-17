@@ -67,8 +67,8 @@ export const th = 'whitespace-nowrap border-b border-[#EDF0F6] px-3 pb-3 pt-1 fo
 export const td = 'px-3 py-3.5 align-middle first:pl-0 last:pr-0';
 export const fila = 'group border-b border-[#F0F2F7] transition-colors last:border-0 hover:bg-fondo/70';
 
-/** Número corto de la app: "#12". El oficial (00001-00000012) queda en el detalle y el PDF. */
-export const nroCorto = (f: Comprobante) => `#${f.numeroInterno}`;
+/** Número corto de la app con 4 dígitos: "#0012". El oficial (00001-00000012) queda en el detalle y el PDF. */
+export const nroCorto = (f: Pick<Comprobante, 'numeroInterno'>) => `#${String(f.numeroInterno).padStart(4, '0')}`;
 
 /** Chip con la sigla del comprobante (C, E, NC…). */
 export function ChipTipo({ sigla }: { sigla: string }) {

@@ -158,7 +158,7 @@ func (m *Memoria) ListarComprobantes(_ context.Context, cuentaID int64, f Filtro
 			continue
 		}
 		if q != "" && !strings.Contains(strings.ToLower(c.Receptor.Nombre), q) && !strings.Contains(c.Receptor.DocNro, q) && !strings.Contains(numeroDe(c), q) &&
-			strings.TrimPrefix(q, "#") != strconv.FormatInt(c.NumeroInterno, 10) {
+			!esNumeroInterno(q, c.NumeroInterno) {
 			continue
 		}
 		c.Items = nil
@@ -299,4 +299,10 @@ func (m *Memoria) GuardarSolicitud(_ context.Context, s *Solicitud) error {
 	s.CreadaEn = m.ahora()
 	m.solicitudes = append(m.solicitudes, *s)
 	return nil
+}
+
+// esNumeroInterno dice si la búsqueda es el número interno ("#0012", "#12" o "12").
+func esNumeroInterno(q string, n int64) bool {
+	v, err := strconv.ParseInt(strings.TrimPrefix(q, "#"), 10, 64)
+	return err == nil && v == n
 }
