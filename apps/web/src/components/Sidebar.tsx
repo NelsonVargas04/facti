@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'motion/react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -41,10 +41,11 @@ function esActivo(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function ItemMenu({ it, activo }: { it: Item; activo: boolean }) {
+function ItemMenu({ it, activo, onIr }: { it: Item; activo: boolean; onIr: (href: string) => void }) {
   return (
     <Link
       href={it.href}
+      onClick={() => onIr(it.href)}
       aria-current={activo ? 'page' : undefined}
       className={`group relative flex flex-none items-center gap-2 whitespace-nowrap rounded-[14px] px-3 py-2 text-base font-semibold transition-colors duration-150 md:gap-3 md:py-2.5 ${
         activo ? 'text-white' : 'text-texto-suave hover:bg-fondo hover:text-texto'
@@ -78,6 +79,10 @@ function iniciales(nombre: string) {
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  // Al tocar un ítem, la píldora se mueve en el acto, sin esperar a que cargue la página.
+  const [destino, setDestino] = useState<string | null>(null);
+  useEffect(() => setDestino(null), [pathname]);
+  const actual = destino ?? pathname;
   const cuenta = useApi(verCuenta, []);
   const sesion = useSesion();
   const email = sesion.estado === 'con_sesion' ? sesion.sesion.user.email : undefined;
@@ -114,17 +119,17 @@ export function Sidebar() {
             <div key={g.titulo} className="contents md:flex md:flex-col md:gap-1">
               <span className="hidden px-3 pb-1 text-base font-semibold text-texto-tenue md:block">{g.titulo}</span>
               {g.items.map((it) => (
-                <ItemMenu key={it.href} it={it} activo={esActivo(pathname, it.href)} />
+                <ItemMenu key={it.href} it={it} activo={esActivo(actual, it.href)} onIr={setDestino} />
               ))}
             </div>
           ))}
           <span className="contents md:hidden">
-            <ItemMenu it={{ href: '/app/configuracion', label: 'Configuración', icon: 'config' }} activo={esActivo(pathname, '/app/configuracion')} />
+            <ItemMenu it={{ href: '/app/configuracion', label: 'Configuración', icon: 'config' }} activo={esActivo(actual, '/app/configuracion')} onIr={setDestino} />
           </span>
         </nav>
 
         <div className="mt-auto hidden flex-col gap-1 md:flex">
-          <ItemMenu it={{ href: '/app/configuracion', label: 'Configuración', icon: 'config' }} activo={esActivo(pathname, '/app/configuracion')} />
+          <ItemMenu it={{ href: '/app/configuracion', label: 'Configuración', icon: 'config' }} activo={esActivo(actual, '/app/configuracion')} onIr={setDestino} />
 
           {/* Cuenta: quién sos arriba; abajo el CUIT y el botón para salir. */}
           <div className="mt-2 flex flex-col gap-2.5 rounded-[20px] bg-fondo p-3">
