@@ -72,12 +72,12 @@ export default function Inicio() {
       {/* Encabezado */}
       <div className="aparece flex flex-wrap items-center justify-between gap-5">
         <div>
-          <h1 className="text-[34px] font-bold">{nombre ? `Hola, ${nombrePila(nombre)}` : 'Hola'}</h1>
+          <h1 className="text-[28px] font-bold leading-tight sm:text-[34px]">{nombre ? `Hola, ${nombrePila(nombre)}` : 'Hola'}</h1>
           <p className="text-texto-suave">{r ? `Este es el resumen de ${mes}.` : 'Tu resumen del mes.'}</p>
         </div>
         {r && (
-          <div className="entra flex items-center gap-1">
-            <div className="f-pop max-w-[300px] rounded-[20px_20px_6px_20px] bg-white px-4 py-3 text-base font-semibold shadow-[0_8px_20px_rgba(21,25,58,0.08)]">
+          <div className="entra flex w-full items-center gap-1 sm:w-auto">
+            <div className="f-pop flex-1 rounded-[20px] bg-white px-4 py-3 text-base font-semibold shadow-[0_8px_20px_rgba(21,25,58,0.08)] sm:max-w-[300px] sm:flex-none sm:rounded-[20px_20px_6px_20px]">
               {r.delMes.emitidos === 0 && pendientes === 0 ? (
                 <>Todavía no emitiste facturas este mes. <Link href="/app/facturas/nueva" className="text-primario-oscuro underline">¿Hacemos la primera?</Link></>
               ) : pendientes > 0 ? (
@@ -86,7 +86,9 @@ export default function Inicio() {
                 <>¡Tenés todo cobrado! Buen trabajo.</>
               )}
             </div>
-            <Facti pose="alerta" size={110} animated={false} />
+            <span className="hidden sm:block">
+              <Facti pose="alerta" size={110} animated={false} />
+            </span>
           </div>
         )}
       </div>
@@ -95,26 +97,26 @@ export default function Inicio() {
 
       {/* Stat cards */}
       {(r || resumen.estado === 'cargando') && (
-        <div className={`grid gap-[18px] [grid-template-columns:repeat(auto-fit,minmax(210px,1fr))] ${r ? 'cascada' : ''}`}>
+        <div className={`grid grid-cols-2 gap-3 sm:gap-[18px] xl:grid-cols-4 ${r ? 'cascada' : ''}`}>
           {r
             ? stats.map((s) => (
                 // Cada tarjeta lleva a su pantalla: reemplaza la fila de botones "Ver cobros / Ver clientes".
                 <Link
                   key={s.label}
                   href={s.href}
-                  className="card-hover group flex flex-col gap-1.5 rounded-tarjeta bg-superficie px-6 py-[22px] shadow-tarjeta outline-none focus-visible:ring-2 focus-visible:ring-primario"
+                  className="card-hover group row-span-3 grid grid-rows-subgrid content-start gap-y-1.5 rounded-tarjeta bg-superficie px-4 py-4 shadow-tarjeta sm:px-6 sm:py-[22px] outline-none focus-visible:ring-2 focus-visible:ring-primario"
                 >
-                  <span className="flex items-center justify-between gap-2 text-base font-semibold text-texto-tenue">
-                    <span className="whitespace-nowrap">{s.label}</span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="flex-none opacity-0 transition-[opacity,transform] duration-150 group-hover:translate-x-0.5 group-hover:opacity-100">
+                  <span className="flex items-start justify-between gap-2 text-base font-semibold text-texto-tenue">
+                    <span className="min-w-0">{s.label}</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="mt-1 flex-none opacity-0 transition-[opacity,transform] duration-150 group-hover:translate-x-0.5 group-hover:opacity-100">
                       <path d="M9 6l6 6-6 6" />
                     </svg>
                   </span>
-                  <span className="whitespace-nowrap font-display text-[32px] font-semibold tabular-nums"><Numero valor={s.valor} formato={pesos} /></span>
+                  <span className="self-end whitespace-nowrap font-display text-[22px] font-semibold leading-tight tabular-nums sm:text-[32px]"><Numero valor={s.valor} formato={pesos} /></span>
                   <span className="text-base text-texto-suave">{s.nota}</span>
                 </Link>
               ))
-            : [0, 1, 2, 3].map((i) => <div key={i} className="skeleton h-[122px] rounded-tarjeta" />)}
+            : [0, 1, 2, 3].map((i) => <div key={i} className="skeleton row-span-3 h-[122px] rounded-tarjeta" />)}
         </div>
       )}
 

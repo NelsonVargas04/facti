@@ -26,10 +26,10 @@ export default function Clientes() {
     <>
       <div className="aparece flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-[34px] font-bold">Clientes</h1>
-          <p className="text-texto-suave">Tus clientes y cuánto les facturaste. Se guardan solos cuando les hacés una factura.</p>
+          <h1 className="text-[28px] font-bold leading-tight sm:text-[34px]">Clientes</h1>
+          <p className="hidden text-texto-suave sm:block">Tus clientes y cuánto les facturaste. Se guardan solos cuando les hacés una factura.</p>
         </div>
-        <Link href="/app/facturas/nueva" className="btn-lift flex h-12 items-center gap-2 rounded-full bg-primario px-6 font-bold text-white shadow-boton">
+        <Link href="/app/facturas/nueva" className="btn-lift hidden h-12 items-center gap-2 rounded-full bg-primario px-6 font-bold text-white shadow-boton md:flex">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="10" cy="8" r="4" /><path d="M3 20c0-3.9 3.1-7 7-7M18 14v6M15 17h6" /></svg>
           Facturar a un cliente nuevo
         </Link>
@@ -37,14 +37,14 @@ export default function Clientes() {
 
       {/* Stats */}
       {lista.dato && !qDemorado && (
-        <div className="cascada grid gap-[18px] [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
-          <div className="flex flex-col gap-1 rounded-tarjeta bg-superficie px-6 py-5 shadow-tarjeta">
+        <div className="cascada grid grid-cols-2 gap-3 sm:gap-[18px]">
+          <div className="row-span-3 grid grid-rows-subgrid content-start gap-y-1 rounded-tarjeta bg-superficie px-4 py-4 shadow-tarjeta sm:px-6 sm:py-5">
             <span className="text-base font-semibold text-texto-tenue">Clientes</span>
-            <span className="font-display text-[30px] font-semibold tabular-nums"><Numero valor={clientes.length} formato={String} /></span>
+            <span className="self-end font-display text-[22px] font-semibold leading-tight tabular-nums sm:text-[30px]"><Numero valor={clientes.length} formato={String} /></span>
           </div>
-          <div className="flex flex-col gap-1 rounded-tarjeta bg-superficie px-6 py-5 shadow-tarjeta">
+          <div className="row-span-3 grid grid-rows-subgrid content-start gap-y-1 rounded-tarjeta bg-superficie px-4 py-4 shadow-tarjeta sm:px-6 sm:py-5">
             <span className="text-base font-semibold text-texto-tenue">Comprobantes emitidos</span>
-            <span className="font-display text-[30px] font-semibold tabular-nums"><Numero valor={totalComprobantes} formato={String} /></span>
+            <span className="self-end font-display text-[22px] font-semibold leading-tight tabular-nums sm:text-[30px]"><Numero valor={totalComprobantes} formato={String} /></span>
           </div>
         </div>
       )}
@@ -62,8 +62,29 @@ export default function Clientes() {
         ) : !lista.dato ? (
           <TablaSkeleton filas={4} />
         ) : clientes.length > 0 ? (
-          <div className="overflow-y-hidden overflow-x-auto">
-            <table className="w-full min-w-[640px] border-collapse text-base">
+          <div className="@container">
+            {/* Con poco ancho, lista; si entra, tabla. */}
+            <ul className="cascada flex flex-col divide-y divide-[#F0F2F7] @min-[960px]:hidden" key={`l-${qDemorado}`}>
+              {clientes.map((c) => (
+                <li key={c.id} className="flex items-start gap-3 py-3.5">
+                  <span className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate font-semibold">{c.nombre ? nombrePropio(c.nombre) : formatearCuit(c.docNro)}</span>
+                    <span className="truncate tabular-nums text-texto-tenue">
+                      {DOC[c.docTipo] ?? 'Doc.'} {c.docTipo === 96 ? c.docNro : formatearCuit(c.docNro)}
+                    </span>
+                    <span className="truncate text-texto-suave">
+                      {condicionTexto(c)} · {c.comprobantes} {c.comprobantes === 1 ? 'comprobante' : 'comprobantes'}
+                    </span>
+                  </span>
+                  <span className="flex flex-none flex-col items-end">
+                    <span className="whitespace-nowrap font-semibold tabular-nums">{pesos(c.facturado)}</span>
+                    {c.porCobrar > 0 && <span className="whitespace-nowrap font-semibold tabular-nums text-aviso-texto">Debe {pesos(c.porCobrar)}</span>}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <div className="hidden overflow-y-hidden overflow-x-auto @min-[960px]:block">
+            <table className="w-full border-collapse text-base">
               <thead>
                 <tr className="text-base text-texto-tenue">
                   <th className={`${th} text-left`}>Cliente</th>
@@ -94,6 +115,7 @@ export default function Clientes() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         ) : qDemorado ? (
           <p className="py-10 text-center text-texto-suave">No encontramos clientes con esa búsqueda.</p>

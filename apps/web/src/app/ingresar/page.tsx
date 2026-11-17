@@ -1,7 +1,8 @@
 'use client';
 
-import { Suspense, useState, type FormEvent } from 'react';
+import { Suspense, useEffect, useState, type FormEvent } from 'react';
 import Link from 'next/link';
+import { Icon } from '@/components/Icon';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Girando } from '@/components/Animado';
 import { BotonGoogle } from '@/components/BotonGoogle';
@@ -28,7 +29,19 @@ export default function IngresarPagina() {
 
 function Ingresar() {
   const router = useRouter();
-  const volver = rutaSegura(useSearchParams().get('volver'));
+  const params = useSearchParams();
+  const volver = rutaSegura(params.get('volver'));
+  const [porInactividad, setPorInactividad] = useState(params.get('motivo') === 'inactividad');
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem('facti.motivoSalida') === 'inactividad') {
+        setPorInactividad(true);
+        sessionStorage.removeItem('facti.motivoSalida');
+      }
+    } catch {
+      /* sin almacenamiento */
+    }
+  }, []);
   const [email, setEmail] = useState('');
   const [clave, setClave] = useState('');
   const [enviando, setEnviando] = useState(false);
@@ -85,6 +98,15 @@ function Ingresar() {
         <h1 className="text-[30px] font-bold leading-tight sm:text-[34px]">Hola de nuevo</h1>
         <p className="text-texto-suave">Entrá para seguir facturando.</p>
       </div>
+
+      {porInactividad && (
+        <p role="status" className="flex items-start gap-3 rounded-[16px] bg-aviso-suave px-4 py-3 text-aviso-texto">
+          <Icon name="candado" size={20} className="mt-0.5 flex-none" />
+          <span>
+            <strong>Cerramos tu sesión</strong> porque pasaron 10 minutos sin actividad. Volvé a entrar con tu email y tu contraseña.
+          </span>
+        </p>
+      )}
 
       <BotonGoogle volver={volver} onError={setError} />
 

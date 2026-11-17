@@ -13,6 +13,7 @@ import {
   CheckCircle,
   ClockCountdown,
   CopySimple,
+  DotsThreeOutline,
   Crown,
   DownloadSimple,
   EnvelopeSimple,
@@ -63,6 +64,7 @@ const ICONOS = {
   cobros: Wallet,
   monotributo: ChartLineUp,
   config: GearSix,
+  menu: DotsThreeOutline,
 
   // Acciones
   mas: Plus,

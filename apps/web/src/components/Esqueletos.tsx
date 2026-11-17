@@ -27,7 +27,7 @@ export function EsqueletoListado({ conResumen = false, boton = false }: { conRes
     <>
       <EsqueletoTitulo boton={boton} />
       {conResumen && (
-        <div className="grid gap-[18px] [grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]">
+        <div className="grid grid-cols-2 gap-3 sm:gap-[18px]">
           <Tarjeta alto="h-[112px]" />
           <Tarjeta alto="h-[112px]" />
         </div>
@@ -49,7 +49,7 @@ export function EsqueletoConfiguracion() {
     <>
       <EsqueletoTitulo />
       <Tarjeta alto="h-[112px]" />
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2">
         {[0, 1, 2, 3].map((i) => (
           <Tarjeta key={i} alto="h-[250px]" />
         ))}

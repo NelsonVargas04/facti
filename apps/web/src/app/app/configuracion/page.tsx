@@ -73,7 +73,7 @@ export default function Configuracion() {
   return (
     <>
       <div className="aparece">
-        <h1 className="text-[34px] font-bold">Configuración</h1>
+        <h1 className="text-[28px] font-bold leading-tight sm:text-[34px]">Configuración</h1>
         <p className="text-texto-suave">Tu perfil fiscal, la conexión con ARCA y tu plan.</p>
       </div>
 
@@ -116,7 +116,7 @@ export default function Configuracion() {
             </section>
           )}
 
-          <div className="grid items-stretch gap-6 md:grid-cols-2">
+          <div className="grid items-stretch gap-6 lg:grid-cols-2">
             <Tarjeta titulo="Datos fiscales" icono="cliente">
               <dl className="flex flex-col divide-y divide-[#EEF1F6]">
                 <Fila k="Condición" v={c.condicion ? CONDICION[c.condicion] ?? c.condicion : ''} />
@@ -184,7 +184,7 @@ export default function Configuracion() {
         cuenta.estado === 'cargando' && (
           <div className="flex flex-col gap-6">
             <div className="skeleton h-[112px] rounded-tarjeta" />
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-6 lg:grid-cols-2">
               {[0, 1, 2, 3].map((i) => <div key={i} className="skeleton h-[240px] rounded-tarjeta" />)}
             </div>
           </div>

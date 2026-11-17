@@ -52,25 +52,41 @@ export default function Cobros() {
 
   const r = resumen.dato;
 
+  // Botón de cada factura: marcarla como cobrada (con confirmación) o deshacer.
+  const accion = (f: Comprobante) =>
+      f.cobro === 'pendiente' ? (
+        <button type="button" disabled={marcando === f.id} onClick={() => setAConfirmar(f)} className="btn-lift inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full bg-exito px-3.5 text-base font-bold text-white disabled:opacity-60">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+          {marcando === f.id ? (<><Girando size={14} />Guardando…</>) : 'Marcar cobrada'}
+        </button>
+      ) : (
+        <span className="inline-flex items-center gap-2">
+          <ChipCobro estado={f.cobro} />
+          <button type="button" disabled={marcando === f.id} onClick={() => marcar(f.id, 'pendiente')} className="text-base font-semibold text-texto-tenue underline-offset-2 hover:text-texto hover:underline disabled:opacity-60">
+            Deshacer
+          </button>
+        </span>
+      );
+
   return (
     <>
       <div className="aparece">
-        <h1 className="text-[34px] font-bold">Cobros</h1>
-        <p className="text-texto-suave">Marcá tus facturas como cobradas y seguí lo que te deben.</p>
+        <h1 className="text-[28px] font-bold leading-tight sm:text-[34px]">Cobros</h1>
+        <p className="hidden text-texto-suave sm:block">Marcá tus facturas como cobradas y seguí lo que te deben.</p>
       </div>
 
       {/* Stats */}
-      <div style={{ animationDelay: '20ms' }} className="aparece grid gap-[18px] [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
+      <div style={{ animationDelay: '20ms' }} className="aparece grid grid-cols-2 gap-3 sm:gap-[18px]">
         {r ? (
           <>
-            <div className="entra flex flex-col gap-1 rounded-tarjeta bg-superficie px-6 py-5 shadow-tarjeta">
+            <div className="entra row-span-3 grid grid-rows-subgrid content-start gap-y-1 rounded-tarjeta bg-superficie px-4 py-4 shadow-tarjeta sm:px-6 sm:py-5">
               <span className="text-base font-semibold text-texto-tenue">Por cobrar</span>
-              <span className="font-display text-[30px] font-semibold tabular-nums"><Numero valor={r.porCobrar.total} formato={pesos} /></span>
+              <span className="self-end font-display text-[22px] font-semibold leading-tight tabular-nums sm:text-[30px]"><Numero valor={r.porCobrar.total} formato={pesos} /></span>
               <span className="text-base text-texto-suave">{r.porCobrar.facturas} {r.porCobrar.facturas === 1 ? 'factura pendiente' : 'facturas pendientes'}</span>
             </div>
-            <div style={{ '--i': 1 } as React.CSSProperties} className="entra flex flex-col gap-1 rounded-tarjeta bg-superficie px-6 py-5 shadow-tarjeta">
+            <div style={{ '--i': 1 } as React.CSSProperties} className="entra row-span-3 grid grid-rows-subgrid content-start gap-y-1 rounded-tarjeta bg-superficie px-4 py-4 shadow-tarjeta sm:px-6 sm:py-5">
               <span className="text-base font-semibold text-texto-tenue">Cobrado este mes</span>
-              <span className="font-display text-[30px] font-semibold tabular-nums"><Numero valor={r.delMes.cobrado} formato={pesos} /></span>
+              <span className="self-end font-display text-[22px] font-semibold leading-tight tabular-nums sm:text-[30px]"><Numero valor={r.delMes.cobrado} formato={pesos} /></span>
               <span className="text-base text-texto-suave">{r.delMes.cobradas} {r.delMes.cobradas === 1 ? 'factura cobrada' : 'facturas cobradas'}</span>
             </div>
           </>
@@ -101,8 +117,33 @@ export default function Cobros() {
         ) : !lista.dato ? (
           <TablaSkeleton filas={4} />
         ) : filas.length > 0 ? (
-          <div key={filtro} className="entra overflow-x-auto">
-            <table className="w-full min-w-[720px] border-collapse text-base">
+          <div key={filtro} className="entra @container">
+            {/* Con poco ancho, lista; si entra, tabla. */}
+            <ul className="flex flex-col divide-y divide-[#F0F2F7] @min-[720px]:hidden">
+              <AnimatePresence initial={false}>
+                {filas.map((f) => (
+                  <motion.li
+                    key={f.id}
+                    layout
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: 24 }}
+                    transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+                    className="flex flex-col gap-3 py-3.5"
+                  >
+                    <Link href={`/app/facturas/${f.id}`} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1">
+                      <span className={`row-span-2 inline-flex h-10 min-w-[40px] items-center justify-center rounded-[12px] px-2 font-bold ${colorTipo(f.sigla)}`}>{f.sigla}</span>
+                      <span className="truncate font-semibold">{nombreCliente(f)}</span>
+                      <span className="whitespace-nowrap text-right font-semibold tabular-nums">{importe(f.total, f.moneda)}</span>
+                      <span className="col-span-2 truncate tabular-nums text-texto-tenue">{numeroComprobante(f.puntoVenta, f.numero)} · {fechaCorta(f.fecha)}</span>
+                    </Link>
+                    <div className="flex justify-end">{accion(f)}</div>
+                  </motion.li>
+                ))}
+              </AnimatePresence>
+            </ul>
+            <div className="hidden overflow-x-auto @min-[720px]:block">
+            <table className="w-full border-collapse text-base">
               <thead>
                 <tr className="text-base text-texto-tenue">
                   <th className={`${th} text-center`}>Tipo</th>
@@ -133,26 +174,14 @@ export default function Cobros() {
                     <td className={`${td} whitespace-nowrap font-semibold`}>{nombreCliente(f)}</td>
                     <td className={`${td} whitespace-nowrap tabular-nums text-texto-suave`}>{fechaCorta(f.fecha)}</td>
                     <td className={`${td} text-right font-semibold tabular-nums`}>{importe(f.total, f.moneda)}</td>
-                    <td className={`${td} text-right`}>
-                      {f.cobro === 'pendiente' ? (
-                        <button type="button" disabled={marcando === f.id} onClick={() => setAConfirmar(f)} className="btn-lift inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-full bg-exito px-3.5 text-base font-bold text-white disabled:opacity-60">
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
-                          {marcando === f.id ? (<><Girando size={14} />Guardando…</>) : 'Marcar cobrada'}
-                        </button>
-                      ) : (
-                        <span className="inline-flex items-center gap-2">
-                          <ChipCobro estado={f.cobro} />
-                          <button type="button" disabled={marcando === f.id} onClick={() => marcar(f.id, 'pendiente')} className="text-base font-semibold text-texto-tenue underline-offset-2 hover:text-texto hover:underline disabled:opacity-60">
-                            Deshacer
-                          </button>
-                        </span>
-                      )}
+                    <td className={`${td} text-right`}>{accion(f)}
                     </td>
                   </motion.tr>
                 ))}
                 </AnimatePresence>
               </tbody>
             </table>
+            </div>
           </div>
         ) : (
           <p className="py-10 text-center text-texto-suave">

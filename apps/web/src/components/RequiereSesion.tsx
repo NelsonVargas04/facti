@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import { CierrePorInactividad } from '@/components/CierrePorInactividad';
 import { Facti } from '@/components/Facti';
 import { useSesion } from '@/lib/sesion';
 
@@ -15,7 +16,14 @@ export function RequiereSesion({ children }: { children: React.ReactNode }) {
     if (sesion.estado === 'sin_sesion') router.replace(`/ingresar?volver=${encodeURIComponent(ruta)}`);
   }, [sesion.estado, router, ruta]);
 
-  if (sesion.estado === 'con_sesion') return <>{children}</>;
+  if (sesion.estado === 'con_sesion') {
+    return (
+      <>
+        {children}
+        <CierrePorInactividad />
+      </>
+    );
+  }
   if (sesion.estado === 'sin_configurar') {
     return (
       <div role="alert" className="mx-auto flex max-w-[520px] flex-col items-center gap-3 px-4 py-20 text-center">

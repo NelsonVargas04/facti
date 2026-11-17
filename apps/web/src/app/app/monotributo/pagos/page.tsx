@@ -7,6 +7,10 @@ import { Icon } from '@/components/Icon';
 import { Select } from '@/components/Select';
 import { ComprobantePagoVEP, type DatosPagoVEP } from '@/components/ComprobantePagoVEP';
 import { PLAN_DEMO } from '@/lib/plan-demo';
+import { Recategorizacion, ResumenMonotributo } from '@/components/monotributo/Pestanas';
+import { verCuenta, verResumen } from '@/lib/api';
+import { formatearCuit } from '@/lib/formato';
+import { useApi } from '@/lib/useApi';
 
 /** Los recordatorios de vencimiento son exclusivos del plan Pro. */
 const ES_PRO = PLAN_DEMO.plan !== 'Gratis';
@@ -87,7 +91,10 @@ function Externo() {
 }
 
 export default function MonotributoPagos() {
-  const [tab, setTab] = useState('pagos');
+  const [tab, setTab] = useState('resumen');
+  const cuenta = useApi(verCuenta, []);
+  const resumen = useApi(() => verResumen(), []);
+  const c = cuenta.dato?.cuenta;
   const [q, setQ] = useState('');
   const [estado, setEstado] = useState('todos');
   const [orden, setOrden] = useState('reciente');
@@ -117,22 +124,28 @@ export default function MonotributoPagos() {
       {/* Encabezado + tabs */}
       <div className="aparece flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-[34px] font-bold">Monotributo</h1>
-          <p className="text-texto-suave">Categoría C · Servicios · CUIT 27-31456789-4</p>
+          <h1 className="text-[28px] font-bold leading-tight sm:text-[34px]">Monotributo</h1>
+          <p className="text-texto-suave">{c ? [c.categoria && `Categoría ${c.categoria}`, c.cuit && `CUIT ${formatearCuit(c.cuit)}`].filter(Boolean).join(' · ') : ' '}</p>
         </div>
-        <nav aria-label="Secciones de monotributo" className="inline-flex max-w-full gap-1 overflow-x-auto rounded-input bg-[#E8EBF2] p-1 [scrollbar-width:none]">
-          {[['resumen', 'Resumen'], ['pagos', 'Pagos'], ['recategorizacion', 'Recategorización']].map(([id, label]) => {
+        <nav aria-label="Secciones de monotributo" className="grid w-full grid-cols-3 gap-1 rounded-input bg-[#E8EBF2] p-1 sm:inline-flex sm:w-auto">
+          {[['resumen', 'Resumen', 'Resumen'], ['pagos', 'Pagos', 'Pagos'], ['recategorizacion', 'Recategorización', 'Categoría']].map(([id, label, corto]) => {
             const on = tab === id;
             return (
               <button key={id} type="button" onClick={() => setTab(id)} aria-current={on ? 'page' : undefined}
-                className={`whitespace-nowrap rounded-xl px-4 py-2.5 transition-colors sm:px-[18px] ${on ? 'bg-white font-bold text-texto shadow-[0_2px_8px_rgba(21,25,58,0.08)]' : 'font-semibold text-texto-suave hover:text-texto'}`}>
-                {label}
+                className={`whitespace-nowrap rounded-xl px-2 py-2.5 transition-colors sm:px-[18px] ${on ? 'bg-white font-bold text-texto shadow-[0_2px_8px_rgba(21,25,58,0.08)]' : 'font-semibold text-texto-suave hover:text-texto'}`}>
+                <span className="sm:hidden">{corto}</span>
+                <span className="hidden sm:inline">{label}</span>
               </button>
             );
           })}
         </nav>
       </div>
 
+      {tab === 'resumen' && <ResumenMonotributo resumen={resumen} cuenta={c} />}
+      {tab === 'recategorizacion' && <Recategorizacion resumen={resumen} cuenta={c} />}
+
+      {tab === 'pagos' && (
+      <>
       {/* Cuota + recordatorio */}
       <div style={{ animationDelay: '20ms' }} className="aparece flex flex-wrap items-stretch gap-6">
         <section className="flex min-w-0 flex-[999_1_480px] flex-col gap-4 rounded-tarjeta bg-superficie p-7 shadow-tarjeta">
@@ -242,12 +255,40 @@ export default function MonotributoPagos() {
           </div>
 
           {visibles.length > 0 ? (
-            <div className="overflow-y-hidden overflow-x-auto">
-              <table className="w-full min-w-[640px] border-collapse text-base">
+            <div className="@container">
+              {/* Con poco ancho, lista; si entra, tabla. */}
+              <ul className="flex flex-col gap-1 @min-[720px]:hidden">
+                {visibles.map((h) => {
+                  const on = h.id === selId;
+                  return (
+                    <li key={h.id}>
+                      <button
+                        type="button"
+                        onClick={() => setSelId(h.id)}
+                        aria-current={on ? 'true' : undefined}
+                        className={`flex w-full items-start gap-3 rounded-[14px] px-3 py-3 text-left transition-colors ${on ? 'bg-primario-suave/60' : 'hover:bg-fondo'}`}
+                      >
+                        <span className="flex min-w-0 flex-1 flex-col gap-1">
+                          <span className="font-semibold">{h.periodo}</span>
+                          <span className="text-texto-tenue">Vence {h.vence}{h.pagado && h.pagado !== '—' ? ` · Pagado el ${h.pagado}` : ''}</span>
+                        </span>
+                        <span className="flex flex-none flex-col items-end gap-1.5">
+                          <span className="font-semibold tabular-nums">{h.importe}</span>
+                          {h.estado === 'Pagado'
+                          ? <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EAF8F0] px-2.5 py-1 text-base font-semibold text-[#0E5C38] ring-1 ring-inset ring-[#C8EDD8]"><span className="h-[7px] w-[7px] rounded-full bg-[#1E9E63]" />Pagado</span>
+                          : <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FFF6E1] px-2.5 py-1 text-base font-semibold text-[#7A5200] ring-1 ring-inset ring-[#F3E1A6]"><span className="h-[7px] w-[7px] rounded-full bg-[#E0A100]" />Pendiente</span>}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            <div className="hidden overflow-y-hidden overflow-x-auto @min-[720px]:block">
+              <table className="w-full border-collapse text-base">
                 <thead>
                   <tr className="text-base text-texto-tenue">
-                    {['PERÍODO', 'IMPORTE', 'VENCE', 'PAGADO EL', 'MEDIO', 'ESTADO', ''].map((h, i) => (
-                      <th key={h || 'acc'} className={`border-b-2 border-[#EDF0F6] px-3 pb-3 font-bold ${i === 1 ? 'text-right' : 'text-left'}`}>{h}</th>
+                    {['Período', 'Importe', 'Vence', 'Pagado el', 'Medio', 'Estado', ''].map((h, i) => (
+                      <th key={h || 'acc'} className={`whitespace-nowrap border-b-2 border-[#EDF0F6] px-3 pb-3 font-semibold ${i === 1 ? 'text-right' : 'text-left'}`}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -287,6 +328,7 @@ export default function MonotributoPagos() {
                   })}
                 </tbody>
               </table>
+            </div>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-3 py-10 text-center">
@@ -332,6 +374,8 @@ export default function MonotributoPagos() {
           )}
         </section>
       </div>
+      </>
+      )}
     </>
   );
 }

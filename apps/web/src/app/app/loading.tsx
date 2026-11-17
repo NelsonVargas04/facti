@@ -7,7 +7,7 @@ export default function Loading() {
         <div className="skeleton h-9 w-48" />
         <div className="skeleton h-4 w-56" />
       </div>
-      <div className="grid gap-[18px] [grid-template-columns:repeat(auto-fit,minmax(210px,1fr))]">
+      <div className="grid grid-cols-2 gap-3 sm:gap-[18px] xl:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="skeleton h-[112px] rounded-tarjeta" />
         ))}

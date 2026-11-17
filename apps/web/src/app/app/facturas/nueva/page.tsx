@@ -235,7 +235,7 @@ export default function NuevaFactura() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <BackLink href="/app">Volver al inicio</BackLink>
-          <h1 className="mt-1 text-[34px] font-bold">Nueva factura</h1>
+          <h1 className="mt-1 text-[28px] font-bold leading-tight sm:text-[34px]">Nueva factura</h1>
         </div>
         <span className="inline-flex items-center gap-2.5 rounded-input bg-primario-suave px-4 py-2.5 font-bold text-primario-oscuro">
           <span className="rounded-lg bg-primario px-2.5 py-0.5 text-white">{tipo}</span>
@@ -249,7 +249,7 @@ export default function NuevaFactura() {
           <section className="flex flex-col gap-4 rounded-tarjeta bg-superficie p-7 shadow-tarjeta">
             <div>
               <h2 className="text-[20px] font-bold">Tipo de comprobante</h2>
-              <p className="text-base text-texto-suave">Según tu condición (monotributo) podés emitir C y E. Cada tipo pide solo los datos que le corresponden.</p>
+              <p className="hidden text-base text-texto-suave sm:block">Según tu condición (monotributo) podés emitir C y E. Cada tipo pide solo los datos que le corresponden.</p>
             </div>
             <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(240px,1fr))]">
               {TIPOS.filter((t) => t.hab).map((t) => {
@@ -276,7 +276,7 @@ export default function NuevaFactura() {
             </div>
             {TIPOS.some((t) => !t.hab) && (
               <div className="flex flex-wrap items-center gap-2 text-texto-tenue">
-                <span>Para responsables inscriptos, próximamente:</span>
+                <span>Próximamente:</span>
                 {TIPOS.filter((t) => !t.hab).map((t) => (
                   <span key={t.id} title={t.detalle} className="inline-flex h-8 items-center rounded-full bg-fondo px-3 font-semibold text-texto-suave">
                     {t.nombre}
@@ -327,7 +327,7 @@ export default function NuevaFactura() {
                 ) : padronMsg ? (
                   <Aviso res={padronMsg} />
                 ) : (
-                  <p className="rounded-[18px] bg-fondo px-5 py-4 text-base text-texto-suave">Escribí el CUIT y tocá <strong>Buscar en ARCA</strong> para traer los datos del cliente y su condición frente al IVA.</p>
+                  <p className="hidden rounded-[18px] bg-fondo px-5 py-4 text-base text-texto-suave sm:block">Escribí el CUIT y tocá <strong>Buscar en ARCA</strong> para traer los datos del cliente y su condición frente al IVA.</p>
                 )}
 
                 <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
@@ -380,11 +380,11 @@ export default function NuevaFactura() {
                   </span>
                   <span className="font-semibold text-texto">{incluyeServicio ? 'Sí, cobro por un período de trabajo' : 'No, vendo productos'}</span>
                 </button>
-                <span className="text-base text-texto-tenue">Si está activado, sumamos el período facturado (desde/hasta). Apagalo si vendés productos. Los ítems los agregás abajo como más te convenga.</span>
+                <span className="hidden text-base text-texto-tenue sm:block">Si está activado, sumamos el período facturado (desde/hasta). Apagalo si vendés productos. Los ítems los agregás abajo como más te convenga.</span>
               </div>
             )}
 
-            <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(160px,1fr))]">
+            <div className="grid grid-cols-2 gap-x-3 gap-y-4 [&>*]:min-w-0 sm:gap-4 lg:[grid-template-columns:repeat(auto-fit,minmax(160px,1fr))]">
               <label className={labelCls}>Fecha de emisión<input type="text" value={fecha} onChange={(e) => setFecha(e.target.value)} className={inputCls} /></label>
               {esE ? (
                 <>
@@ -407,8 +407,44 @@ export default function NuevaFactura() {
 
             <div className="flex flex-col gap-2">
               <span className="text-base font-semibold">Detalle</span>
-              <div className="overflow-y-hidden overflow-x-auto">
-                <table className="w-full min-w-[640px] border-separate border-spacing-y-2">
+              <div className="@container">
+              {/* Con poco ancho cada ítem es una tarjeta con los campos apilados; si entra, una tabla. */}
+              <div className="flex flex-col gap-3 @min-[620px]:hidden">
+                {items.map((it, i) => (
+                  <div key={it.id} className="flex flex-col gap-3 rounded-[18px] border-[1.5px] border-[#E6E9F1] p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="font-bold">Ítem {i + 1}</span>
+                      <button type="button" onClick={() => quitar(it.id)} aria-label="Quitar ítem" disabled={items.length === 1} className="rounded-lg p-2 text-texto-tenue transition-colors hover:bg-fondo hover:text-[#D9466F] disabled:opacity-30">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                      </button>
+                    </div>
+                    <label className="flex flex-col gap-1.5 font-semibold">
+                      Descripción
+                      <input type="text" value={it.desc} onChange={(e) => actualizar(it.id, 'desc', e.target.value)} className={inputCls} placeholder="Ej: Diseño de logo" />
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className="flex min-w-0 flex-col gap-1.5 font-semibold">
+                        Cantidad
+                        <input type="text" inputMode="decimal" value={it.cant} onChange={(e) => actualizar(it.id, 'cant', e.target.value)} className={inputCls} />
+                      </label>
+                      <div className="flex min-w-0 flex-col gap-1.5 font-semibold">
+                        Unidad
+                        <Select ariaLabel="Unidad de medida" value={it.unidad} onChange={(v) => actualizar(it.id, 'unidad', v)} options={UNIDADES} />
+                      </div>
+                    </div>
+                    <label className="flex flex-col gap-1.5 font-semibold">
+                      Precio unitario
+                      <input type="text" inputMode="decimal" value={it.precio} onChange={(e) => actualizar(it.id, 'precio', e.target.value)} onBlur={(e) => actualizar(it.id, 'precio', e.target.value.trim() ? fmtNum(parseNum(e.target.value)) : '')} className={inputCls} placeholder="0,00" />
+                    </label>
+                    <div className="flex items-center justify-between border-t border-dashed border-borde pt-3">
+                      <span className="text-texto-suave">Subtotal</span>
+                      <span className="font-bold tabular-nums">{fmt(parseNum(it.cant) * parseNum(it.precio), simboloMoneda)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="hidden overflow-y-hidden overflow-x-auto @min-[620px]:block">
+                <table className="w-full border-separate border-spacing-y-2">
                   <thead>
                     <tr className="text-left text-base text-texto-tenue">
                       <th className="px-1 pb-1">Descripción</th>
@@ -436,6 +472,7 @@ export default function NuevaFactura() {
                     ))}
                   </tbody>
                 </table>
+              </div>
               </div>
               <button type="button" onClick={agregar} className="flex items-center gap-2 self-start rounded-input border-[1.5px] border-dashed border-[#B9BED3] px-[18px] py-3 text-base font-bold text-primario-oscuro transition-colors hover:border-primario hover:bg-fondo">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>

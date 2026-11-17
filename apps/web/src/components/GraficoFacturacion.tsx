@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { obtenerParametro } from '@facti/shared/src/parametros';
 import { pesos } from '@/lib/formato';
@@ -49,27 +50,39 @@ export function GraficoFacturacion({ porMes, total, categoria }: { porMes: Mes[]
   });
   const tope = topeDe(categoria);
   const pct = tope ? Math.min(100, Math.round((total / tope) * 100)) : null;
+  // En el celular el eje de montos se esconde: el detalle de cada mes está al tocar la barra.
+  const [angosto, setAngosto] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 639px)');
+    const ver = () => setAngosto(mq.matches);
+    ver();
+    mq.addEventListener('change', ver);
+    return () => mq.removeEventListener('change', ver);
+  }, []);
 
   return (
     <section className="flex flex-col gap-5 rounded-tarjeta bg-superficie p-6 shadow-tarjeta">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex flex-col gap-1">
-          <h2 className="text-[20px] font-bold">Tu facturación de los últimos 12 meses</h2>
-          <p className="text-base text-texto-suave">
+          <h2 className="text-[20px] font-bold">
+            <span className="sm:hidden">Últimos 12 meses</span>
+            <span className="hidden sm:inline">Tu facturación de los últimos 12 meses</span>
+          </h2>
+          <p className="hidden text-base text-texto-suave sm:block">
             {categoria ? `Es lo que mira ARCA para tu categoría ${categoria.toUpperCase()} de monotributo.` : 'Es lo que mira ARCA para tu categoría de monotributo.'}
           </p>
         </div>
-        <div className="text-right">
+        <div className="sm:text-right">
           <div className="font-display text-[26px] font-bold leading-none tabular-nums">{pesos(total)}</div>
-          <div className="mt-1 text-base text-texto-tenue">en 12 meses</div>
+          <div className="mt-1 hidden text-base text-texto-tenue sm:block">en 12 meses</div>
         </div>
       </div>
 
       <div className="h-[200px] w-full" role="img" aria-label={`Gráfico de barras: facturación mensual de ${datos[0]?.nombre ?? ''} a ${datos.at(-1)?.nombre ?? ''}`}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={datos} margin={{ top: 6, right: 0, bottom: 0, left: 0 }} barCategoryGap="22%">
-            <XAxis dataKey="corto" axisLine={false} tickLine={false} tick={{ fill: '#8A90AD', fontSize: 16 }} />
-            <YAxis axisLine={false} tickLine={false} width={80} tick={{ fill: '#8A90AD', fontSize: 16 }} tickFormatter={corto} />
+            <XAxis dataKey="corto" axisLine={false} tickLine={false} interval={angosto ? 2 : 0} tick={{ fill: '#8A90AD', fontSize: 16 }} />
+            <YAxis hide={angosto} axisLine={false} tickLine={false} width={80} tick={{ fill: '#8A90AD', fontSize: 16 }} tickFormatter={corto} />
             <Tooltip content={<Globo />} cursor={{ fill: 'rgba(59,63,216,0.06)', radius: 10 }} />
             <Bar dataKey="facturado" radius={[8, 8, 8, 8]} animationDuration={700} animationEasing="ease-out">
               {datos.map((d, i) => (

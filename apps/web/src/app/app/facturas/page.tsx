@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { AvisoApi } from '@/components/AvisoApi';
 import { Facti } from '@/components/Facti';
+import { Paginacion } from '@/components/Paginacion';
 import { Select } from '@/components/Select';
 import { TablaFacturas, TablaSkeleton } from '@/components/TablaFacturas';
 import { listarComprobantes, type Cobro } from '@/lib/api';
@@ -47,7 +48,6 @@ function rangoDe(periodo: string): { desde?: string; hasta?: string } {
   }
 }
 
-const POR_PAGINA = 10;
 
 export default function Facturas() {
   const [q, setQ] = useState('');
@@ -55,22 +55,21 @@ export default function Facturas() {
   const [periodo, setPeriodo] = useState('mes');
   const [orden, setOrden] = useState('reciente');
   const [pagina, setPagina] = useState(1);
+  const [porPagina, setPorPagina] = useState(10);
   const qDemorado = useDemorado(q.trim());
 
   useEffect(() => setPagina(1), [qDemorado, filtro, orden, periodo]);
 
   const filtroApi = useMemo(
-    () => ({ ...rangoDe(periodo), q: qDemorado, cobro: COBRO[filtro], orden, limite: POR_PAGINA, saltar: (pagina - 1) * POR_PAGINA }),
-    [periodo, qDemorado, filtro, orden, pagina],
+    () => ({ ...rangoDe(periodo), q: qDemorado, cobro: COBRO[filtro], orden, limite: porPagina, saltar: (pagina - 1) * porPagina }),
+    [periodo, qDemorado, filtro, orden, pagina, porPagina],
   );
   const lista = useApi(() => listarComprobantes(filtroApi), [filtroApi]);
 
   const total = lista.dato?.total ?? 0;
   const visibles = lista.dato?.comprobantes ?? [];
-  const totalPaginas = Math.max(1, Math.ceil(total / POR_PAGINA));
+  const totalPaginas = Math.max(1, Math.ceil(total / porPagina));
   const paginaActual = Math.min(pagina, totalPaginas);
-  const desde = total ? (paginaActual - 1) * POR_PAGINA + 1 : 0;
-  const hasta = Math.min(paginaActual * POR_PAGINA, total);
   const hayFiltros = qDemorado !== '' || filtro !== 'todas' || periodo !== 'todas';
 
   return (
@@ -78,45 +77,34 @@ export default function Facturas() {
       {/* Encabezado */}
       <div className="aparece flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-[34px] font-bold">Facturas</h1>
+          <h1 className="text-[28px] font-bold leading-tight sm:text-[34px]">Facturas</h1>
           <p className="text-texto-suave">Todas tus facturas emitidas, en un solo lugar.</p>
         </div>
-        <Link href="/app/facturas/nueva" className="btn-lift flex h-12 items-center gap-2 rounded-full bg-primario px-6 font-bold text-white shadow-boton">
+        <Link href="/app/facturas/nueva" className="btn-lift hidden h-12 items-center gap-2 rounded-full bg-primario px-6 font-bold text-white shadow-boton md:flex">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
           Emitir factura
         </Link>
       </div>
 
-      {/* Filtros separados */}
-      <div style={{ animationDelay: '20ms' }} className="aparece flex flex-wrap items-end gap-4">
-        <div className="flex min-w-[240px] flex-1 flex-col gap-1.5">
-          <span className="text-base font-semibold">Buscar</span>
-          <div className="flex h-12 items-center gap-2 rounded-input border-[1.5px] border-borde bg-white px-4 transition-colors focus-within:border-primario">
+      {/* Tabla / vacío */}
+      <section style={{ animationDelay: '40ms' }} aria-busy={lista.estado === 'cargando'} className="aparece flex flex-col overflow-hidden rounded-tarjeta bg-superficie shadow-tarjeta md:min-h-[540px]">
+        {/* Buscador y filtros, dentro de la misma tarjeta que la lista. */}
+        <div className="grid grid-cols-2 gap-3 border-b border-[#EDF0F6] p-4 sm:grid-cols-3 sm:p-6 xl:grid-cols-[minmax(240px,1fr)_185px_170px_185px]">
+          <label className="col-span-2 flex h-12 min-w-0 items-center gap-2 rounded-input border-[1.5px] border-borde bg-white px-4 transition-colors focus-within:border-primario sm:col-span-3 xl:col-span-1">
+            <span className="sr-only">Buscar</span>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="flex-none text-texto-tenue"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Cliente o número…"
-              className="h-full w-full bg-transparent text-base text-texto outline-none placeholder:text-texto-tenue"
+              placeholder="Buscar cliente o número…"
+              className="h-full w-full min-w-0 bg-transparent text-base text-texto outline-none placeholder:text-texto-tenue"
             />
-          </div>
+          </label>
+          <div className="min-w-0"><Select ariaLabel="Período" value={periodo} onChange={setPeriodo} options={PERIODOS} /></div>
+          <div className="min-w-0"><Select ariaLabel="Estado" value={filtro} onChange={(v) => setFiltro(v as Filtro)} options={FILTROS_SEL} /></div>
+          <div className="col-span-2 min-w-0 sm:col-span-1"><Select ariaLabel="Ordenar por" value={orden} onChange={setOrden} options={ORDENES} /></div>
         </div>
-        <div className="flex w-[185px] flex-col gap-1.5">
-          <span className="text-base font-semibold">Período</span>
-          <Select ariaLabel="Período" value={periodo} onChange={setPeriodo} options={PERIODOS} />
-        </div>
-        <div className="flex w-[160px] flex-col gap-1.5">
-          <span className="text-base font-semibold">Estado</span>
-          <Select ariaLabel="Estado" value={filtro} onChange={(v) => setFiltro(v as Filtro)} options={FILTROS_SEL} />
-        </div>
-        <div className="flex w-[185px] flex-col gap-1.5">
-          <span className="text-base font-semibold">Ordenar por</span>
-          <Select ariaLabel="Ordenar por" value={orden} onChange={setOrden} options={ORDENES} />
-        </div>
-      </div>
-
-      {/* Tabla / vacío */}
-      <section style={{ animationDelay: '40ms' }} aria-busy={lista.estado === 'cargando'} className="aparece rounded-tarjeta bg-superficie p-6 shadow-tarjeta">
+        <div className="flex flex-1 flex-col p-4 sm:p-6">
         {lista.estado === 'error' && !lista.dato ? (
           <AvisoApi error={lista.error} onReintentar={lista.recargar} />
         ) : !lista.dato ? (
@@ -128,29 +116,23 @@ export default function Facturas() {
               {/* La key cambia con el resultado: las filas nuevas entran en cascada al filtrar o cambiar de página. */}
               <TablaFacturas key={visibles.map((v) => v.id).join(',')} rows={visibles} />
             </div>
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-              <span className="text-base text-texto-tenue">Mostrando {desde}–{hasta} de {total}</span>
-              {totalPaginas > 1 && (
-                <div className="flex items-center gap-1">
-                  <button type="button" onClick={() => setPagina((p) => Math.max(1, p - 1))} disabled={paginaActual === 1} aria-label="Página anterior" className="flex h-9 w-9 items-center justify-center rounded-[10px] border-[1.5px] border-borde text-texto-suave transition-colors hover:border-primario hover:text-primario disabled:opacity-40">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
-                  </button>
-                  {Array.from({ length: totalPaginas }).map((_, i) => {
-                    const npag = i + 1;
-                    const on = npag === paginaActual;
-                    return (
-                      <button key={npag} type="button" onClick={() => setPagina(npag)} aria-current={on ? 'page' : undefined} className={`h-9 min-w-9 rounded-[10px] px-2.5 text-base font-bold transition-colors ${on ? 'bg-primario text-white' : 'text-texto-suave hover:bg-fondo'}`}>{npag}</button>
-                    );
-                  })}
-                  <button type="button" onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))} disabled={paginaActual === totalPaginas} aria-label="Página siguiente" className="flex h-9 w-9 items-center justify-center rounded-[10px] border-[1.5px] border-borde text-texto-suave transition-colors hover:border-primario hover:text-primario disabled:opacity-40">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
-                  </button>
-                </div>
-              )}
+            <div className="mt-auto border-t border-[#EDF0F6] pt-4">
+              <Paginacion
+                total={total}
+                pagina={paginaActual}
+                porPagina={porPagina}
+                onPagina={setPagina}
+                onPorPagina={(n) => {
+                  setPorPagina(n);
+                  setPagina(1);
+                }}
+                singular="factura"
+                plural="facturas"
+              />
             </div>
           </>
         ) : (
-          <div className="flex flex-col items-center gap-3 py-12 text-center">
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 py-12 text-center">
             <Facti pose="durmiendo" size={150} animated />
             <h2 className="text-[20px] font-bold">{hayFiltros ? 'No encontramos facturas' : 'Todavía no emitiste facturas'}</h2>
             <p className="max-w-[360px] text-texto-suave">
@@ -161,6 +143,7 @@ export default function Facturas() {
             )}
           </div>
         )}
+        </div>
       </section>
     </>
   );

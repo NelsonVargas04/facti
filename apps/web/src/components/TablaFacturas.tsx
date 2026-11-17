@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Cobro, Comprobante } from '@/lib/api';
 import { nombreCliente } from '@/lib/comprobante';
@@ -41,22 +42,22 @@ export const totalFirmado = (c: Comprobante) => (c.sigla === 'NC' ? -c.total : c
 
 /** Placeholder animado mientras cargan las facturas. */
 export function TablaSkeleton({ filas = 5 }: { filas?: number }) {
-  const anchos = ['w-10', 'w-32', 'w-40', 'w-12', 'w-20', 'w-24', 'w-20'];
+  // Filas flexibles (no una tabla de ancho fijo): sirve igual en celular y en compu.
   return (
-    <div className="overflow-y-hidden overflow-x-auto">
-      <table className="w-full min-w-[720px] border-collapse">
-        <tbody>
-          {Array.from({ length: filas }).map((_, i) => (
-            <tr key={i} className="border-b border-[#F0F2F7] last:border-0">
-              {anchos.map((w, j) => (
-                <td key={j} className="px-3 py-4">
-                  <div className={`skeleton h-5 ${w} ${j === 0 ? 'rounded-[10px]' : ''}`} />
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="flex flex-col divide-y divide-[#F0F2F7]" aria-hidden="true">
+      {Array.from({ length: filas }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3 py-3.5">
+          <div className="skeleton h-9 w-9 flex-none rounded-[10px]" />
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <div className="skeleton h-5 w-2/5 max-w-[220px]" />
+            <div className="skeleton h-4 w-3/5 max-w-[300px]" />
+          </div>
+          <div className="flex flex-none flex-col items-end gap-2">
+            <div className="skeleton h-5 w-20" />
+            <div className="skeleton h-6 w-24 rounded-full" />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -67,9 +68,29 @@ const td = 'px-4 py-3.5 align-middle';
 /** `compacta` (para el inicio, donde la tarjeta es angosta): el número va debajo del cliente y no hay columna aparte. */
 export function TablaFacturas({ rows, compacta = false }: { rows: Comprobante[]; compacta?: boolean }) {
   const router = useRouter();
+  // Con poco ancho (celular, o la tarjeta angosta del inicio) se muestra como lista; si entra, como tabla.
+  const tabla = compacta ? 'hidden @min-[520px]:block' : 'hidden @min-[820px]:block';
+  const lista = compacta ? '@min-[520px]:hidden' : '@min-[820px]:hidden';
   return (
-    <div className="overflow-y-hidden overflow-x-auto">
-      <table className={`w-full border-collapse text-base ${compacta ? 'min-w-[420px] [&_td]:px-3 [&_th]:px-3' : 'min-w-[620px]'}`}>
+    <div className="@container">
+    <ul className={`cascada flex flex-col divide-y divide-[#F0F2F7] ${lista}`}>
+      {rows.map((f) => {
+        const total = totalFirmado(f);
+        return (
+          <li key={f.id}>
+            <Link href={`/app/facturas/${f.id}`} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 rounded-[12px] py-3 transition-colors hover:bg-fondo">
+              <span className={`row-span-2 inline-flex h-10 min-w-[40px] items-center justify-center rounded-[12px] px-2 font-bold ${colorTipo(f.sigla)}`}>{f.sigla}</span>
+              <span className="truncate font-semibold">{nombreCliente(f)}</span>
+              <span className={`whitespace-nowrap text-right font-semibold tabular-nums ${total < 0 ? 'text-[#B4232B]' : ''}`}>{importe(total, f.moneda)}</span>
+              <span className="truncate tabular-nums text-texto-tenue">{numeroComprobante(f.puntoVenta, f.numero)} · {fechaCorta(f.fecha)}</span>
+              <span className="justify-self-end"><ChipCobro estado={f.cobro} /></span>
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
+    <div className={`overflow-y-hidden overflow-x-auto ${tabla}`}>
+      <table className={`w-full border-collapse text-base ${compacta ? '[&_td]:px-3 [&_th]:px-3' : ''}`}>
         <thead>
           {/* Sin columna "ARCA": Facti solo guarda comprobantes que ARCA ya autorizó, así que siempre decía lo mismo. */}
           <tr className="text-base text-texto-tenue">
@@ -118,6 +139,7 @@ export function TablaFacturas({ rows, compacta = false }: { rows: Comprobante[];
           })}
         </tbody>
       </table>
+    </div>
     </div>
   );
 }
