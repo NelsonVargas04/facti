@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { AvisoApi } from '@/components/AvisoApi';
 import { GraficoFacturacion } from '@/components/GraficoFacturacion';
 import { Icon } from '@/components/Icon';
@@ -97,15 +98,33 @@ export function Recategorizacion({ resumen, cuenta, escala }: { resumen: Estado<
           <li>Elegí &quot;Recategorizarme&quot; y revisá lo que facturaste, los alquileres y la energía que consumiste.</li>
           <li>Si te corresponde otra categoría, confirmala. Si seguís en la misma, no hace falta hacer nada.</li>
         </ol>
-        <a
-          href="https://www.arca.gob.ar/monotributo/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn-lift inline-flex h-11 items-center gap-2 self-start rounded-full bg-primario px-5 font-bold text-white shadow-boton"
+        {/* Video paso a paso: el mismo formato que la guía para conectar Facti con ARCA. */}
+        <Link
+          href="/guias/recategorizacion"
+          className="group flex items-center gap-4 rounded-[18px] bg-fondo p-3 pr-5 transition-colors hover:bg-primario-suave"
         >
-          Ir a Monotributo en ARCA
-          <Icon name="link-externo" size={18} />
-        </a>
+          <span className="relative flex h-[72px] w-[128px] flex-none items-center justify-center overflow-hidden rounded-[12px] bg-texto">
+            <img src="/videos/recategorizacion.jpg" alt="" className="absolute inset-0 h-full w-full object-cover opacity-80" />
+            <span className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-tarjeta transition-transform group-hover:scale-110">
+              <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="#3B3FD8" /></svg>
+            </span>
+          </span>
+          <span className="flex min-w-0 flex-col">
+            <strong>Ver el video paso a paso</strong>
+            <span className="text-texto-suave">Cómo recategorizarte en ARCA, despacio y con ejemplos. Dura menos de 2 minutos.</span>
+          </span>
+        </Link>
+        <div className="flex flex-wrap gap-3">
+          <a
+            href="https://www.arca.gob.ar/monotributo/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-lift inline-flex h-11 items-center gap-2 rounded-full bg-primario px-5 font-bold text-white shadow-boton"
+          >
+            Ir a Monotributo en ARCA
+            <Icon name="link-externo" size={18} />
+          </a>
+        </div>
         <p className="text-texto-tenue">El cálculo es una ayuda con lo que facturaste desde Facti. No reemplaza la consulta con tu contador.</p>
       </section>
     </div>

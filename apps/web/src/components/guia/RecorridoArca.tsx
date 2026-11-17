@@ -17,16 +17,16 @@ export const ALTO = 720;
 
 // ---------- utilidades de tiempo ----------
 
-const lim = (x: number, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+export const lim = (x: number, a = 0, b = 1) => Math.min(b, Math.max(a, x));
 /** Progreso 0..1 de `a` a `b`, con salida suave. */
-const prog = (t: number, a: number, b: number) => {
+export const prog = (t: number, a: number, b: number) => {
   const p = lim((t - a) / (b - a));
   return 1 - Math.pow(1 - p, 3);
 };
 /** Texto que se va escribiendo desde `desde`, a `cps` letras por segundo. */
-const tipear = (texto: string, t: number, desde: number, cps = 9) => texto.slice(0, Math.max(0, Math.floor((t - desde) * cps)));
+export const tipear = (texto: string, t: number, desde: number, cps = 9) => texto.slice(0, Math.max(0, Math.floor((t - desde) * cps)));
 
-type Punto = { t: number; x: number; y: number; click?: boolean };
+export type Punto = { t: number; x: number; y: number; click?: boolean };
 
 /** Posición del cursor interpolando entre puntos (con curva suave). */
 function cursorEn(puntos: Punto[], t: number) {
@@ -42,10 +42,10 @@ function cursorEn(puntos: Punto[], t: number) {
 
 // ---------- piezas visuales ----------
 
-const AZUL_ARCA = '#1F2A5C';
-const CELESTE_ARCA = '#1C9AD6';
+export const AZUL_ARCA = '#1F2A5C';
+export const CELESTE_ARCA = '#1C9AD6';
 
-function BarraNavegador({ url }: { url: string }) {
+export function BarraNavegador({ url }: { url: string }) {
   return (
     <div className="flex h-[52px] items-center gap-3 border-b border-[#D9DEE8] bg-[#EEF1F6] px-5">
       <div className="flex gap-2">
@@ -61,7 +61,7 @@ function BarraNavegador({ url }: { url: string }) {
   );
 }
 
-function CabeceraArca({ nombre = true }: { nombre?: boolean }) {
+export function CabeceraArca({ nombre = true }: { nombre?: boolean }) {
   return (
     <div className="flex h-[64px] items-center justify-between px-10" style={{ background: AZUL_ARCA }}>
       <div className="flex items-center gap-3 text-white">
@@ -74,7 +74,7 @@ function CabeceraArca({ nombre = true }: { nombre?: boolean }) {
   );
 }
 
-function Boton({ children, activo = false, celeste = false }: { children: ReactNode; activo?: boolean; celeste?: boolean }) {
+export function Boton({ children, activo = false, celeste = false }: { children: ReactNode; activo?: boolean; celeste?: boolean }) {
   return (
     <span
       className={`inline-flex h-11 items-center justify-center rounded-[6px] px-6 text-[17px] font-bold transition-none ${
@@ -87,7 +87,7 @@ function Boton({ children, activo = false, celeste = false }: { children: ReactN
   );
 }
 
-function Campo({ etiqueta, valor, placeholder, enfocado = false, ancho = 420 }: { etiqueta?: string; valor: string; placeholder?: string; enfocado?: boolean; ancho?: number }) {
+export function Campo({ etiqueta, valor, placeholder, enfocado = false, ancho = 420 }: { etiqueta?: string; valor: string; placeholder?: string; enfocado?: boolean; ancho?: number }) {
   return (
     <div className="flex flex-col gap-1.5" style={{ width: ancho }}>
       {etiqueta && <span className="text-[15px] font-bold text-[#3C4268]">{etiqueta}</span>}
@@ -101,7 +101,7 @@ function Campo({ etiqueta, valor, placeholder, enfocado = false, ancho = 420 }: 
 
 // ---------- escenas ----------
 
-type Escena = {
+export type Escena = {
   dur: number;
   url: string | null; // null = pantalla de Facti (sin navegador)
   paso: string; // "Paso 1 de 6"
@@ -521,7 +521,11 @@ export function duracionTotal(cuitFacti: string) {
 
 /** Dibuja el cuadro del instante `t` (en segundos) a 1280×720. */
 export function Escenario({ t, cuitFacti }: { t: number; cuitFacti: string }) {
-  const lista = escenas(cuitFacti);
+  return <Cuadro t={t} lista={escenas(cuitFacti)} />;
+}
+
+/** Cuadro de cualquier guía: la escena del instante `t`, el cursor, el subtítulo y la barra de progreso. */
+export function Cuadro({ t, lista }: { t: number; lista: Escena[] }) {
   let inicio = 0;
   let e = lista[lista.length - 1]!;
   for (const x of lista) {
@@ -582,7 +586,7 @@ export function Escenario({ t, cuitFacti }: { t: number; cuitFacti: string }) {
           <div className="h-full bg-[#3B3FD8]" style={{ width: `${(t / total) * 100}%` }} />
         </div>
       </div>
-      {e.url?.includes('afip.gob.ar') && (
+      {(e.url?.includes('afip.gob.ar') || e.url?.includes('arca.gob.ar')) && (
         <span className="absolute right-4 top-[12px] rounded-full bg-[#15193A]/70 px-3 py-1 text-[13px] text-white">Recreación simplificada de la web de ARCA</span>
       )}
     </div>

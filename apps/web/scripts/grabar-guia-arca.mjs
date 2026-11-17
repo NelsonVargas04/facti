@@ -15,7 +15,8 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const aqui = dirname(fileURLToPath(import.meta.url));
-const SALIDA = resolve(aqui, '../public/videos/conectar-arca.mp4');
+// Otra guía: GUIA_URL=http://localhost:3000/guias/recategorizacion?grabar=1 SALIDA=apps/web/public/videos/recategorizacion.mp4
+const SALIDA = process.env.SALIDA ? resolve(process.env.SALIDA) : resolve(aqui, '../public/videos/conectar-arca.mp4');
 const URL = process.env.GUIA_URL ?? 'http://localhost:3000/guias/conectar-arca?grabar=1';
 const FPS = Number(process.env.FPS ?? 24);
 const ESCALA = 1.5; // 1280×720 dibujado a 1920×1080 para que el texto se vea nítido

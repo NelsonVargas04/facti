@@ -1,14 +1,19 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { ALTO, ANCHO, Escenario, duracionTotal } from '@/components/guia/RecorridoArca';
 import { CUIT_FACTI } from '@/lib/cuitFacti';
 
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
-/** Reproductor de la guía: se adapta al ancho, con play/pausa, barra para adelantar y velocidad. */
+/** Reproductor de la guía "Conectá Facti con ARCA". */
 export function ReproductorArca() {
-  const total = duracionTotal(CUIT_FACTI);
+  return <Reproductor total={duracionTotal(CUIT_FACTI)} cuadro={(t) => <Escenario t={t} cuitFacti={CUIT_FACTI} />} />;
+}
+
+/** Reproductor de cualquier guía: se adapta al ancho, con play/pausa, barra para adelantar y velocidad. */
+export function Reproductor({ total, cuadro }: { total: number; cuadro: (t: number) => ReactNode }) {
   const [t, setT] = useState(0);
   const [jugando, setJugando] = useState(false);
   const [velocidad, setVelocidad] = useState(1);
@@ -50,7 +55,7 @@ export function ReproductorArca() {
     <div className="flex flex-col gap-3">
       <div ref={caja} className="relative w-full overflow-hidden rounded-[20px] bg-[#0F1330] shadow-tarjeta-lg" style={{ height: ALTO * escala }}>
         <div style={{ width: ANCHO, height: ALTO, zoom: escala }}>
-          <Escenario t={t} cuitFacti={CUIT_FACTI} />
+          {cuadro(t)}
         </div>
         {!jugando && (
           <button
