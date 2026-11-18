@@ -199,6 +199,34 @@ func probarContrato(t *testing.T, d Datos) {
 		t.Errorf("uso (las notas no cuentan): %+v", u)
 	}
 
+	// Comprobantes de afuera (Mis Comprobantes): no se duplican ni repiten los de Facti, y suman por mes.
+	externos := []Externo{
+		{Fecha: "2026-08-10", Tipo: 11, PuntoVenta: 1, Numero: 40, NumeroHasta: 40, Moneda: "PES", Cotizacion: 1, Total: 300000, Pesos: 300000, Receptor: "WEB ARCA"},
+		{Fecha: "2026-10-05", Tipo: 13, PuntoVenta: 1, Numero: 2, NumeroHasta: 2, Moneda: "PES", Cotizacion: 1, Total: 20000, Pesos: -20000},
+		{Fecha: "2026-10-12", Tipo: 11, PuntoVenta: 3, Numero: 1, NumeroHasta: 1, Moneda: "PES", Cotizacion: 1, Total: 85000, Pesos: 85000}, // es f1, ya está en Facti
+	}
+	if imp, err := d.ImportarExternos(ctx, cuenta.ID, externos); err != nil || imp != (Importacion{Nuevos: 2, EnFacti: 1}) {
+		t.Fatalf("importar: %+v %v", imp, err)
+	}
+	if imp, err := d.ImportarExternos(ctx, cuenta.ID, externos[:2]); err != nil || imp != (Importacion{Repetidos: 2}) {
+		t.Fatalf("importar de nuevo: %+v %v", imp, err)
+	}
+	if e, err := d.EstadoExternos(ctx, cuenta.ID); err != nil || e.Cantidad != 2 || e.Desde != "2026-08-10" || e.Hasta != "2026-10-05" || e.UltimaImportacion == nil {
+		t.Fatalf("estado de externos: %+v %v", e, err)
+	}
+	if e, _ := d.EstadoExternos(ctx, otraCuenta.ID); e.Cantidad != 0 {
+		t.Errorf("otra cuenta no ve los externos: %+v", e)
+	}
+	ing, err := d.IngresosPorMes(ctx, cuenta.ID, "2026-08-01", "2026-10-31")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Octubre: lo de Facti (el mismo total del resumen) y -20000 de afuera. Septiembre: 10000.
+	quiero := []IngresoMes{{Mes: "2026-08", Externo: 300000}, {Mes: "2026-09", Facti: 10000}, {Mes: "2026-10", Facti: r.Facturado, Externo: -20000}}
+	if fmt.Sprint(ing) != fmt.Sprint(quiero) {
+		t.Errorf("ingresos por mes: %+v, quería %+v", ing, quiero)
+	}
+
 	// Solicitudes del botón de arrepentimiento y de baja: con o sin sesión; el código no se repite.
 	codigo := fmt.Sprintf("BAJ-%06d", rand.IntN(1_000_000))
 	sol := &Solicitud{Codigo: codigo, Tipo: SolicitudBaja, Nombre: "Lucía Fernández", Email: "lucia@example.com", UsuarioID: usuario}

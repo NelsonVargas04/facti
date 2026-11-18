@@ -18,7 +18,9 @@
     "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "recharts": "3.10.1"
+    "react-svg-credit-card-payment-icons": "6.0.4",
+    "recharts": "3.10.1",
+    "simple-icons": "16.38.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.0",

@@ -58,3 +58,38 @@ func TestCategoriasMonotributo(t *testing.T) {
 		t.Fatalf("categorías: %d %v", res.StatusCode, j)
 	}
 }
+
+func TestImportarYTopes(t *testing.T) {
+	e := nuevoEntorno(t, nil)
+	if res, j := e.pedir(t, "POST", "/facturas", facturaLumen); res.StatusCode != 200 {
+		t.Fatalf("emitir: %d %v", res.StatusCode, j)
+	}
+	// Sin importar: solo lo de Facti (85.000 en octubre).
+	_, j := e.pedir(t, "GET", "/monotributo/topes", "")
+	if j["facti"] != 85000.0 || j["externo"] != 0.0 {
+		t.Fatalf("topes sin importar: %v", j)
+	}
+	if res, j := e.pedir(t, "POST", "/comprobantes/importar", "cualquier cosa"); res.StatusCode != 400 || j["error"] != "archivo_invalido" {
+		t.Errorf("archivo que no sirve: %d %v", res.StatusCode, j)
+	}
+	csv := "Fecha;Tipo;Punto de Venta;Número Desde;Moneda;Imp. Total\n" +
+		"10/08/2026;11 - Factura C;1;40;$;30.000.000,00\n" +
+		"12/10/2026;11 - Factura C;3;1;$;85.000,00\n" + // la emitida con Facti
+		"ayer;11;1;41;$;1\n"
+	res, j := e.pedir(t, "POST", "/comprobantes/importar", csv)
+	imp, _ := j["importacion"].(map[string]any)
+	errs, _ := j["errores"].([]any)
+	if res.StatusCode != 200 || imp["nuevos"] != 1.0 || imp["enFacti"] != 1.0 || len(errs) != 1 {
+		t.Fatalf("importar: %d %v", res.StatusCode, j)
+	}
+	_, j = e.pedir(t, "GET", "/monotributo/topes", "")
+	a, _ := j["analisis"].(map[string]any)
+	if j["externo"] != 30000000.0 || a["ingresos"] != 30085000.0 || a["categoriaDeHecho"] != "D" {
+		t.Fatalf("topes: %v", j)
+	}
+	// El inicio también suma lo importado.
+	_, j = e.pedir(t, "GET", "/resumen", "")
+	if u, _ := j["ultimos12Meses"].(map[string]any); u["facturado"] != 30085000.0 {
+		t.Errorf("resumen 12 meses: %v", j["ultimos12Meses"])
+	}
+}

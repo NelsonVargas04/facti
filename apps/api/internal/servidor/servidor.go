@@ -31,6 +31,14 @@ type Servidor struct {
 	categorias interface {
 		Escala(ctx context.Context) monotributo.Escala
 	}
+	// Cobro de Facti Pro con Mercado Pago (nil = no configurado: la web muestra la vista previa).
+	mp           CobradorPro
+	mpSecreto    string
+	cotizador    Cotizador
+	precioProUSD float64
+	webURL       string
+	// cronSecreto protege POST /recurrentes/procesar (lo llama el cron diario).
+	cronSecreto string
 }
 
 // Opciones para construir el servidor.
@@ -49,6 +57,16 @@ type Opciones struct {
 	Categorias interface {
 		Escala(ctx context.Context) monotributo.Escala
 	}
+	// MercadoPago cobra Pro; nil = todavía no está configurado.
+	MercadoPago CobradorPro
+	// MPWebhookSecret valida la firma de los webhooks (en producción es obligatoria).
+	MPWebhookSecret string
+	Cotizador       Cotizador
+	PrecioProUSD    float64 // 10 si no se indica
+	// WebURL: a dónde vuelve el usuario después de pagar en Mercado Pago.
+	WebURL string
+	// CronSecret: clave del cron que emite las facturas recurrentes automáticas (vacía = desactivado).
+	CronSecret string
 }
 
 // Nuevo devuelve el http.Handler con todas las rutas.
@@ -58,6 +76,14 @@ func Nuevo(o Opciones) http.Handler {
 		entorno: o.Entorno, origenesWeb: o.OrigenesWeb, log: o.Log, ahora: o.Ahora,
 		limiteSolicitudes: limitador{max: 5, ventana: time.Hour},
 		categorias:        o.Categorias,
+		mp:                o.MercadoPago, mpSecreto: o.MPWebhookSecret, cotizador: o.Cotizador,
+		precioProUSD: o.PrecioProUSD, webURL: o.WebURL, cronSecreto: o.CronSecret,
+	}
+	if s.precioProUSD == 0 {
+		s.precioProUSD = 10
+	}
+	if s.webURL == "" {
+		s.webURL = "http://localhost:3000"
 	}
 	if s.categorias == nil {
 		s.categorias = monotributo.NuevaFuente()
@@ -101,6 +127,27 @@ func Nuevo(o Opciones) http.Handler {
 	mux.Handle("GET /comprobantes/{id}", s.ruta(s.verComprobante))
 	mux.Handle("PATCH /comprobantes/{id}/cobro", s.ruta(s.marcarCobro))
 	mux.Handle("GET /clientes", s.ruta(s.listarClientes))
+	mux.Handle("POST /comprobantes/importar", s.ruta(s.importarComprobantes))
+	mux.Handle("GET /monotributo/topes", s.ruta(s.verTopes))
+	// Plan Pro con Mercado Pago. El webhook no tiene sesión: valida la firma y consulta a Mercado Pago.
+	mux.Handle("GET /pagos", s.ruta(s.verPagos))
+	mux.Handle("POST /pagos/suscripcion", s.ruta(s.suscribirse))
+	mux.Handle("POST /pagos/sincronizar", s.ruta(s.sincronizarPagos))
+	mux.Handle("POST /pagos/cancelar", s.ruta(s.cancelarPro))
+	mux.HandleFunc("POST /webhooks/mercadopago", s.webhookMercadoPago)
+	// Facturas recurrentes. "procesar" es del cron (sin sesión, con CRON_SECRET).
+	// Calendario: vencimientos + facturas de todos los meses + cobros (Pro). El .ics va sin sesión (con token).
+	mux.Handle("GET /calendario", s.ruta(s.verCalendario))
+	mux.Handle("GET /calendario/enlace", s.ruta(s.enlaceCalendario))
+	mux.Handle("POST /calendario/enlace", s.ruta(s.enlaceCalendario))
+	mux.HandleFunc("GET /calendario.ics", s.calendarioICS)
+	mux.Handle("GET /recurrentes", s.ruta(s.listarRecurrentes))
+	mux.Handle("POST /recurrentes", s.ruta(s.crearRecurrente))
+	mux.Handle("POST /recurrentes/procesar", s.ruta(s.procesarRecurrentes))
+	mux.Handle("GET /recurrentes/procesar", s.ruta(s.procesarRecurrentes)) // los cron de Vercel llaman con GET
+	mux.Handle("GET /recurrentes/{id}", s.ruta(s.verRecurrente))
+	mux.Handle("PATCH /recurrentes/{id}", s.ruta(s.cambiarRecurrente))
+	mux.Handle("DELETE /recurrentes/{id}", s.ruta(s.borrarRecurrente))
 
 	return s.registrar(s.cors(mux))
 }
@@ -184,7 +231,7 @@ func (s *Servidor) cors(next http.Handler) http.Handler {
 			h.Set("Access-Control-Allow-Origin", origen)
 			h.Add("Vary", "Origin")
 			if r.Method == http.MethodOptions && r.Header.Get("Access-Control-Request-Method") != "" {
-				h.Set("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, PATCH, OPTIONS")
+				h.Set("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, PATCH, DELETE, OPTIONS")
 				if pedidos := r.Header.Get("Access-Control-Request-Headers"); pedidos != "" {
 					h.Set("Access-Control-Allow-Headers", pedidos)
 				}

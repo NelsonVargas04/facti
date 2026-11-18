@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { AvisoApi } from '@/components/AvisoApi';
 import { Facti } from '@/components/Facti';
+import { Icon } from '@/components/Icon';
 import { Paginacion } from '@/components/Paginacion';
 import { Select } from '@/components/Select';
 import { Buscador, TarjetaLista } from '@/components/TarjetaLista';
@@ -81,10 +82,16 @@ export default function Facturas() {
           <h1 className="text-[28px] font-bold leading-tight sm:text-[34px]">Facturas</h1>
           <p className="text-texto-suave">Todas tus facturas emitidas, en un solo lugar.</p>
         </div>
+        <div className="flex flex-wrap items-center gap-3">
+        <Link href="/app/facturas/recurrentes" className="btn-lift flex h-12 items-center gap-2 rounded-full border-[1.5px] border-borde bg-white px-5 font-bold text-texto hover:border-primario hover:text-primario-oscuro">
+          <Icon name="calendario" size={20} />
+          De todos los meses
+        </Link>
         <Link href="/app/facturas/nueva" className="btn-lift hidden h-12 items-center gap-2 rounded-full bg-primario px-6 font-bold text-white shadow-boton md:flex">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
           Emitir factura
         </Link>
+        </div>
       </div>
 
       {/* Listado: buscador y filtros, la lista y el pie con la cantidad y las páginas. */}

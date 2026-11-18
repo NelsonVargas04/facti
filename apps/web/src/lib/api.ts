@@ -12,7 +12,7 @@ export async function pedir<T>(ruta: string, init?: RequestInit): Promise<Result
   try {
     const token = await tokenActual();
     const headers = new Headers(init?.headers);
-    if (init?.body) headers.set('Content-Type', 'application/json');
+    if (init?.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
     if (token) headers.set('Authorization', `Bearer ${token}`);
     r = await fetch(`${API_URL}${ruta}`, { ...init, headers });
   } catch {
@@ -211,7 +211,7 @@ export interface ResumenPeriodo {
 export interface Resumen {
   mes: string; // AAAA-MM
   delMes: ResumenPeriodo;
-  ultimos12Meses: { facturado: number; desde: string; porMes: { mes: string; facturado: number }[] };
+  ultimos12Meses: { facturado: number; desde: string; porMes: { mes: string; facturado: number; externo?: number }[] };
   porCobrar: { total: number; facturas: number };
   ultimas: Comprobante[];
   plan: Plan;
@@ -219,6 +219,61 @@ export interface Resumen {
 
 export function verResumen(mes?: string) {
   return pedir<Resumen>(`/resumen${query({ mes })}`);
+}
+
+// ---------- Topes y Mis Comprobantes ----------
+
+export interface AlertaTope {
+  nivel: 'peligro' | 'aviso' | 'info';
+  codigo: string;
+  titulo: string;
+  texto: string;
+}
+
+export interface MetaTope {
+  letra?: string;
+  tope: number;
+  falta: number;
+  /** En cuántos meses lo pasarías a tu ritmo (null: no en el próximo año). */
+  enMeses: number | null;
+}
+
+export interface Topes {
+  desde: string;
+  porMes: { mes: string; facti: number; externo: number }[];
+  facti: number;
+  externo: number;
+  externos: { cantidad: number; desde?: string; hasta?: string; ultimaImportacion?: string };
+  analisis: {
+    ingresos: number;
+    promedio: number;
+    categoriaPadron: string;
+    categoriaDeHecho: string;
+    siguiente: MetaTope | null;
+    exclusion: MetaTope;
+    exclusionFuente: string;
+    proximaRecategorizacion: string;
+    alertas: AlertaTope[] | null;
+  };
+}
+
+export function verTopes() {
+  return pedir<Topes>('/monotributo/topes');
+}
+
+export interface ResultadoImportacion {
+  leidos: number;
+  importacion: { nuevos: number; repetidos: number; enFacti: number };
+  errores: { fila: number; mensaje: string }[];
+}
+
+/** Sube el archivo de "Mis Comprobantes – Emitidos" (CSV o Excel) tal cual. */
+export function importarComprobantes(archivo: File) {
+  return pedir<ResultadoImportacion>('/comprobantes/importar', {
+    method: 'POST',
+    body: archivo,
+    headers: { 'Content-Type': 'application/octet-stream' },
+  });
 }
 
 // ---------- Clientes ----------
@@ -274,6 +329,8 @@ export interface NuevaFacturaReq {
   condicionVenta?: string;
   periodoServicio?: { desde: string; hasta: string; vencimientoPago: string };
   items: { descripcion: string; cantidad: number; unidad?: string; precioUnitario: number }[];
+  /** Si se emite desde una factura recurrente: la API la pasa al mes siguiente. */
+  recurrenteId?: number;
 }
 
 export function emitirFactura(body: NuevaFacturaReq) {
@@ -324,4 +381,113 @@ export interface EscalaMonotributo {
 
 export function verCategorias() {
   return pedir<EscalaMonotributo>('/monotributo/categorias');
+}
+
+// ---------- Plan Pro (Mercado Pago) ----------
+
+export interface Suscripcion {
+  estado: 'pending' | 'authorized' | 'paused' | 'cancelled' | string;
+  importe: number; // en pesos, por mes
+  precioUsd: number;
+  cotizacion: number;
+  proximoCobro: string; // AAAA-MM-DD o ""
+  medio: string; // visa, master, account_money…
+  ultimos: string;
+  vence: string; // MM/AA
+}
+
+export interface PagoFacti {
+  id: string;
+  fecha: string;
+  importe: number;
+  moneda: string;
+  estado: 'aprobado' | 'rechazado' | 'pendiente' | 'cancelado' | string;
+  medio: string;
+  ultimos: string;
+}
+
+export interface EstadoPagos {
+  plan: Plan['nombre'];
+  precioUsd: number;
+  dolar?: { valor: number; fecha: string; fuente: string };
+  /** false = Mercado Pago todavía no está configurado: la pantalla muestra la vista previa. */
+  mercadoPago: boolean;
+  suscripcion: Suscripcion | null;
+  pagos: PagoFacti[];
+}
+
+export function verPagos() {
+  return pedir<EstadoPagos>('/pagos');
+}
+
+/** Crea la suscripción y devuelve la URL del checkout de Mercado Pago (ahí se paga con tarjeta o dinero en cuenta). */
+export function suscribirsePro() {
+  return pedir<{ url: string; importe: number }>('/pagos/suscripcion', { method: 'POST' });
+}
+
+/** Trae de Mercado Pago el estado de la suscripción (al volver del checkout). */
+export function sincronizarPagos() {
+  return pedir<EstadoPagos>('/pagos/sincronizar', { method: 'POST' });
+}
+
+export function cancelarPro() {
+  return pedir<EstadoPagos>('/pagos/cancelar', { method: 'POST' });
+}
+
+// ---------- Facturas recurrentes ----------
+
+export interface Recurrente {
+  id: number;
+  cliente: string;
+  total: number;
+  /** El pedido de emisión sin fechas (se usan las del día al emitir). */
+  plantilla: NuevaFacturaReq;
+  dia: number; // 1 a 28
+  proxima: string; // AAAA-MM-DD
+  automatica: boolean;
+  activa: boolean;
+  ultimaEmision: string;
+  ultimoComprobanteId?: number;
+  ultimoError: string;
+  /** Llegó el día y todavía no se emitió. */
+  pendiente: boolean;
+}
+
+export function listarRecurrentes() {
+  return pedir<{ recurrentes: Recurrente[]; limite: number | null }>('/recurrentes');
+}
+
+export function verRecurrente(id: number | string) {
+  return pedir<Recurrente>(`/recurrentes/${id}`);
+}
+
+export function crearRecurrente(body: { plantilla: Omit<NuevaFacturaReq, 'fecha' | 'periodoServicio' | 'recurrenteId'>; dia: number; automatica: boolean }) {
+  return pedir<Recurrente>('/recurrentes', { method: 'POST', body: JSON.stringify(body) });
+}
+
+export function cambiarRecurrente(id: number, cambios: { dia?: number; automatica?: boolean; activa?: boolean }) {
+  return pedir<Recurrente>(`/recurrentes/${id}`, { method: 'PATCH', body: JSON.stringify(cambios) });
+}
+
+export function borrarRecurrente(id: number) {
+  return pedir<null>(`/recurrentes/${id}`, { method: 'DELETE' });
+}
+
+// ---------- Calendario (vencimientos, facturas de todos los meses y cobros) ----------
+
+export interface EventoCalendario {
+  fecha: string; // AAAA-MM-DD
+  tipo: 'cuota_monotributo' | 'recategorizacion' | 'nueva_escala' | 'factura_mensual' | 'cobro' | string;
+  titulo: string;
+  detalle: string;
+  link?: string;
+}
+
+export function verCalendario(dias = 90) {
+  return pedir<{ eventos: EventoCalendario[]; cobrosOcultos: number }>(`/calendario?dias=${dias}`);
+}
+
+/** Link privado (.ics) para suscribirse desde Google Calendar, iPhone u Outlook. renovar: invalida el anterior. */
+export function enlaceCalendario(renovar = false) {
+  return pedir<{ url: string }>('/calendario/enlace', renovar ? { method: 'POST' } : undefined);
 }

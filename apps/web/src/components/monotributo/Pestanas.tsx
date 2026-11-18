@@ -3,8 +3,10 @@
 import { AvisoApi } from '@/components/AvisoApi';
 import { GraficoFacturacion } from '@/components/GraficoFacturacion';
 import { Icon } from '@/components/Icon';
-import type { Cuenta, ErrorApi, EscalaMonotributo, Resumen } from '@/lib/api';
-import { BarraTope, categoriaQueCorresponde, topes, VerCategorias } from '@/components/monotributo/Categorias';
+import type { Cuenta, ErrorApi, EscalaMonotributo, Resumen, Topes } from '@/lib/api';
+import { AlertasTopes } from '@/components/monotributo/AlertasTopes';
+import { FacturacionCompleta } from '@/components/monotributo/FacturacionCompleta';
+import { BarraTope, categoriaQueCorresponde, topes as topesDe, VerCategorias } from '@/components/monotributo/Categorias';
 import { BotonVideo } from '@/components/guia/PaginaGuia';
 import { pesos } from '@/lib/formato';
 
@@ -21,7 +23,8 @@ export function proximaRecategorizacion(hoy = new Date()): { mes: string; anio: 
   return { mes: 'enero', anio: hoy.getFullYear() + 1, cierre: `31/12/${hoy.getFullYear()}` };
 }
 
-type Estado<T> = { estado: 'cargando' } | { estado: 'error'; error: ErrorApi } | { estado: 'ok'; dato: T };
+// Mientras recarga (por ejemplo, después de importar) se sigue mostrando el dato anterior.
+type Estado<T> = { estado: 'cargando'; dato?: T } | { estado: 'error'; error: ErrorApi; dato?: T } | { estado: 'ok'; dato: T };
 
 function Esqueleto() {
   return (
@@ -35,14 +38,27 @@ function Esqueleto() {
 }
 
 /** Pestaña Resumen: lo facturado en los últimos 12 meses contra el tope de tu categoría. */
-export function ResumenMonotributo({ resumen, cuenta, escala }: { resumen: Estado<Resumen>; cuenta?: Cuenta; escala?: EscalaMonotributo | null }) {
-  if (resumen.estado === 'error') return <AvisoApi error={resumen.error} />;
-  if (resumen.estado === 'cargando') return <Esqueleto />;
+export function ResumenMonotributo({
+  resumen,
+  cuenta,
+  escala,
+  topes,
+  onImportado,
+}: {
+  resumen: Estado<Resumen>;
+  cuenta?: Cuenta;
+  escala?: EscalaMonotributo | null;
+  topes?: Topes;
+  onImportado: () => void;
+}) {
+  if (resumen.estado === 'error' && !resumen.dato) return <AvisoApi error={resumen.error} />;
+  if (!resumen.dato) return <Esqueleto />;
   const r = resumen.dato;
   const total = r.ultimos12Meses.facturado;
-  const t = topes(escala);
+  const t = topesDe(escala);
   return (
     <>
+      <AlertasTopes alertas={topes?.analisis.alertas} />
       <section className="flex flex-col gap-5 rounded-tarjeta bg-superficie p-5 shadow-tarjeta sm:p-7">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -54,20 +70,22 @@ export function ResumenMonotributo({ resumen, cuenta, escala }: { resumen: Estad
         <BarraTope facturado={total} categoria={cuenta?.categoria} escala={escala} desde={r.ultimos12Meses.desde} hasta={hoyISO()} />
       </section>
       <GraficoFacturacion porMes={r.ultimos12Meses.porMes} total={total} categoria={cuenta?.categoria} conTope={false} />
+      <FacturacionCompleta topes={topes} onImportado={onImportado} />
     </>
   );
 }
 
 /** Pestaña Recategorización: cuándo toca y cómo venís. */
-export function Recategorizacion({ resumen, cuenta, escala }: { resumen: Estado<Resumen>; cuenta?: Cuenta; escala?: EscalaMonotributo | null }) {
-  if (resumen.estado === 'error') return <AvisoApi error={resumen.error} />;
-  if (resumen.estado === 'cargando') return <Esqueleto />;
+export function Recategorizacion({ resumen, cuenta, escala, topes }: { resumen: Estado<Resumen>; cuenta?: Cuenta; escala?: EscalaMonotributo | null; topes?: Topes }) {
+  if (resumen.estado === 'error' && !resumen.dato) return <AvisoApi error={resumen.error} />;
+  if (!resumen.dato) return <Esqueleto />;
   const total = resumen.dato.ultimos12Meses.facturado;
-  const t = topes(escala);
+  const t = topesDe(escala);
   const corresponde = categoriaQueCorresponde(total, t);
   const prox = proximaRecategorizacion();
   return (
     <div className="cascada flex flex-col gap-6">
+      <AlertasTopes alertas={topes?.analisis.alertas?.filter((a) => a.codigo !== 'tope_cerca')} />
       <section className="flex flex-col gap-5 rounded-tarjeta bg-superficie p-7 shadow-tarjeta">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -110,7 +128,11 @@ export function Recategorizacion({ resumen, cuenta, escala }: { resumen: Estado<
             <Icon name="link-externo" size={18} />
           </a>
         </div>
-        <p className="text-texto-tenue">El cálculo es una ayuda con lo que facturaste desde Facti. No reemplaza la consulta con tu contador.</p>
+        <p className="text-texto-tenue">
+          {topes && topes.externos.cantidad > 0
+            ? 'El cálculo suma lo que facturaste con Facti y lo que importaste de Mis Comprobantes. Es una ayuda: revisá también alquileres, energía y superficie.'
+            : 'El cálculo usa lo que facturaste con Facti. Si facturaste por otro lado, importalo en la pestaña Resumen para que sea exacto.'}
+        </p>
       </section>
     </div>
   );

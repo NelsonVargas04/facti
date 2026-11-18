@@ -46,7 +46,8 @@ export function GraficoFacturacion({ porMes, total, categoria, conTope = true }:
   const datos = porMes.map((m) => {
     const [a, mm] = m.mes.split('-');
     const i = Number(mm) - 1;
-    return { ...m, corto: MESES[i]!, nombre: `${MESES[i]} ${a}` };
+    // Un mes con más notas de crédito que facturas da negativo: la barra queda en 0 (el globo muestra el valor real).
+    return { ...m, barra: Math.max(0, m.facturado), corto: MESES[i]!, nombre: `${MESES[i]} ${a}` };
   });
   const tope = topeDe(categoria);
   const pct = tope ? Math.min(100, Math.round((total / tope) * 100)) : null;
@@ -82,9 +83,9 @@ export function GraficoFacturacion({ porMes, total, categoria, conTope = true }:
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={datos} margin={{ top: 6, right: 0, bottom: 0, left: 0 }} barCategoryGap="22%">
             <XAxis dataKey="corto" axisLine={false} tickLine={false} interval={angosto ? 2 : 0} tick={{ fill: '#8A90AD', fontSize: 16 }} />
-            <YAxis hide={angosto} axisLine={false} tickLine={false} width={80} tick={{ fill: '#8A90AD', fontSize: 16 }} tickFormatter={corto} />
+            <YAxis hide={angosto} domain={[0, 'auto']} axisLine={false} tickLine={false} width={80} tick={{ fill: '#8A90AD', fontSize: 16 }} tickFormatter={corto} />
             <Tooltip content={<Globo />} cursor={{ fill: 'rgba(59,63,216,0.06)', radius: 10 }} />
-            <Bar dataKey="facturado" radius={[8, 8, 8, 8]} animationDuration={700} animationEasing="ease-out">
+            <Bar dataKey="barra" radius={[8, 8, 8, 8]} animationDuration={700} animationEasing="ease-out">
               {datos.map((d, i) => (
                 <Cell key={d.mes} fill={i === datos.length - 1 ? '#3B3FD8' : '#C9CBFA'} />
               ))}

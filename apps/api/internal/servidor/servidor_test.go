@@ -232,6 +232,7 @@ func nuevoEntorno(t *testing.T, d datos.Datos) *entorno {
 		Auth:       authFalso{},
 		PuntoVenta: 3,
 		Ahora:      func() time.Time { return hoy },
+		Categorias: escalaFija{},
 	})
 	// Lucía completa el onboarding con su CUIT.
 	if res, j := e.pedir(t, "PUT", "/cuenta/cuit", `{"cuit":"20-11111111-2"}`); res.StatusCode != 200 {

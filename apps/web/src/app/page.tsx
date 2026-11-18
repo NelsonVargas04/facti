@@ -4,6 +4,7 @@ import { FactiWordmark } from '@/components/FactiLogo';
 import { MuestraComprobantes } from '@/components/MuestraComprobantes';
 import { Reveal } from '@/components/Reveal';
 import { PieLegal } from '@/components/legal/PieLegal';
+import { PLAN_DEMO } from '@/lib/plan-demo';
 
 function Flecha() {
   return (
@@ -249,7 +250,7 @@ export default function Landing() {
           <Reveal delay={120} className="h-full">
             <div className="flex h-full flex-col gap-[18px] rounded-tarjeta-lg bg-texto p-7 text-white sm:p-9 shadow-tarjeta-lg">
               <h3 className="text-[26px] font-bold text-white">Pro</h3>
-              <div className="font-display text-[44px] font-bold">$8.900<span className="text-[18px] font-semibold text-[#C9CCE8]"> / mes</span></div>
+              <div className="font-display text-[44px] font-bold">{PLAN_DEMO.precioPro}<span className="text-[18px] font-semibold text-[#C9CCE8]"> / mes</span></div>
               <ul className="flex flex-col gap-2.5 text-[#DADCF2]">
                 {['Facturas A, B y C ilimitadas', 'Factura E ilimitada', 'Recordatorios de cobro', 'Registro de cobros'].map((t) => (
                   <li key={t} className="flex items-center gap-2.5"><Tilde color="#FFD25E" size={18} />{t}</li>

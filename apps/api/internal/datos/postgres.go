@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -424,4 +425,98 @@ func (p *Postgres) GuardarSolicitud(ctx context.Context, s *Solicitud) error {
 		return ErrCodigoRepetido
 	}
 	return err
+}
+
+func (p *Postgres) ImportarExternos(ctx context.Context, cuentaID int64, ex []Externo) (Importacion, error) {
+	var r Importacion
+	tx, err := p.pool.Begin(ctx)
+	if err != nil {
+		return r, err
+	}
+	defer tx.Rollback(ctx)
+	for _, e := range ex {
+		var enFacti bool
+		if err := tx.QueryRow(ctx, `select exists(select 1 from facti.comprobantes
+			where cuenta_id = $1 and tipo = $2 and punto_venta = $3 and numero = $4)`,
+			cuentaID, e.Tipo, e.PuntoVenta, e.Numero).Scan(&enFacti); err != nil {
+			return r, err
+		}
+		if enFacti {
+			r.EnFacti++
+			continue
+		}
+		tag, err := tx.Exec(ctx, `
+			insert into facti.comprobantes_externos (cuenta_id, fecha, tipo, punto_venta, numero, numero_hasta,
+				cod_autorizacion, receptor_doc_tipo, receptor_doc_nro, receptor_nombre, moneda, cotizacion,
+				importe_total, importe_pesos)
+			values ($1, $2::date, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+			on conflict (cuenta_id, tipo, punto_venta, numero) do nothing`,
+			cuentaID, e.Fecha, e.Tipo, e.PuntoVenta, e.Numero, e.NumeroHasta, e.CodAutorizacion,
+			e.DocTipo, e.DocNro, e.Receptor, e.Moneda, e.Cotizacion, e.Total, e.Pesos)
+		if err != nil {
+			return r, err
+		}
+		if tag.RowsAffected() == 0 {
+			r.Repetidos++
+		} else {
+			r.Nuevos++
+		}
+	}
+	return r, tx.Commit(ctx)
+}
+
+func (p *Postgres) EstadoExternos(ctx context.Context, cuentaID int64) (EstadoExternos, error) {
+	var e EstadoExternos
+	var desde, hasta *time.Time
+	err := p.pool.QueryRow(ctx, `
+		select count(*)::int, min(fecha), max(fecha), max(importado_en)
+		from facti.comprobantes_externos where cuenta_id = $1`, cuentaID).
+		Scan(&e.Cantidad, &desde, &hasta, &e.UltimaImportacion)
+	if desde != nil {
+		e.Desde = desde.Format("2006-01-02")
+	}
+	if hasta != nil {
+		e.Hasta = hasta.Format("2006-01-02")
+	}
+	return e, err
+}
+
+// pesosFirmado es lo facturado con Facti en pesos y con signo, con la moneda extranjera a su cotización.
+const pesosFirmado = `(case when c.tipo in (3, 8, 13, 53) then -c.importe_total else c.importe_total end)
+	* (case when c.moneda = 'PES' then 1 else coalesce(nullif(c.cotizacion, 0), 1) end)`
+
+func (p *Postgres) IngresosPorMes(ctx context.Context, cuentaID int64, desde, hasta string) ([]IngresoMes, error) {
+	meses := mesesEntre(desde, hasta)
+	idx := map[string]int{}
+	out := make([]IngresoMes, len(meses))
+	for i, m := range meses {
+		out[i].Mes = m
+		idx[m] = i
+	}
+	filas, err := p.pool.Query(ctx, `
+		select to_char(c.fecha, 'YYYY-MM'), sum(`+pesosFirmado+`)::float8, 0::float8
+		from facti.comprobantes c
+		where c.cuenta_id = $1 and c.fecha between $2::date and $3::date
+		group by 1
+		union all
+		select to_char(fecha, 'YYYY-MM'), 0::float8, sum(importe_pesos)::float8
+		from facti.comprobantes_externos
+		where cuenta_id = $1 and fecha between $2::date and $3::date
+		group by 1`, cuentaID, desde, hasta)
+	if err != nil {
+		return nil, err
+	}
+	defer filas.Close()
+	for filas.Next() {
+		var mes string
+		var facti, externo float64
+		if err := filas.Scan(&mes, &facti, &externo); err != nil {
+			return nil, err
+		}
+		if i, ok := idx[mes]; ok {
+			out[i].Facti += facti
+			out[i].Externo += externo
+		}
+	}
+	return out, filas.Err()
 }

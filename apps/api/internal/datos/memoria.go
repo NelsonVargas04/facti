@@ -18,7 +18,16 @@ type Memoria struct {
 	clientes     []delaCuenta[Cliente]
 	comprobantes []delaCuenta[Comprobante]
 	solicitudes  []Solicitud
-	ahora        func() time.Time
+	externos     []delaCuenta[externoGuardado]
+	// suscripciones a Pro (una por cuenta) y sus cobros.
+	suscripciones map[int64]Suscripcion
+	pagosFacti    []delaCuenta[PagoFacti]
+	// facturas recurrentes
+	recurrentes      []delaCuenta[Recurrente]
+	ultimaRecurrente int64
+	// link privado del calendario, por cuenta
+	tokensCal map[int64]string
+	ahora     func() time.Time
 }
 
 type delaCuenta[T any] struct {
@@ -305,4 +314,77 @@ func (m *Memoria) GuardarSolicitud(_ context.Context, s *Solicitud) error {
 func esNumeroInterno(q string, n int64) bool {
 	v, err := strconv.ParseInt(strings.TrimPrefix(q, "#"), 10, 64)
 	return err == nil && v == n
+}
+
+type externoGuardado struct {
+	Externo
+	importadoEn time.Time
+}
+
+func (m *Memoria) ImportarExternos(_ context.Context, cuentaID int64, ex []Externo) (Importacion, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	var r Importacion
+	ahora := m.ahora()
+siguiente:
+	for _, e := range ex {
+		for _, x := range m.comprobantes {
+			if x.cuentaID == cuentaID && x.v.Tipo == e.Tipo && x.v.PuntoVenta == e.PuntoVenta && x.v.Numero == e.Numero {
+				r.EnFacti++
+				continue siguiente
+			}
+		}
+		for _, x := range m.externos {
+			if x.cuentaID == cuentaID && x.v.Tipo == e.Tipo && x.v.PuntoVenta == e.PuntoVenta && x.v.Numero == e.Numero {
+				r.Repetidos++
+				continue siguiente
+			}
+		}
+		m.externos = append(m.externos, delaCuenta[externoGuardado]{cuentaID, externoGuardado{e, ahora}})
+		r.Nuevos++
+	}
+	return r, nil
+}
+
+func (m *Memoria) EstadoExternos(_ context.Context, cuentaID int64) (EstadoExternos, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	var e EstadoExternos
+	for _, x := range m.externos {
+		if x.cuentaID != cuentaID {
+			continue
+		}
+		e.Cantidad++
+		if e.Desde == "" || x.v.Fecha < e.Desde {
+			e.Desde = x.v.Fecha
+		}
+		if x.v.Fecha > e.Hasta {
+			e.Hasta = x.v.Fecha
+		}
+		if t := x.v.importadoEn; e.UltimaImportacion == nil || t.After(*e.UltimaImportacion) {
+			e.UltimaImportacion = &t
+		}
+	}
+	return e, nil
+}
+
+func (m *Memoria) IngresosPorMes(_ context.Context, cuentaID int64, desde, hasta string) ([]IngresoMes, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	meses := mesesEntre(desde, hasta)
+	idx := map[string]int{}
+	out := make([]IngresoMes, len(meses))
+	for i, mm := range meses {
+		out[i].Mes = mm
+		idx[mm] = i
+	}
+	m.delPeriodo(cuentaID, desde, hasta, func(c Comprobante) {
+		out[idx[c.Fecha[:7]]].Facti += pesosDe(c)
+	})
+	for _, x := range m.externos {
+		if x.cuentaID == cuentaID && x.v.Fecha >= desde && x.v.Fecha <= hasta {
+			out[idx[x.v.Fecha[:7]]].Externo += x.v.Pesos
+		}
+	}
+	return out, nil
 }

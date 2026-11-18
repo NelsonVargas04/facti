@@ -1,15 +1,18 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { BackLink } from '@/components/BackLink';
 import { Facti } from '@/components/Facti';
 import { Select } from '@/components/Select';
 import { Girando } from '@/components/Animado';
 import { AvisoApi } from '@/components/AvisoApi';
-import { buscarPadron, emitirFactura, verCuenta, COND_IVA_RECEPTOR, type ErrorApi, type PadronDatos } from '@/lib/api';
+import { buscarPadron, crearRecurrente, emitirFactura, verComprobante, verCuenta, verRecurrente, COND_IVA_RECEPTOR, type Comprobante, type Condicion, type ErrorApi, type NuevaFacturaReq, type PadronDatos } from '@/lib/api';
+import { Icon } from '@/components/Icon';
+import { borrarBorrador, cuandoSeGuardo, enLinea, guardarBorrador, leerBorrador, tieneContenido, type Borrador } from '@/lib/borrador';
 import { hoyAR, rangoMes } from '@/lib/formato';
+import { paises } from '@/lib/paises';
 import { useApi } from '@/lib/useApi';
 
 type Tipo = 'C' | 'E';
@@ -70,7 +73,6 @@ const DOCS = [
 ];
 const UNIDADES = ['unidades', 'horas', 'kg', 'metros', 'litros', 'docena', 'servicio'];
 const CONDICIONES_VENTA = ['Contado', 'Transferencia bancaria', 'Cuenta corriente', 'Tarjeta de débito', 'Tarjeta de crédito', 'Cheque', 'Otra'];
-const PAISES = ['Estados Unidos', 'Brasil', 'Chile', 'Uruguay', 'Paraguay', 'España', 'Alemania', 'Reino Unido', 'Francia', 'Italia', 'México', 'Colombia', 'Perú', 'China', 'Canadá', 'Otro'];
 const MONEDAS_EXT = [
   { id: 'USD', label: 'Dólar estadounidense (USD)' },
   { id: 'EUR', label: 'Euro (EUR)' },
@@ -120,7 +122,74 @@ function Aviso({ res }: { res: ErrorApi }) {
 }
 
 export default function NuevaFactura() {
+  // useSearchParams (para "Repetir factura") necesita un Suspense alrededor.
+  return (
+    <Suspense fallback={<div className="skeleton h-[560px] rounded-tarjeta-lg" />}>
+      <FormularioFactura />
+    </Suspense>
+  );
+}
+
+const CONDICIONES_VALIDAS: Condicion[] = ['responsable_inscripto', 'monotributo', 'exento', 'consumidor_final', 'no_alcanzado'];
+/** CondicionIVAReceptorId de ARCA (RG 5616) → condición. */
+const CONDICION_POR_ID: Record<number, Condicion> = { 1: 'responsable_inscripto', 4: 'exento', 5: 'consumidor_final', 6: 'monotributo', 13: 'monotributo' };
+
+/** La condición guardada puede venir como código ("monotributo") o como texto ("IVA Responsable Inscripto"):
+ *  si no es un código, manda el id de ARCA, que es lo que se usa para emitir. */
+function condicionDe(cond: string | undefined, ivaId: number | undefined): Condicion {
+  if (CONDICIONES_VALIDAS.includes(cond as Condicion)) return cond as Condicion;
+  return (ivaId !== undefined && CONDICION_POR_ID[ivaId]) || 'consumidor_final';
+}
+
+/** Arma un borrador a partir de una factura ya emitida ("Repetir factura"). Las fechas no se copian: van las de hoy. */
+function borradorDeComprobante(c: Comprobante): Partial<Borrador> {
+  const r = c.receptor;
+  const cond = condicionDe(r.condicion, r.condicionIvaId);
+  const esE = c.sigla === 'E';
+  const conPadron = !esE && r.docTipo !== 99 && !!r.nombre;
+  return {
+    repiteDe: c.numeroInterno,
+    tipo: esE ? 'E' : 'C',
+    incluyeServicio: c.concepto !== 1,
+    docTipo: esE ? 80 : r.docTipo,
+    cuit: esE || r.docTipo === 99 ? '' : r.docNro,
+    padron: conPadron ? { cuit: r.docNro, nombre: r.nombre, tipoPersona: '', condicion: cond, domicilio: r.domicilio || undefined, actividades: [] } : null,
+    nombreExt: esE ? r.nombre : '',
+    email: r.email ?? '',
+    condicionVenta: c.condicionVenta || 'Transferencia bancaria',
+    items: (c.items ?? []).map((it, i) => ({
+      id: i + 1,
+      desc: it.descripcion,
+      cant: String(it.cantidad).replace('.', ','),
+      unidad: it.unidad || 'unidades',
+      precio: fmtNum(it.precioUnitario),
+    })),
+  };
+}
+
+/** Arma el borrador desde la plantilla de una factura recurrente (fechas: las de hoy). */
+function borradorDePlantilla(pl: NuevaFacturaReq): Partial<Borrador> {
+  const r = pl.receptor;
+  const cond = condicionDe(r.condicion, r.condicionIvaReceptorId);
+  return {
+    tipo: 'C',
+    incluyeServicio: pl.concepto !== 1,
+    docTipo: r.docTipo,
+    cuit: r.docTipo === 99 ? '' : r.docNro,
+    padron: r.docTipo !== 99 && r.nombre ? { cuit: r.docNro, nombre: r.nombre, tipoPersona: '', condicion: cond, domicilio: r.domicilio || undefined, actividades: [] } : null,
+    email: r.email ?? '',
+    condicionVenta: pl.condicionVenta || 'Transferencia bancaria',
+    items: pl.items.map((it, i) => ({ id: i + 1, desc: it.descripcion, cant: String(it.cantidad).replace('.', ','), unidad: it.unidad || 'unidades', precio: fmtNum(it.precioUnitario) })),
+  };
+}
+
+const DIAS = Array.from({ length: 28 }, (_, i) => String(i + 1));
+
+function FormularioFactura() {
   const router = useRouter();
+  const params = useSearchParams();
+  const repetirId = params.get('repetir');
+  const recurrenteParam = params.get('recurrente');
   const [tipo, setTipo] = useState<Tipo>('C');
   const [incluyeServicio, setIncluyeServicio] = useState(true);
 
@@ -156,6 +225,142 @@ export default function NuevaFactura() {
   const [emitirMsg, setEmitirMsg] = useState<ErrorApi | null>(null);
   const [yaAutorizada, setYaAutorizada] = useState(false);
 
+  // ---------- Borrador: se guarda solo, también sin internet ----------
+  const cuentaId = cuenta.dato?.cuenta.id;
+  const cuentaLista = cuenta.dato !== undefined || cuenta.estado === 'error';
+  const [listo, setListo] = useState(false); // ya se recuperó (o no había) borrador
+  const [guardadoEn, setGuardadoEn] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<{ tipo: 'borrador' | 'repetida' | 'error'; texto: string } | null>(null);
+  const [repiteDe, setRepiteDe] = useState<number | undefined>(undefined);
+  const [online, setOnline] = useState(true);
+  // "Repetir todos los meses": apagado por defecto, para que facturar siga siendo simple.
+  const [mensual, setMensual] = useState(false);
+  const [diaMensual, setDiaMensual] = useState(() => String(Math.min(28, Number(hoyAR().slice(8, 10)))));
+  const [saleSola, setSaleSola] = useState(false);
+  // Si se está emitiendo una recurrente que tocaba hoy.
+  const [recurrenteId, setRecurrenteId] = useState<number | null>(null);
+  const arrancado = useRef(false);
+
+  function aplicar(b: Partial<Borrador>) {
+    if (b.tipo) setTipo(b.tipo);
+    if (b.incluyeServicio !== undefined) setIncluyeServicio(b.incluyeServicio);
+    if (b.docTipo !== undefined) setDocTipo(b.docTipo);
+    if (b.cuit !== undefined) setCuit(b.cuit);
+    if (b.padron !== undefined) setPadron(b.padron);
+    if (b.condicionVenta) setCondicionVenta(b.condicionVenta);
+    if (b.nombreExt !== undefined) setNombreExt(b.nombreExt);
+    if (b.pais) setPais(b.pais);
+    if (b.idImpositivo !== undefined) setIdImpositivo(b.idImpositivo);
+    if (b.monedaExt) setMonedaExt(b.monedaExt);
+    if (b.cotizacion) setCotizacion(b.cotizacion);
+    if (b.formaPago) setFormaPago(b.formaPago);
+    if (b.incoterms) setIncoterms(b.incoterms);
+    if (b.email !== undefined) setEmail(b.email);
+    if (b.fecha) setFecha(b.fecha);
+    if (b.desde) setDesde(b.desde);
+    if (b.hasta) setHasta(b.hasta);
+    if (b.vence) setVence(b.vence);
+    if (b.items?.length) {
+      setItems(b.items);
+      proximoId = Math.max(proximoId, ...b.items.map((it) => it.id + 1));
+    }
+    setRepiteDe(b.repiteDe);
+  }
+
+  // Al entrar: "Repetir factura" trae la original; si no, se recupera el borrador que haya quedado.
+  useEffect(() => {
+    if (arrancado.current || !cuentaLista) return;
+    arrancado.current = true;
+    if (recurrenteParam) {
+      void verRecurrente(recurrenteParam).then((r) => {
+        if (r.ok) {
+          aplicar(borradorDePlantilla(r.dato.plantilla));
+          setRecurrenteId(r.dato.id);
+          setAviso({ tipo: 'repetida', texto: `Factura de todos los meses para ${r.dato.cliente}. Ya está todo cargado con las fechas de hoy: revisala y emitila.` });
+        } else {
+          setAviso({ tipo: 'error', texto: 'No pudimos traer la factura recurrente. Podés cargarla igual a mano.' });
+        }
+        setListo(true);
+      });
+      return;
+    }
+    if (repetirId) {
+      void verComprobante(repetirId).then((r) => {
+        if (r.ok) {
+          const b = borradorDeComprobante(r.dato.comprobante);
+          aplicar(b);
+          setAviso({
+            tipo: 'repetida',
+            texto: `Estás repitiendo la factura #${String(r.dato.comprobante.numeroInterno).padStart(4, '0')}. Copiamos el cliente y el detalle; las fechas son las de hoy. Revisá el monto antes de emitir.`,
+          });
+        } else {
+          setAviso({ tipo: 'error', texto: 'No pudimos traer la factura para repetirla. Podés cargarla igual a mano.' });
+        }
+        setListo(true);
+      });
+      return;
+    }
+    const b = leerBorrador(cuentaId);
+    if (b && tieneContenido(b)) {
+      aplicar(b);
+      setGuardadoEn(b.guardadoEn);
+      setAviso({ tipo: 'borrador', texto: `Recuperamos la factura que estabas armando (guardada ${cuandoSeGuardo(b.guardadoEn)}).` });
+    }
+    setListo(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cuentaLista, cuentaId, repetirId, recurrenteParam]);
+
+  // A cada cambio, se guarda (medio segundo después de dejar de escribir).
+  useEffect(() => {
+    if (!listo) return;
+    const datos = {
+      repiteDe, tipo, incluyeServicio, docTipo, cuit, padron, condicionVenta, nombreExt, pais, idImpositivo,
+      monedaExt, cotizacion, formaPago, incoterms, email, fecha, desde, hasta, vence, items,
+    };
+    if (!tieneContenido(datos)) return;
+    const t = setTimeout(() => {
+      const cuando = guardarBorrador(datos, cuentaId);
+      if (cuando) setGuardadoEn(cuando);
+    }, 500);
+    return () => clearTimeout(t);
+  }, [listo, cuentaId, repiteDe, tipo, incluyeServicio, docTipo, cuit, padron, condicionVenta, nombreExt, pais, idImpositivo, monedaExt, cotizacion, formaPago, incoterms, email, fecha, desde, hasta, vence, items]);
+
+  // Sin internet: se avisa y no se intenta emitir (el borrador sigue guardándose igual).
+  useEffect(() => {
+    const ver = () => setOnline(enLinea());
+    ver();
+    window.addEventListener('online', ver);
+    window.addEventListener('offline', ver);
+    return () => {
+      window.removeEventListener('online', ver);
+      window.removeEventListener('offline', ver);
+    };
+  }, []);
+
+  function empezarDeCero() {
+    borrarBorrador(cuentaId);
+    setAviso(null);
+    setGuardadoEn(null);
+    setRepiteDe(undefined);
+    setTipo('C');
+    setIncluyeServicio(true);
+    setDocTipo(80);
+    setCuit('');
+    setPadron(null);
+    setPadronMsg(null);
+    setCondicionVenta('Transferencia bancaria');
+    setNombreExt('');
+    setIdImpositivo('');
+    setEmail('');
+    setFecha(iniciales.hoy);
+    setDesde(iniciales.desde);
+    setHasta(iniciales.hasta);
+    setVence(iniciales.vence);
+    setItems([{ id: proximoId++, desc: '', cant: '1', unidad: 'unidades', precio: '' }]);
+    setRecurrenteId(null);
+    if (repetirId || recurrenteParam) router.replace('/app/facturas/nueva');
+  }
+
   const total = useMemo(() => items.reduce((acc, it) => acc + parseNum(it.cant) * parseNum(it.precio), 0), [items]);
   const conServicio = incluyeServicio;
   const esE = tipo === 'E';
@@ -182,6 +387,10 @@ export default function NuevaFactura() {
 
   async function emitir() {
     setEmitirMsg(null);
+    if (!enLinea()) {
+      setEmitirMsg({ ok: false, estado: 0, codigo: 'sin_conexion', mensaje: 'Estás sin internet. Tu factura quedó guardada: emitila cuando vuelva la conexión.' } as ErrorApi);
+      return;
+    }
     if (esE) {
       // La Factura E usa WSFEX (otro web service), que todavía no integramos.
       setEmitirMsg({ ok: false, estado: 501, mensaje: 'La Factura E (exportación) se emite con el web service WSFEX de ARCA, que estamos integrando. Es parte del plan Pro.' });
@@ -209,18 +418,32 @@ export default function NuevaFactura() {
             email,
           }
         : { docTipo, docNro: cuit.replace(/\D/g, ''), condicionIvaReceptorId: 5, condicion: 'consumidor_final', email };
-    const res = await emitirFactura({
+    const plantilla = {
       receptor,
-      concepto: incluyeServicio ? 2 : 1,
-      fecha: isoFecha(fecha),
+      concepto: (incluyeServicio ? 2 : 1) as 1 | 2,
       condicionVenta,
-      periodoServicio: conServicio ? { desde: isoFecha(desde), hasta: isoFecha(hasta), vencimientoPago: isoFecha(vence) } : undefined,
       items: items.map((it) => ({ descripcion: it.desc, cantidad: parseNum(it.cant), unidad: it.unidad, precioUnitario: parseNum(it.precio) })),
+    };
+    const res = await emitirFactura({
+      ...plantilla,
+      fecha: isoFecha(fecha),
+      periodoServicio: conServicio ? { desde: isoFecha(desde), hasta: isoFecha(hasta), vencimientoPago: isoFecha(vence) } : undefined,
+      recurrenteId: recurrenteId ?? undefined,
     });
-    setEmitiendo(false);
     if (res.ok) {
-      router.push(`/app/facturas/emitida?id=${res.dato.id}`);
-    } else if (res.codigo === 'no_guardado') {
+      borrarBorrador(cuentaId);
+      let extra = '';
+      if (mensual && !recurrenteId) {
+        const r = await crearRecurrente({ plantilla, dia: Number(diaMensual), automatica: saleSola });
+        extra = r.ok ? '&recurrente=creada' : r.codigo === 'limite_plan' ? '&recurrente=limite' : '&recurrente=error';
+      }
+      setEmitiendo(false);
+      router.push(`/app/facturas/emitida?id=${res.dato.id}${extra}`);
+      return;
+    }
+    setEmitiendo(false);
+    if (res.codigo === 'no_guardado') {
+      borrarBorrador(cuentaId);
       // ARCA ya la autorizó: no hay que reintentar. Mostramos el aviso y bloqueamos el botón.
       setEmitirMsg(res);
       setYaAutorizada(true);
@@ -242,6 +465,31 @@ export default function NuevaFactura() {
           {esE ? 'Factura E · Exportación' : `Factura C · Punto de venta ${puntoVenta}`}
         </span>
       </div>
+
+      {!online && (
+        <div role="status" className="aviso-entra flex items-start gap-3 rounded-[18px] bg-aviso-suave px-4 py-3.5 text-aviso-texto sm:px-5">
+          <Icon name="alerta" size={22} className="mt-0.5 flex-none" />
+          <p>
+            <strong>Estás sin internet.</strong> No te preocupes: lo que cargás se sigue guardando en este dispositivo. Cuando vuelva la conexión, emitís.
+          </p>
+        </div>
+      )}
+      {aviso && (
+        <div
+          role="status"
+          className={`aviso-entra flex flex-wrap items-center gap-x-4 gap-y-3 rounded-[18px] px-4 py-3.5 sm:px-5 ${
+            aviso.tipo === 'error' ? 'bg-error-suave text-error' : 'bg-primario-suave text-primario-oscuro'
+          }`}
+        >
+          <Icon name={aviso.tipo === 'repetida' ? 'copiar' : aviso.tipo === 'error' ? 'alerta' : 'reloj'} size={22} className="flex-none" />
+          <p className="min-w-0 flex-[1_1_280px] font-semibold">{aviso.texto}</p>
+          {aviso.tipo !== 'error' && (
+            <button type="button" onClick={empezarDeCero} className="h-10 rounded-full bg-white px-4 font-bold text-texto shadow-chip">
+              Empezar de cero
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="flex flex-wrap items-start gap-6">
         <div className="flex min-w-0 flex-[999_1_560px] flex-col gap-6">
@@ -343,7 +591,7 @@ export default function NuevaFactura() {
                 </div>
                 <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
                   <label className={labelCls}>Nombre / Razón social del exterior<input type="text" value={nombreExt} onChange={(e) => setNombreExt(e.target.value)} className={inputCls} placeholder="Acme Corp." /></label>
-                  <label className={labelCls}>País de destino<Select ariaLabel="País de destino" value={pais} onChange={setPais} options={PAISES} /></label>
+                  <label className={labelCls}>País de destino<Select ariaLabel="País de destino" value={pais} onChange={setPais} options={paises().map((p) => p.nombre)} /></label>
                   <label className={labelCls}>ID impositivo del exterior<input type="text" value={idImpositivo} onChange={(e) => setIdImpositivo(e.target.value)} className={inputCls} placeholder="Tax ID / VAT / EIN" /></label>
                   <label className={labelCls}>Email<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputCls} placeholder="cliente@ejemplo.com" /></label>
                 </div>
@@ -488,15 +736,55 @@ export default function NuevaFactura() {
             <h2 className="text-[20px] font-bold">Resumen</h2>
             <div className="flex justify-between text-texto-suave"><span>Subtotal</span><span>{fmt(total, simboloMoneda)}</span></div>
             <div className="flex justify-between text-texto-suave"><span>IVA</span><span>{esE ? 'Exento (exportación)' : 'No corresponde'}</span></div>
-            <div className="flex items-baseline justify-between border-t-[1.5px] border-dashed border-borde pt-3.5">
+            {/* El total en su propia línea y sin cortar: con USD y montos grandes no entra al lado de "Total". */}
+            <div className="@container flex flex-col gap-0.5 border-t-[1.5px] border-dashed border-borde pt-3.5">
               <strong>Total</strong>
-              <span className="font-display text-[32px] font-semibold">{fmt(total, simboloMoneda)}</span>
+              <span className="whitespace-nowrap text-right font-display text-[26px] font-semibold tabular-nums @[260px]:text-[32px]">{fmt(total, simboloMoneda)}</span>
             </div>
             {emitirMsg && <Aviso res={emitirMsg} />}
-            <button type="button" onClick={emitir} disabled={emitiendo || yaAutorizada} className="btn-lift flex h-12 items-center justify-center gap-2 rounded-full bg-primario text-base font-bold text-white shadow-boton disabled:opacity-60">
-              {emitiendo ? (<><Girando />Emitiendo en ARCA…</>) : `Emitir y enviar Factura ${tipo}`}
+            <button type="button" onClick={emitir} disabled={emitiendo || yaAutorizada || !online} className="btn-lift flex h-12 items-center justify-center gap-2 rounded-full bg-primario text-base font-bold text-white shadow-boton disabled:opacity-60">
+              {emitiendo ? (<><Girando />Emitiendo en ARCA…</>) : mensual && !recurrenteId ? `Emitir y repetir cada mes` : `Emitir y enviar Factura ${tipo}`}
             </button>
-            <button type="button" className="inline-flex items-center justify-center btn-lift h-12 rounded-full border-[1.5px] border-borde bg-white text-base font-bold text-texto hover:border-primario hover:text-primario-oscuro">Guardar borrador</button>
+            {!recurrenteId && !esE && (
+              <div className="flex flex-col gap-3 rounded-[16px] bg-fondo p-4">
+                <button type="button" role="switch" aria-checked={mensual} onClick={() => setMensual((v) => !v)} className="flex items-center justify-between gap-3 text-left">
+                  <span className="flex flex-col">
+                    <span className="font-semibold">Repetir todos los meses</span>
+                    <span className="text-texto-tenue">Te la preparo cada mes</span>
+                  </span>
+                  <span className={`relative h-6 w-11 flex-none rounded-full transition-colors ${mensual ? 'bg-primario' : 'bg-[#D6DBE7]'}`}>
+                    <span className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ease-mover ${mensual ? 'translate-x-5' : 'translate-x-0'}`} />
+                  </span>
+                </button>
+                {mensual && (
+                  <div className="aparece flex flex-col gap-3 border-t border-[#E3E7F0] pt-3">
+                    <label className="flex items-center justify-between gap-3 font-semibold">
+                      El día
+                      <span className="w-[110px]">
+                        <Select ariaLabel="Día del mes" value={diaMensual} onChange={setDiaMensual} options={DIAS} />
+                      </span>
+                    </label>
+                    <label className="flex cursor-pointer items-start gap-3">
+                      <input type="checkbox" checked={saleSola} onChange={(e) => setSaleSola(e.target.checked)} className="mt-1 h-5 w-5 flex-none accent-primario" />
+                      <span className="flex flex-col">
+                        <span className="font-semibold">Que salga sola</span>
+                        <span className="text-texto-tenue">{saleSola ? 'Facti la emite en ARCA ese día, sin preguntarte.' : 'Si no, te aviso ese día y la emitís con un toque.'}</span>
+                      </span>
+                    </label>
+                  </div>
+                )}
+              </div>
+            )}
+            <p className="flex items-start justify-center gap-2 text-center text-texto-tenue" aria-live="polite">
+              {guardadoEn ? (
+                <>
+                  <Icon name="check-circulo" size={18} className="mt-[3px] flex-none text-exito" />
+                  Guardado {cuandoSeGuardo(guardadoEn)}
+                </>
+              ) : (
+                'Se guarda solo mientras cargás, aunque se corte internet.'
+              )}
+            </p>
           </div>
 
           <div className="flex items-center gap-3.5 rounded-tarjeta bg-texto p-[22px] text-white">

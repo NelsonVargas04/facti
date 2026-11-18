@@ -8,7 +8,8 @@ import { GraficoFacturacion } from '@/components/GraficoFacturacion';
 import { Icon } from '@/components/Icon';
 import { TablaFacturas, TablaSkeleton } from '@/components/TablaFacturas';
 import { UsoPlan } from '@/components/UsoPlan';
-import { pedir, verCuenta, verResumen } from '@/lib/api';
+import { listarRecurrentes, pedir, verCalendario, verCuenta, verResumen, verTopes } from '@/lib/api';
+import { AlertasTopes } from '@/components/monotributo/AlertasTopes';
 import { nombreMes, nombrePila, pesos } from '@/lib/formato';
 import { useApi } from '@/lib/useApi';
 
@@ -50,6 +51,12 @@ const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno
 export default function Inicio() {
   const resumen = useApi(() => verResumen(), []);
   const cuenta = useApi(verCuenta, []);
+  const topes = useApi(verTopes, []);
+  const recurrentes = useApi(listarRecurrentes, []);
+  const paraEmitir = recurrentes.dato?.recurrentes.filter((r) => r.pendiente && !r.automatica) ?? [];
+  // El próximo vencimiento, solo si es en la semana (la factura mensual ya tiene su propio aviso).
+  const calendario = useApi(() => verCalendario(7), []);
+  const proximo = calendario.dato?.eventos.find((e) => e.tipo !== 'factura_mensual' && e.tipo !== 'nueva_escala');
   const arca = useApi(() => pedir<{ servidores: { app: string; db: string; auth: string } }>('/arca/estado'), []);
 
   const r = resumen.dato;
@@ -94,6 +101,45 @@ export default function Inicio() {
       </div>
 
       {resumen.estado === 'error' && !r && <AvisoApi error={resumen.error} onReintentar={resumen.recargar} />}
+
+      {/* Avisos de topes del monotributo: solo los importantes (no "podrías bajar"). */}
+      {paraEmitir.length > 0 && (
+        <div role="status" className="aparece flex flex-wrap items-center gap-x-4 gap-y-3 rounded-tarjeta bg-superficie p-5 shadow-tarjeta ring-2 ring-acento sm:p-6">
+          <span className="flex h-12 w-12 flex-none items-center justify-center rounded-[14px] bg-aviso-suave text-aviso-texto">
+            <Icon name="calendario" size={24} />
+          </span>
+          <div className="flex min-w-0 flex-[1_1_260px] flex-col">
+            <strong className="text-[18px]">
+              {paraEmitir.length === 1 ? `Hoy toca facturarle a ${paraEmitir[0]!.cliente}` : `Hoy tocan ${paraEmitir.length} facturas de todos los meses`}
+            </strong>
+            <span className="text-texto-suave">Ya está todo cargado: revisala y emitila con un toque.</span>
+          </div>
+          <Link
+            href={paraEmitir.length === 1 ? `/app/facturas/nueva?recurrente=${paraEmitir[0]!.id}` : '/app/facturas/recurrentes'}
+            className="btn-lift inline-flex h-11 items-center rounded-full bg-primario px-5 font-bold text-white shadow-boton"
+          >
+            {paraEmitir.length === 1 ? 'Revisar y emitir' : 'Verlas'}
+          </Link>
+        </div>
+      )}
+      {proximo && (
+        <Link
+          href="/app/calendario"
+          className="aparece group flex flex-wrap items-center gap-x-4 gap-y-2 rounded-tarjeta bg-superficie px-5 py-4 shadow-tarjeta transition-colors hover:bg-fondo sm:px-6"
+        >
+          <span className="flex h-11 w-11 flex-none items-center justify-center rounded-[14px] bg-primario-suave text-primario-oscuro">
+            <Icon name="calendario" size={22} />
+          </span>
+          <span className="flex min-w-0 flex-[1_1_240px] flex-col">
+            <strong>{proximo.titulo}</strong>
+            <span className="text-texto-suave">
+              {proximo.fecha.split('-').reverse().join('/')} · Ver el calendario
+            </span>
+          </span>
+          <Icon name="chevron-derecha" size={20} className="text-texto-tenue transition-transform group-hover:translate-x-0.5" />
+        </Link>
+      )}
+      {cuenta.dato?.cuenta.condicion === 'monotributo' && <AlertasTopes alertas={topes.dato?.analisis.alertas?.filter((a) => a.nivel !== 'info')} />}
 
       {/* Stat cards */}
       {(r || resumen.estado === 'cargando') && (

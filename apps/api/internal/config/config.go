@@ -37,6 +37,16 @@ type Config struct {
 	CertPEM  string
 	KeyPEM   string
 	CacheDir string
+
+	// Mercado Pago (cobro de Facti Pro). Sin token, la pantalla de pagos queda en vista previa.
+	MPAccessToken   string
+	MPWebhookSecret string
+	// Precio de Pro en dólares (se cobra en pesos con el dólar del BCRA del día).
+	PrecioProUSD float64
+	// URL pública de la web: a dónde vuelve el usuario después de pagar.
+	WebURL string
+	// CronSecret: clave del cron diario que emite las facturas recurrentes automáticas.
+	CronSecret string
 }
 
 // Cargar busca el .env subiendo desde la carpeta actual (la API corre dentro de apps/api)
@@ -72,6 +82,18 @@ func Cargar() Config {
 		if o = strings.TrimSpace(o); o != "" {
 			c.OrigenesWeb = append(c.OrigenesWeb, o)
 		}
+	}
+	c.MPAccessToken = strings.TrimSpace(os.Getenv("MP_ACCESS_TOKEN"))
+	c.MPWebhookSecret = strings.TrimSpace(os.Getenv("MP_WEBHOOK_SECRET"))
+	c.CronSecret = strings.TrimSpace(os.Getenv("CRON_SECRET"))
+	c.PrecioProUSD = 10
+	if v, err := strconv.ParseFloat(strings.TrimSpace(os.Getenv("FACTI_PRECIO_PRO_USD")), 64); err == nil && v > 0 {
+		c.PrecioProUSD = v
+	}
+	// Por defecto, el primer origen permitido de la web (o la web local).
+	c.WebURL = strings.TrimSpace(os.Getenv("WEB_URL"))
+	if c.WebURL == "" && len(c.OrigenesWeb) > 0 {
+		c.WebURL = c.OrigenesWeb[0]
 	}
 	return c
 }

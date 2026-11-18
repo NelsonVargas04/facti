@@ -152,6 +152,8 @@ type nuevaFactura struct {
 		Unidad         string   `json:"unidad"`
 		PrecioUnitario *float64 `json:"precioUnitario"`
 	} `json:"items"`
+	// RecurrenteID: si se emite desde una factura recurrente, para pasarla al mes siguiente.
+	RecurrenteID *int64 `json:"recurrenteId,omitempty"`
 }
 
 type facturaEmitida struct {
@@ -187,51 +189,78 @@ func (s *Servidor) emitirFactura(w http.ResponseWriter, r *http.Request) error {
 	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)).Decode(&body); err != nil || !body.valido() {
 		return pedidoInvalido("datos_invalidos", "Faltan datos del comprobante o los ítems.")
 	}
-
-	total := 0.0
-	items := make([]datos.Item, len(body.Items))
-	for i, it := range body.Items {
-		sub := math.Round(*it.Cantidad**it.PrecioUnitario*100) / 100
-		total += sub
-		items[i] = datos.Item{
-			Descripcion: strings.TrimSpace(it.Descripcion), Cantidad: *it.Cantidad, Unidad: it.Unidad,
-			PrecioUnitario: *it.PrecioUnitario, Subtotal: sub,
-		}
-	}
-	total = math.Round(total*100) / 100
-	if total <= 0 {
-		return pedidoInvalido("total_invalido", "El total debe ser mayor a cero.")
-	}
-
-	ahora := s.ahora()
-	fecha, err := parseFecha(body.Fecha, ahora)
+	prep, err := body.preparar(s.ahora())
 	if err != nil {
-		return pedidoInvalido("fecha_invalida", "La fecha tiene que tener el formato AAAA-MM-DD.")
+		return err
 	}
-	var servicio *arca.PeriodoServicio
-	if p := body.PeriodoServicio; p != nil {
-		desde, e1 := parseFecha(p.Desde, ahora)
-		hasta, e2 := parseFecha(p.Hasta, ahora)
-		vto, e3 := parseFecha(p.VencimientoPago, ahora)
-		if e1 != nil || e2 != nil || e3 != nil {
-			return pedidoInvalido("fecha_invalida", "Las fechas del período tienen que tener el formato AAAA-MM-DD.")
-		}
-		servicio = &arca.PeriodoServicio{Desde: desde, Hasta: hasta, VencimientoPago: vto}
-	}
-
-	// Antes de pedir el CAE: sesión, CUIT cargado, ARCA configurado, base para guardarlo y cupo en el plan.
+	// Antes de pedir el CAE: sesión, CUIT cargado, ARCA configurado y base para guardarlo.
 	d, cuenta, cl, err := s.emisor(r)
 	if err != nil {
 		return err
 	}
+	out, err := s.emitirC(r.Context(), d, cuenta, cl, body, prep)
+	if err != nil {
+		return err
+	}
+	// Si viene de una factura recurrente, queda anotada y pasa al mes siguiente.
+	if body.RecurrenteID != nil {
+		s.avanzarRecurrente(r.Context(), d, cuenta.ID, *body.RecurrenteID, out)
+	}
+	responderJSON(w, http.StatusOK, out)
+	return nil
+}
+
+// facturaPreparada: lo que se calcula del pedido antes de ir a ARCA.
+type facturaPreparada struct {
+	items    []datos.Item
+	total    float64
+	fecha    time.Time
+	servicio *arca.PeriodoServicio
+}
+
+// preparar valida importes y fechas del pedido (errores 400, antes de tocar ARCA).
+func (body nuevaFactura) preparar(ahora time.Time) (facturaPreparada, error) {
+	var p facturaPreparada
+	p.items = make([]datos.Item, len(body.Items))
+	for i, it := range body.Items {
+		sub := math.Round(*it.Cantidad**it.PrecioUnitario*100) / 100
+		p.total += sub
+		p.items[i] = datos.Item{
+			Descripcion: strings.TrimSpace(it.Descripcion), Cantidad: *it.Cantidad, Unidad: it.Unidad,
+			PrecioUnitario: *it.PrecioUnitario, Subtotal: sub,
+		}
+	}
+	p.total = math.Round(p.total*100) / 100
+	if p.total <= 0 {
+		return p, pedidoInvalido("total_invalido", "El total debe ser mayor a cero.")
+	}
+	var err error
+	if p.fecha, err = parseFecha(body.Fecha, ahora); err != nil {
+		return p, pedidoInvalido("fecha_invalida", "La fecha tiene que tener el formato AAAA-MM-DD.")
+	}
+	if ps := body.PeriodoServicio; ps != nil {
+		desde, e1 := parseFecha(ps.Desde, ahora)
+		hasta, e2 := parseFecha(ps.Hasta, ahora)
+		vto, e3 := parseFecha(ps.VencimientoPago, ahora)
+		if e1 != nil || e2 != nil || e3 != nil {
+			return p, pedidoInvalido("fecha_invalida", "Las fechas del período tienen que tener el formato AAAA-MM-DD.")
+		}
+		p.servicio = &arca.PeriodoServicio{Desde: desde, Hasta: hasta, VencimientoPago: vto}
+	}
+	return p, nil
+}
+
+// emitirC pide el CAE a ARCA y guarda la Factura C. La usan la web y las recurrentes automáticas.
+func (s *Servidor) emitirC(ctx context.Context, d datos.Datos, cuenta datos.Cuenta, cl *ClientesArca, body nuevaFactura, prep facturaPreparada) (facturaEmitida, error) {
+	fecha, total, servicio := prep.fecha, prep.total, prep.servicio
 	if lim := limitesDe(cuenta.Plan); lim != nil {
 		desde, hasta := mes(fecha.In(arca.HoraArgentina))
-		uso, err := d.Uso(r.Context(), cuenta.ID, desde, hasta)
+		uso, err := d.Uso(ctx, cuenta.ID, desde, hasta)
 		if err != nil {
-			return &BaseDatosError{Mensaje: err.Error()}
+			return facturaEmitida{}, &BaseDatosError{Mensaje: err.Error()}
 		}
 		if uso.Facturas >= lim.Facturas {
-			return &errorPedido{
+			return facturaEmitida{}, &errorPedido{
 				estado: http.StatusForbidden, codigo: "limite_plan",
 				mensaje: fmt.Sprintf("Ya emitiste las %d facturas de tu plan Gratis este mes. Pasate a Pro para seguir facturando.", lim.Facturas),
 				extra:   map[string]any{"uso": uso, "limites": lim},
@@ -241,7 +270,7 @@ func (s *Servidor) emitirFactura(w http.ResponseWriter, r *http.Request) error {
 
 	pv := cuenta.PuntoVenta
 	rec := body.Receptor
-	res, err := cl.WsfeDe(cuenta.Cuit).Emitir(r.Context(), arca.NuevoComprobante{
+	res, err := cl.WsfeDe(cuenta.Cuit).Emitir(ctx, arca.NuevoComprobante{
 		PuntoVenta:             pv,
 		Tipo:                   arca.FacturaC,
 		Concepto:               body.Concepto,
@@ -254,16 +283,13 @@ func (s *Servidor) emitirFactura(w http.ResponseWriter, r *http.Request) error {
 		Servicio:               servicio,
 	})
 	if err != nil {
-		return err
+		return facturaEmitida{}, err
 	}
 	if !res.Aprobado || res.CAE == "" {
-		responderJSON(w, http.StatusUnprocessableEntity, map[string]any{
-			"error":         "rechazada",
-			"mensaje":       "ARCA no autorizó la factura.",
-			"observaciones": res.Observaciones,
-			"errores":       res.Errores,
-		})
-		return nil
+		return facturaEmitida{}, &errorPedido{
+			estado: http.StatusUnprocessableEntity, codigo: "rechazada", mensaje: "ARCA no autorizó la factura.",
+			extra: map[string]any{"observaciones": res.Observaciones, "errores": res.Errores},
+		}
 	}
 
 	fechaISO := arca.DeFechaArca(arca.AFechaArca(fecha))
@@ -311,31 +337,30 @@ func (s *Servidor) emitirFactura(w http.ResponseWriter, r *http.Request) error {
 			CondicionIvaID: *rec.CondicionIvaReceptorID, Condicion: rec.Condicion,
 			Domicilio: strings.TrimSpace(rec.Domicilio), Email: strings.TrimSpace(rec.Email),
 		},
-		Cobro: datos.Pendiente, Items: items, Respuesta: res.Respuesta,
+		Cobro: datos.Pendiente, Items: prep.items, Respuesta: res.Respuesta,
 	}
 	if comp.Receptor.DocNro == "" {
 		comp.Receptor.DocNro = "0"
 	}
 	if servicio != nil {
-		p := body.PeriodoServicio
-		comp.Periodo = &datos.Periodo{Desde: p.Desde, Hasta: p.Hasta, VtoPago: p.VencimientoPago}
+		ps := body.PeriodoServicio
+		comp.Periodo = &datos.Periodo{Desde: ps.Desde, Hasta: ps.Hasta, VtoPago: ps.VencimientoPago}
 	}
 	// Usa un contexto propio: si el navegador cortó el pedido, el comprobante igual se guarda.
-	ctxGuardar, cancelar := context.WithTimeout(context.WithoutCancel(r.Context()), 20*time.Second)
+	ctxGuardar, cancelar := context.WithTimeout(context.WithoutCancel(ctx), 20*time.Second)
 	defer cancelar()
 	if err := d.GuardarComprobante(ctxGuardar, cuenta.ID, &comp); err != nil {
 		// ARCA ya lo autorizó: se deja todo en el log para poder cargarlo a mano y se avisa claro.
 		completo, _ := json.Marshal(comp)
 		s.log.Error("comprobante autorizado sin guardar", "error", err, "comprobante", string(completo), "respuesta", res.Respuesta)
-		return &errorPedido{
+		return facturaEmitida{}, &errorPedido{
 			estado: http.StatusInternalServerError, codigo: "no_guardado",
 			mensaje: fmt.Sprintf("ARCA autorizó la factura %05d-%08d (CAE %s), pero no pudimos guardarla en Facti. No la vuelvas a emitir: ya es válida.", pv, res.Numero, res.CAE),
 			extra:   map[string]any{"factura": out},
 		}
 	}
 	out.ID = comp.ID
-	responderJSON(w, http.StatusOK, out)
-	return nil
+	return out, nil
 }
 
 func (b nuevaFactura) valido() bool {

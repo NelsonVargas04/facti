@@ -3,5 +3,6 @@ export const PLAN_DEMO = {
   plan: 'Gratis',
   facturas: { limite: 10, usadas: 10 },
   exportacion: { limite: 1, usadas: 0 },
-  precioPro: '$8.900',
+  // Precio en dólares; se cobra en pesos al tipo de cambio del día (el final con impuestos se muestra antes de contratar).
+  precioPro: 'US$10',
 };

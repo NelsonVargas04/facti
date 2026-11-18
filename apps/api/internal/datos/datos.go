@@ -209,6 +209,20 @@ type Datos interface {
 	// ErrCodigoRepetido si el código ya existe (se genera otro y se reintenta).
 	GuardarSolicitud(ctx context.Context, s *Solicitud) error
 
+	// ImportarExternos guarda comprobantes emitidos fuera de Facti. Saltea los que ya se importaron
+	// y los que se emitieron con Facti (mismo tipo, punto de venta y número).
+	ImportarExternos(ctx context.Context, cuentaID int64, ex []Externo) (Importacion, error)
+	EstadoExternos(ctx context.Context, cuentaID int64) (EstadoExternos, error)
+	// IngresosPorMes devuelve lo facturado mes a mes (con y sin Facti), de desde a hasta inclusive.
+	IngresosPorMes(ctx context.Context, cuentaID int64, desde, hasta string) ([]IngresoMes, error)
+
+	// Suscripción a Facti Pro (Mercado Pago) y sus cobros.
+	Pagos
+	// Facturas que se repiten todos los meses.
+	Recurrentes
+	// Link privado para suscribirse al calendario.
+	Calendario
+
 	Cerrar()
 }
 

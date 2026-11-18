@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Facti } from '@/components/Facti';
+import { Icon } from '@/components/Icon';
 import { cerrarSesion } from '@/lib/sesion';
 
 /**
@@ -102,32 +102,45 @@ export function CierrePorInactividad() {
 
   if (quedan === null) return null;
 
+  const seguir = () => {
+    avisando.current = false;
+    ultima.current = Date.now();
+    guardar(ultima.current);
+    setQuedan(null);
+  };
+
+  // Tarjeta arriba, sin oscurecer la pantalla: se ve lo que estabas haciendo.
   return (
-    <div role="alertdialog" aria-modal="true" aria-labelledby="inactividad-titulo" className="fixed inset-0 z-50 flex items-center justify-center bg-[#15193A]/40 p-4">
-      <div className="flex w-full max-w-[420px] flex-col items-center gap-4 rounded-tarjeta bg-superficie p-7 text-center shadow-tarjeta">
-        <Facti pose="durmiendo" size={110} animated={false} />
-        <h2 id="inactividad-titulo" className="text-[22px] font-bold">¿Seguís ahí?</h2>
-        <p className="text-texto-suave">
-          Para cuidar tus datos fiscales, cerramos tu sesión en <strong className="tabular-nums text-texto">{quedan} s</strong> si no hay actividad.
-        </p>
-        <div className="flex w-full flex-wrap justify-center gap-3">
-          <button
-            type="button"
-            autoFocus
-            onClick={() => {
-              avisando.current = false;
-              ultima.current = Date.now();
-              guardar(ultima.current);
-              setQuedan(null);
-            }}
-            className="btn-lift inline-flex h-12 items-center rounded-full bg-primario px-6 font-bold text-white shadow-boton"
-          >
-            Seguir conectado
-          </button>
-          <button type="button" onClick={() => void salir()} className="inline-flex h-12 items-center rounded-full px-5 font-bold text-texto-suave hover:text-error">
+    <div className="pointer-events-none fixed inset-x-0 top-4 z-50 flex justify-center px-4">
+      <div
+        role="alertdialog"
+        aria-labelledby="inactividad-titulo"
+        aria-describedby="inactividad-texto"
+        className="aviso-entra pointer-events-auto relative flex w-full max-w-[700px] flex-wrap items-center gap-x-4 gap-y-3 overflow-hidden rounded-tarjeta bg-superficie p-4 pb-5 shadow-[0_16px_40px_rgba(21,25,58,0.16)] sm:p-5 sm:pb-6"
+      >
+        <div className="flex min-w-0 flex-[1_1_220px] items-center gap-4">
+          <span className="flex h-12 w-12 flex-none items-center justify-center rounded-[14px] bg-aviso-suave text-aviso-texto">
+            <Icon name="reloj" size={24} />
+          </span>
+          <div className="flex min-w-0 flex-col">
+            <h2 id="inactividad-titulo" className="text-[18px] font-bold">¿Seguís ahí?</h2>
+            <p id="inactividad-texto" className="whitespace-nowrap text-texto-suave">
+              Tu sesión se cierra en <strong className="tabular-nums text-texto">{quedan} s</strong>
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-none items-center gap-2 max-[420px]:w-full max-[420px]:justify-end">
+          <button type="button" onClick={() => void salir()} className="inline-flex h-11 items-center justify-center whitespace-nowrap rounded-full px-4 font-bold text-texto-suave hover:text-error max-[420px]:flex-1">
             Cerrar sesión
           </button>
+          <button type="button" autoFocus onClick={seguir} className="btn-lift inline-flex h-11 items-center justify-center whitespace-nowrap rounded-full bg-primario px-5 font-bold text-white shadow-boton max-[420px]:flex-1">
+            Seguir conectado
+          </button>
         </div>
+        {/* Cuánto falta, como una barrita que se vacía. */}
+        <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-1.5 bg-fondo">
+          <span className="block h-full bg-acento transition-[width] duration-1000 ease-linear" style={{ width: `${(quedan / (AVISO_MS / 1000)) * 100}%` }} />
+        </span>
       </div>
     </div>
   );

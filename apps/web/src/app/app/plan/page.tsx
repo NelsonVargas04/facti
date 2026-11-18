@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { AvisoApi } from '@/components/AvisoApi';
 import { BackLink } from '@/components/BackLink';
 import { Facti } from '@/components/Facti';
@@ -13,8 +14,11 @@ type Valor = string | boolean;
 const BENEFICIOS: { f: string; gratis: Valor; pro: Valor }[] = [
   { f: 'Facturas A, B y C', gratis: '10 / mes', pro: 'Ilimitadas' },
   { f: 'Factura E (exportación)', gratis: '1 / mes', pro: 'Ilimitada' },
+  { f: 'Facturas de todos los meses', gratis: '1', pro: 'Ilimitadas' },
   { f: 'Panel de monotributo', gratis: true, pro: true },
+  { f: 'Calendario de vencimientos', gratis: true, pro: true },
   { f: 'Registro de cobros', gratis: true, pro: true },
+  { f: 'Cobros en el calendario', gratis: false, pro: true },
   { f: 'Recordatorios de cobro', gratis: false, pro: true },
   { f: 'Multi-CUIT (para contadores)', gratis: false, pro: true },
   { f: 'Soporte prioritario', gratis: false, pro: true },
@@ -83,9 +87,9 @@ export default function PlanPro() {
               <li key={t} className="flex items-center gap-2.5"><Icon name="check" size={18} strokeWidth={3} className="flex-none text-acento" />{t}</li>
             ))}
           </ul>
-          <button type="button" className="btn-lift pulse-cta mt-auto flex h-12 items-center justify-center rounded-full bg-acento text-base font-bold text-texto">
+          <Link href="/app/cuenta?pro=1" className="btn-lift pulse-cta mt-auto flex h-12 items-center justify-center rounded-full bg-acento text-base font-bold text-texto">
             Pasar a Pro
-          </button>
+          </Link>
           <p className="text-center text-base text-[#9CA0C8]">Sin permanencia. Cancelás cuando quieras.</p>
         </aside>
       </div>

@@ -22,17 +22,19 @@ const FACTURAS: Item = { href: '/app/facturas', label: 'Facturas', icon: 'factur
 const CLIENTES: Item = { href: '/app/clientes', label: 'Clientes', icon: 'clientes' };
 const COBROS: Item = { href: '/app/cobros', label: 'Cobros', icon: 'cobros' };
 const MONOTRIBUTO: Item = { href: '/app/monotributo/pagos', label: 'Monotributo', icon: 'monotributo' };
+const CALENDARIO: Item = { href: '/app/calendario', label: 'Calendario', icon: 'calendario' };
+const PLAN: Item = { href: '/app/cuenta', label: 'Plan y pagos', icon: 'tarjeta' };
 const CONFIGURACION: Item = { href: '/app/configuracion', label: 'Configuración', icon: 'config' };
 
 /** En la compu el menú va en dos grupos: el día a día de facturar y lo impositivo. Configuración queda abajo. */
 const GRUPOS: { titulo: string; items: Item[] }[] = [
   { titulo: 'Facturación', items: [INICIO, FACTURAS, CLIENTES, COBROS] },
-  { titulo: 'Impuestos', items: [MONOTRIBUTO] },
+  { titulo: 'Impuestos', items: [MONOTRIBUTO, CALENDARIO] },
 ];
 
 /** En el celular: barra de abajo con lo más usado; el resto, en "Más". */
 const BARRA: Item[] = [INICIO, FACTURAS, COBROS];
-const MAS: Item[] = [CLIENTES, MONOTRIBUTO, CONFIGURACION];
+const MAS: Item[] = [CLIENTES, MONOTRIBUTO, CALENDARIO, PLAN, CONFIGURACION];
 
 /** Activo también en las subpáginas (una factura abierta marca "Facturas"), salvo Inicio. */
 function esActivo(pathname: string, href: string) {
@@ -175,7 +177,10 @@ export function Sidebar() {
           </nav>
 
           <div className="mt-auto flex flex-col gap-3">
-            <ItemMenu it={CONFIGURACION} activo={esActivo(actual, CONFIGURACION.href)} onIr={setDestino} />
+            <div className="flex flex-col gap-1">
+              <ItemMenu it={PLAN} activo={esActivo(actual, PLAN.href)} onIr={setDestino} />
+              <ItemMenu it={CONFIGURACION} activo={esActivo(actual, CONFIGURACION.href)} onIr={setDestino} />
+            </div>
             {cuentaTarjeta}
           </div>
         </div>

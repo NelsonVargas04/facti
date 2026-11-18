@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { AvisoApi } from '@/components/AvisoApi';
 import { Facti } from '@/components/Facti';
+import { Icon } from '@/components/Icon';
 import { ComprobanteC } from '@/components/ComprobanteC';
 import { verComprobante } from '@/lib/api';
 import { datosComprobante, nombreCliente } from '@/lib/comprobante';
@@ -30,7 +31,10 @@ export default function FacturaEmitidaPagina() {
 }
 
 function FacturaEmitida() {
-  const id = useSearchParams().get('id') ?? '';
+  const params = useSearchParams();
+  const id = params.get('id') ?? '';
+  // Si al emitir se prendió "Repetir todos los meses": creada, límite del plan o error.
+  const recurrente = params.get('recurrente');
   const det = useApi(() => verComprobante(id), [id]);
   const [copiado, setCopiado] = useState(false);
 
@@ -82,6 +86,25 @@ function FacturaEmitida() {
             </div>
           </div>
 
+          {recurrente && (
+            <div
+              role="status"
+              className={`flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[18px] px-5 py-4 font-semibold ${recurrente === 'creada' ? 'bg-primario-suave text-primario-oscuro' : 'bg-aviso-suave text-aviso-texto'}`}
+            >
+              <Icon name="calendario" size={22} className="flex-none" />
+              <span className="min-w-0 flex-[1_1_240px]">
+                {recurrente === 'creada'
+                  ? 'Listo: se repite todos los meses. Te la preparo el día que elegiste.'
+                  : recurrente === 'limite'
+                    ? 'La factura salió, pero no quedó como mensual: en el plan Gratis podés tener 1 factura de todos los meses.'
+                    : 'La factura salió, pero no pudimos dejarla como mensual. Probá de nuevo desde "Repetir factura".'}
+              </span>
+              <Link href={recurrente === 'limite' ? '/app/plan' : '/app/facturas/recurrentes'} className="underline underline-offset-2">
+                {recurrente === 'limite' ? 'Ver Pro' : 'Ver las de todos los meses'}
+              </Link>
+            </div>
+          )}
+
           <section className="grid grid-cols-2 gap-4 rounded-tarjeta bg-superficie p-7 shadow-tarjeta">
             {DATOS.map(([k, v]) => (
               <div key={k}>
@@ -114,9 +137,13 @@ function FacturaEmitida() {
                 <strong className="block">Registrar el cobro</strong>
                 <span className="text-base text-texto-suave">Cuando te paguen, marcala como cobrada</span>
               </Link>
+              <Link href={`/app/facturas/nueva?repetir=${f.id}`} className="flex-1 basis-[200px] rounded-[16px] bg-fondo p-4 transition-colors hover:bg-primario-suave">
+                <strong className="block">Repetir esta factura</strong>
+                <span className="text-base text-texto-suave">Mismo cliente y detalle, con la fecha de hoy</span>
+              </Link>
               <Link href="/app/facturas/nueva" className="flex-1 basis-[200px] rounded-[16px] bg-fondo p-4 transition-colors hover:bg-primario-suave">
                 <strong className="block">Emitir otra factura</strong>
-                <span className="text-base text-texto-suave">Con los mismos datos o para otro cliente</span>
+                <span className="text-base text-texto-suave">Para otro cliente, desde cero</span>
               </Link>
             </div>
             <p className="text-base text-texto-suave">Guardamos el PDF y la respuesta de ARCA durante 10 años. También podés verificarla en ARCA escaneando el QR.</p>

@@ -7,10 +7,13 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strings"
 
 	"facti/api/internal/auth"
 	"facti/api/internal/config"
+	"facti/api/internal/cotizacion"
 	"facti/api/internal/demo"
+	"facti/api/internal/mercadopago"
 	"facti/api/internal/servidor"
 )
 
@@ -57,6 +60,17 @@ func Armar(log *slog.Logger, conDemo bool) (http.Handler, config.Config, error) 
 		log.Warn("MODO DEMO: cuenta de prueba en memoria (se borra al reiniciar), sin Supabase ni base de datos")
 	}
 
+	// Mercado Pago: sin token, la pantalla "Plan y pagos" queda en vista previa (no cobra nada).
+	var mp servidor.CobradorPro
+	if cfg.MPAccessToken != "" {
+		mp = mercadopago.Nuevo(cfg.MPAccessToken, "")
+		if strings.HasPrefix(cfg.MPAccessToken, "TEST-") {
+			log.Info("Mercado Pago en modo de prueba (credenciales TEST-)")
+		} else if cfg.MPWebhookSecret == "" {
+			log.Warn("falta MP_WEBHOOK_SECRET: los avisos de Mercado Pago no se pueden validar")
+		}
+	}
+
 	h := servidor.Nuevo(servidor.Opciones{
 		Arca:        servidor.ClientesPerezosos(cfg, datosArca),
 		Datos:       datosApp,
@@ -65,6 +79,13 @@ func Armar(log *slog.Logger, conDemo bool) (http.Handler, config.Config, error) 
 		Entorno:     cfg.Entorno,
 		OrigenesWeb: cfg.OrigenesWeb,
 		Log:         log,
+
+		MercadoPago:     mp,
+		MPWebhookSecret: cfg.MPWebhookSecret,
+		Cotizador:       cotizacion.Nueva(""),
+		PrecioProUSD:    cfg.PrecioProUSD,
+		WebURL:          cfg.WebURL,
+		CronSecret:      cfg.CronSecret,
 	})
 	return h, cfg, nil
 }

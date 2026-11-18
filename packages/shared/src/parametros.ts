@@ -103,6 +103,15 @@ export const PARAMETROS: Parametro[] = [
     vigenteDesde: '2026-08-01',
     fuente: 'ARCA, tabla de categorías de monotributo (valores desde el 01/08/2026), arca.gob.ar/monotributo/categorias.asp',
   },
+  {
+    // ARCA excluye con tablas anteriores a la vigente (topes más bajos). Facti avisa con la K de la tabla anterior.
+    // El mismo valor está en apps/api/internal/monotributo/topes.go (TopesExclusion): actualizar los dos.
+    clave: 'monotributo.tope_exclusion',
+    valor: 108_357_084.05,
+    vigenteDesde: '2026-08-01',
+    fuente:
+      'Tope de la categoría K de la tabla del 01/02/2026 al 31/07/2026 (ARCA). Criterio: iprofesional.com/impuestos/446225-tabla-monotributo-aplica-arca-para-exclusiones-2026',
+  },
   // TODO: cargar las cuotas mensuales por categoría desde la misma tabla.
 ];
 

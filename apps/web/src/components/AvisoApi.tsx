@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Facti } from '@/components/Facti';
+import { Icon } from '@/components/Icon';
 import type { ErrorApi } from '@/lib/api';
 
 /** Qué decirle al usuario según el error de la API. */
@@ -19,10 +19,24 @@ function textos(e: ErrorApi): { titulo: string; detalle: string } {
     case 'falta_cuit':
       return { titulo: 'Falta tu CUIT', detalle: e.mensaje };
     case 'sin_conexion':
-      return { titulo: 'No pudimos hablar con la API de Facti', detalle: `${e.mensaje} Levantala con pnpm dev:api.` };
+      return process.env.NODE_ENV === 'development'
+        ? { titulo: 'No pudimos conectarnos con Facti', detalle: `${e.mensaje} Levantala con pnpm dev:api.` }
+        : { titulo: 'No pudimos conectarnos con Facti', detalle: 'Revisá tu conexión a internet y probá de nuevo en un ratito.' };
     default:
-      return { titulo: 'Algo salió mal', detalle: e.mensaje };
+      return { titulo: 'No pudimos cargar esta parte', detalle: e.mensaje };
   }
+}
+
+/** Tarjeta del aviso: a todo el ancho del contenido, como las demás tarjetas de la app. */
+const tarjetaAviso = 'flex w-full flex-wrap items-center gap-x-5 gap-y-4 rounded-tarjeta bg-superficie p-5 shadow-tarjeta sm:p-6';
+
+/** Ícono del aviso en un cuadradito de color, igual que en las tarjetas del inicio. */
+function IconoAviso({ tono }: { tono: 'aviso' | 'error' }) {
+  return (
+    <span className={`flex h-12 w-12 flex-none items-center justify-center rounded-[14px] ${tono === 'error' ? 'bg-error-suave text-error' : 'bg-aviso-suave text-aviso-texto'}`}>
+      <Icon name={tono === 'error' ? 'alerta-triangulo' : 'alerta'} size={24} />
+    </span>
+  );
 }
 
 /** Panel para cuando una pantalla no puede cargar sus datos. */
@@ -31,43 +45,48 @@ export function AvisoApi({ error, onReintentar, compacto }: { error: ErrorApi; o
   // Para estos dos casos, la acción útil es ir a otra pantalla, no reintentar.
   const accion =
     error.codigo === 'sin_sesion' ? { href: '/ingresar', texto: 'Iniciar sesión' } : error.codigo === 'falta_cuit' ? { href: '/onboarding/perfil', texto: 'Cargar mi CUIT' } : null;
-  if (accion) {
-    return (
-      <div role="alert" className={`aviso-entra flex ${compacto ? 'flex-wrap items-center justify-between rounded-[16px] bg-aviso-suave px-4 py-3 text-base text-aviso-texto' : 'flex-col items-center px-4 py-12 text-center'} gap-3`}>
-        {!compacto && <Facti pose="senalando" size={130} animated={false} />}
-        <span className={compacto ? '' : 'flex flex-col gap-1'}>
-          {compacto ? <strong>{titulo}. </strong> : <h2 className="text-[20px] font-bold text-texto">{titulo}</h2>}
-          <span className={compacto ? '' : 'text-texto-suave'}>{detalle}</span>
-        </span>
-        <Link href={accion.href} className="inline-flex items-center justify-center btn-lift rounded-full bg-primario px-5 h-11 font-bold text-white shadow-boton">
-          {accion.texto}
-        </Link>
-      </div>
-    );
-  }
+
   if (compacto) {
     return (
       <div role="alert" className="aviso-entra flex flex-wrap items-center justify-between gap-3 rounded-[16px] bg-aviso-suave px-4 py-3 text-base text-aviso-texto">
         <span>
           <strong>{titulo}.</strong> {detalle}
         </span>
-        {onReintentar && (
-          <button type="button" onClick={onReintentar} className="rounded-full bg-white px-3.5 py-1.5 font-bold text-texto shadow-chip">
-            Reintentar
-          </button>
+        {accion ? (
+          <Link href={accion.href} className="rounded-full bg-white px-3.5 py-1.5 font-bold text-texto shadow-chip">
+            {accion.texto}
+          </Link>
+        ) : (
+          onReintentar && (
+            <button type="button" onClick={onReintentar} className="rounded-full bg-white px-3.5 py-1.5 font-bold text-texto shadow-chip">
+              Reintentar
+            </button>
+          )
         )}
       </div>
     );
   }
+
   return (
-    <div role="alert" className="entra flex flex-col items-center gap-3 px-4 py-12 text-center">
-      <Facti pose="durmiendo" size={140} animated />
-      <h2 className="text-[20px] font-bold">{titulo}</h2>
-      <p className="max-w-[460px] text-texto-suave">{detalle}</p>
-      {onReintentar && (
-        <button type="button" onClick={onReintentar} className="inline-flex items-center justify-center btn-lift mt-1 rounded-full bg-primario px-6 h-12 font-bold text-white shadow-boton">
-          Reintentar
-        </button>
+    <div role="alert" className={`entra ${tarjetaAviso}`}>
+      {/* Ícono y texto siempre juntos; el botón baja abajo si no entra. */}
+      <div className="flex min-w-0 flex-[1_1_280px] items-start gap-4">
+        <IconoAviso tono={accion ? 'aviso' : 'error'} />
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <h2 className="text-[18px] font-bold">{titulo}</h2>
+          <p className="text-texto-suave">{detalle}</p>
+        </div>
+      </div>
+      {accion ? (
+        <Link href={accion.href} className="btn-lift inline-flex h-11 flex-none items-center justify-center rounded-full bg-primario px-5 font-bold text-white shadow-boton">
+          {accion.texto}
+        </Link>
+      ) : (
+        onReintentar && (
+          <button type="button" onClick={onReintentar} className="btn-lift inline-flex h-11 flex-none items-center justify-center gap-2 rounded-full border-[1.5px] border-borde px-5 font-bold text-texto hover:border-primario hover:text-primario-oscuro">
+            Reintentar
+          </button>
+        )
       )}
     </div>
   );
