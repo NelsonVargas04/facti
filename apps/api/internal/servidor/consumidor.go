@@ -64,9 +64,13 @@ func (l *limitador) permitir(clave string, ahora time.Time) bool {
 	return true
 }
 
+// ipDe devuelve la IP del cliente. En Vercel se usan las cabeceras que pone la plataforma
+// (el cliente no las puede falsificar); X-Forwarded-For no se usa porque el cliente lo puede inventar.
 func ipDe(r *http.Request) string {
-	if f := r.Header.Get("X-Forwarded-For"); f != "" {
-		return strings.TrimSpace(strings.Split(f, ",")[0])
+	for _, h := range []string{"X-Vercel-Forwarded-For", "X-Real-Ip"} {
+		if v := strings.TrimSpace(strings.Split(r.Header.Get(h), ",")[0]); v != "" {
+			return v
+		}
 	}
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {

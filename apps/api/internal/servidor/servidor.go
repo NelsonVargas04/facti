@@ -196,10 +196,13 @@ func (s *Servidor) responderError(w http.ResponseWriter, err error) {
 	case errors.Is(err, datos.ErrNoEncontrado):
 		responderJSON(w, http.StatusNotFound, map[string]any{"error": "no_encontrado", "mensaje": "No encontramos ese comprobante."})
 	case errors.As(err, &conf):
-		responderJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "configuracion", "mensaje": conf.Mensaje})
+		// El detalle (variables, rutas) queda en el log; afuera no se cuenta cómo está armado Facti.
+		s.log.Error("configuración", "error", err)
+		responderJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "configuracion", "mensaje": "Facti no está disponible en este momento. Probá de nuevo en un rato."})
 	case errors.As(err, &base):
+		// Nunca se manda el error de la base: puede traer el host, el usuario o nombres de tablas.
 		s.log.Error("base de datos", "error", err)
-		responderJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "base_datos", "mensaje": base.Mensaje})
+		responderJSON(w, http.StatusServiceUnavailable, map[string]any{"error": "base_datos", "mensaje": "No pudimos conectarnos con la base de datos. Probá de nuevo en un rato."})
 	case errors.As(err, &sinRespuesta):
 		responderJSON(w, http.StatusGatewayTimeout, map[string]any{"error": "arca_sin_respuesta", "mensaje": sinRespuesta.Mensaje})
 	case errors.As(err, &errArca):
@@ -210,7 +213,7 @@ func (s *Servidor) responderError(w http.ResponseWriter, err error) {
 		responderJSON(w, http.StatusBadGateway, map[string]any{"error": "arca", "mensaje": errArca.Mensaje, "detalles": detalles})
 	default:
 		s.log.Error("error interno", "error", err)
-		responderJSON(w, http.StatusInternalServerError, map[string]any{"error": "interno", "mensaje": err.Error()})
+		responderJSON(w, http.StatusInternalServerError, map[string]any{"error": "interno", "mensaje": "Algo salió mal de nuestro lado. Probá de nuevo en un rato."})
 	}
 }
 
@@ -237,8 +240,17 @@ func responderJSON(w http.ResponseWriter, estado int, v any) {
 // cors permite que la web (apps/web, otro puerto) consuma la API desde el navegador.
 func (s *Servidor) cors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Cabeceras de seguridad en todas las respuestas: nada se guarda en cachés intermedias
+		// (hay datos fiscales) y nada se puede mostrar dentro de otra página.
+		hs := w.Header()
+		hs.Set("X-Content-Type-Options", "nosniff")
+		hs.Set("X-Frame-Options", "DENY")
+		hs.Set("Referrer-Policy", "no-referrer")
+		hs.Set("Cache-Control", "no-store")
 		origen := r.Header.Get("Origin")
-		if origen != "" && (len(s.origenesWeb) == 0 || slices.Contains(s.origenesWeb, origen)) {
+		// Sin WEB_ORIGIN se acepta cualquier origen solo fuera de producción.
+		abierto := len(s.origenesWeb) == 0 && s.entorno != arca.Produccion
+		if origen != "" && (abierto || slices.Contains(s.origenesWeb, origen)) {
 			h := w.Header()
 			h.Set("Access-Control-Allow-Origin", origen)
 			h.Add("Vary", "Origin")

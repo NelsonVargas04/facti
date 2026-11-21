@@ -83,16 +83,17 @@ func TestSinBaseDeDatosDa503(t *testing.T) {
 	h := Nuevo(Opciones{Arca: sinConfigurar, Auth: authFalso{}, PuntoVenta: 3})
 	for _, ruta := range []string{"/cuenta", "/resumen", "/comprobantes", "/comprobantes/1", "/clientes"} {
 		res, j := pedir(t, h, "GET", ruta, "", comoLucia...)
-		if res.StatusCode != 503 || j["error"] != "base_datos" || !strings.Contains(j["mensaje"].(string), "DATABASE_URL") {
+		// El detalle (DATABASE_URL, host, usuario) queda en el log: afuera va un mensaje genérico.
+		if res.StatusCode != 503 || j["error"] != "base_datos" || strings.Contains(j["mensaje"].(string), "DATABASE_URL") {
 			t.Errorf("%s: se esperaba 503 base_datos, vino %d %v", ruta, res.StatusCode, j)
 		}
 	}
 }
 
 func TestSesion(t *testing.T) {
-	// Sin Supabase configurado nadie puede entrar, y se explica por qué.
+	// Sin Supabase configurado nadie puede entrar. El motivo queda en el log, no en la respuesta.
 	h := Nuevo(Opciones{Arca: sinConfigurar, Datos: FijarDatos(datos.NuevaMemoria())})
-	if res, j := pedir(t, h, "GET", "/cuenta", "", comoLucia...); res.StatusCode != 503 || !strings.Contains(j["mensaje"].(string), "SUPABASE_URL") {
+	if res, j := pedir(t, h, "GET", "/cuenta", "", comoLucia...); res.StatusCode != 503 || j["error"] != "configuracion" || strings.Contains(j["mensaje"].(string), "SUPABASE_URL") {
 		t.Errorf("sin Supabase: %d %v", res.StatusCode, j)
 	}
 	h = Nuevo(Opciones{Arca: sinConfigurar, Datos: FijarDatos(datos.NuevaMemoria()), Auth: authFalso{}})

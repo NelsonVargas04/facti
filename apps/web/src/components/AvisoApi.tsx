@@ -8,12 +8,12 @@ import type { ErrorApi } from '@/lib/api';
 function textos(e: ErrorApi): { titulo: string; detalle: string } {
   switch (e.codigo) {
     case 'base_datos':
-      return {
-        titulo: 'Falta conectar la base de datos',
-        detalle: `${e.mensaje}. Cargá la URL de Supabase en DATABASE_URL (archivo .env de la raíz) y reiniciá la API.`,
-      };
+      // El detalle técnico queda en el log de la API; al usuario no se le muestra.
+      return process.env.NODE_ENV === 'development'
+        ? { titulo: 'Falta conectar la base de datos', detalle: 'Revisá DATABASE_URL en el .env de la raíz y el log de la API.' }
+        : { titulo: 'Facti no está disponible ahora', detalle: e.mensaje };
     case 'configuracion':
-      return { titulo: 'Falta terminar la configuración', detalle: e.mensaje };
+      return { titulo: 'Facti no está disponible ahora', detalle: e.mensaje };
     case 'sin_sesion':
       return { titulo: 'Tu sesión venció', detalle: 'Volvé a iniciar sesión para seguir.' };
     case 'falta_cuit':

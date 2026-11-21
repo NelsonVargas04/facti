@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Facti } from '@/components/Facti';
 import { verCuenta } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
+import { destinoSeguro } from '@/lib/volver';
 
 /**
  * Acá vuelve el usuario después de Google o del link del email. El cliente de Supabase cambia
@@ -37,7 +38,7 @@ function Callback() {
       return;
     }
     const v = params.get('volver');
-    const volver = v && v.startsWith('/') && !v.startsWith('//') ? v : '/app';
+    const volver = destinoSeguro(v);
     let listo = false;
 
     async function seguir() {

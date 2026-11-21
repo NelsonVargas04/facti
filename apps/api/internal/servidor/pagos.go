@@ -338,6 +338,8 @@ func (s *Servidor) webhookMercadoPago(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
+		// Se usa solo el id que vino firmado (no otro que venga en el cuerpo).
+		id = q.Get("data.id")
 	} else if s.entorno == "produccion" {
 		s.log.Error("falta MP_WEBHOOK_SECRET: no se aceptan webhooks sin firma en producción")
 		w.WriteHeader(http.StatusUnauthorized)

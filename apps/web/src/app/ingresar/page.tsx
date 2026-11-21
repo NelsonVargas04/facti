@@ -10,13 +10,14 @@ import { Facti } from '@/components/Facti';
 import { FactiWordmark } from '@/components/FactiLogo';
 import { mensajeAuth, supabase } from '@/lib/supabase';
 import { demoHabilitado, entrarDemo } from '@/lib/demo';
+import { destinoSeguro } from '@/lib/volver';
 
 const inputCls =
   'h-12 w-full rounded-input border-[1.5px] border-borde bg-white px-4 text-base font-normal text-texto outline-none transition-colors placeholder:text-[#9399B2] hover:border-[#C5CCDC] focus:border-primario focus:ring-4 focus:ring-primario-suave';
 
 /** Solo se vuelve a rutas internas, para no usar el login como redirección a otro sitio. */
 function rutaSegura(volver: string | null): string {
-  return volver && volver.startsWith('/') && !volver.startsWith('//') ? volver : '/app';
+  return destinoSeguro(volver);
 }
 
 export default function IngresarPagina() {

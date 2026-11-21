@@ -76,6 +76,17 @@ func (s *Servidor) asignarCuit(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 	nuevo := cuit.Limpiar(body.Cuit)
+	// Una vez que la cuenta factura con un CUIT, no se puede cambiar por otro: así nadie usa una
+	// cuenta para pasar a emitir a nombre de otra persona. Antes de la primera factura sí (por si se equivocó).
+	if c.Cuit != "" && c.Cuit != nuevo {
+		pag, err := d.ListarComprobantes(r.Context(), c.ID, datos.Filtro{Limite: 1})
+		if err != nil {
+			return &BaseDatosError{Mensaje: err.Error()}
+		}
+		if pag.Total > 0 {
+			return &errorPedido{estado: http.StatusConflict, codigo: "cuit_fijo", mensaje: "Tu cuenta ya factura con otro CUIT y no se puede cambiar. Si necesitás hacerlo, escribinos."}
+		}
+	}
 
 	var perfil datos.Perfil
 	padron := false

@@ -30,6 +30,10 @@ func main() {
 		Addr:              fmt.Sprintf(":%d", cfg.Puerto),
 		Handler:           h,
 		ReadHeaderTimeout: 10 * time.Second,
+		// Cortan pedidos lentos a propósito (slowloris). La emisión puede tardar: ARCA a veces demora.
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 90 * time.Second,
+		IdleTimeout:  120 * time.Second,
 	}
 
 	ctx, parar := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
