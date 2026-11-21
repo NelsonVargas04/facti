@@ -80,7 +80,7 @@ Ya están armados los dos proyectos: la web en Next.js y la API en Go, como serv
 | `NEXT_PUBLIC_CUIT_FACTI` | CUIT de Facti (se muestra en la guía de conexión) |
 | `NEXT_PUBLIC_DEMO` | **vacía** (si no, aparece "Entrar con la cuenta de prueba") |
 
-**Falta en el código:** no hay `vercel.json` con el cron diario que llama a `GET /recurrentes/procesar`. Sin eso, las facturas recurrentes **automáticas** no se emiten solas (las manuales andan igual). Es un archivo de pocas líneas; se puede sumar antes de lanzar o dejar las recurrentes en modo manual.
+**Cron de recurrentes:** `apps/api/vercel.json` llama todos los días a las 9 a `GET /recurrentes/procesar`. Para que emita, cargá `CRON_SECRET` en Vercel (proyecto `facti-api`).
 
 **Dominio (opcional):** comprá el dominio (por ejemplo en NIC Argentina para `.com.ar`), apuntalo a Vercel y actualizá `WEB_ORIGIN`, `WEB_URL` y las URLs de Supabase.
 
@@ -88,7 +88,7 @@ Ya están armados los dos proyectos: la web en Next.js y la API en Go, como serv
 
 **Estado del código: completo.** La web usa Supabase Auth con PKCE: el botón de Google en `/ingresar` y `/registro` vuelve a `/auth/callback`, que manda al onboarding si todavía no hay CUIT. La API valida cada sesión con las claves públicas del proyecto (JWKS).
 
-**Problema encontrado (21/11/2026):** la URL de Supabase de tu `.env` local (`NEXT_PUBLIC_SUPABASE_URL`) apunta a un proyecto que **ya no existe**: el dominio no resuelve. Hoy, en la compu, no se puede iniciar sesión ni con Google ni con email, solo con la cuenta de prueba. Fijate en Supabase cuál es el proyecto vigente (puede ser el que creó la integración con Vercel) y corregí la URL y la clave en el `.env` y en Vercel.
+**Resuelto (21/11/2026):** el proyecto `facti` de Supabase estaba **pausado** (Supabase pausa los proyectos gratis después de una semana sin uso) y por eso no andaba el login. Se reactivó y se corrigió el "Site URL" (apuntaba a la API) a `https://facti-iota.vercel.app`. Para que no se vuelva a pausar con usuarios reales, pasá al plan pago de Supabase o asegurate de que tenga uso diario.
 
 **Configuración (una vez por proyecto de Supabase):**
 1. **Google Cloud Console** → APIs y servicios → Credenciales → "ID de cliente de OAuth" de tipo **Aplicación web**:
@@ -179,7 +179,7 @@ Ya están armados los dos proyectos: la web en Next.js y la API en Go, como serv
 - [ ] Copias de seguridad de la base resueltas
 - [ ] Variables de producción cargadas en Vercel (API y web)
 - [ ] `FACTI_DEMO` y `NEXT_PUBLIC_DEMO` vacías
-- [ ] Cron de recurrentes (o recurrentes solo manuales)
+- [ ] `CRON_SECRET` cargado en Vercel (el cron ya está en el código)
 - [ ] Factura real con tu CUIT, PDF y QR revisados, anulada con nota de crédito
 - [ ] Factura real con un segundo CUIT (prueba de la delegación)
 - [ ] Base de datos inscripta (Ley 25.326)
