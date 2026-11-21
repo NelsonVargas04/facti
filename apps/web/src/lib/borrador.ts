@@ -45,11 +45,14 @@ export interface Borrador {
 }
 
 const CLAVE = 'facti-borrador-factura';
-const clave = (cuentaId?: number) => (cuentaId ? `${CLAVE}-${cuentaId}` : CLAVE);
+/** Por cuenta: si dos personas usan la misma compu, cada una ve solo su borrador. Sin cuenta, no se guarda. */
+const clave = (cuentaId?: number) => (cuentaId ? `${CLAVE}-${cuentaId}` : null);
 
 export function leerBorrador(cuentaId?: number): Borrador | null {
+  const k = clave(cuentaId);
+  if (!k) return null;
   try {
-    const s = window.localStorage.getItem(clave(cuentaId));
+    const s = window.localStorage.getItem(k);
     if (!s) return null;
     const b = JSON.parse(s) as Borrador;
     return b.v === 1 && Array.isArray(b.items) ? b : null;
@@ -59,9 +62,11 @@ export function leerBorrador(cuentaId?: number): Borrador | null {
 }
 
 export function guardarBorrador(b: Omit<Borrador, 'v' | 'guardadoEn'>, cuentaId?: number): string | null {
+  const k = clave(cuentaId);
+  if (!k) return null;
   const guardadoEn = new Date().toISOString();
   try {
-    window.localStorage.setItem(clave(cuentaId), JSON.stringify({ ...b, v: 1, guardadoEn }));
+    window.localStorage.setItem(k, JSON.stringify({ ...b, v: 1, guardadoEn }));
     return guardadoEn;
   } catch {
     return null; // sin almacenamiento (modo privado): la página sigue andando igual
@@ -69,8 +74,10 @@ export function guardarBorrador(b: Omit<Borrador, 'v' | 'guardadoEn'>, cuentaId?
 }
 
 export function borrarBorrador(cuentaId?: number) {
+  const k = clave(cuentaId);
+  if (!k) return;
   try {
-    window.localStorage.removeItem(clave(cuentaId));
+    window.localStorage.removeItem(k);
   } catch {
     /* nada */
   }

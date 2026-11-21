@@ -62,12 +62,18 @@ func probarRecurrentes(t *testing.T, d Datos) {
 		t.Fatalf("sin recurrentes: %v %v", rs, err)
 	}
 	r := Recurrente{Cliente: "ESTUDIO LUMEN SRL", Total: 85000, Plantilla: []byte(`{"concepto":2,"items":[{"descripcion":"Diseño"}]}`), Dia: 1, Proxima: "2026-12-01", Activa: true}
-	if err := d.CrearRecurrente(ctx, c.ID, &r); err != nil || r.ID == 0 {
+	if err := d.CrearRecurrente(ctx, c.ID, &r, 0); err != nil || r.ID == 0 {
 		t.Fatalf("crear: %+v %v", r, err)
 	}
 	auto := Recurrente{Cliente: "CAFÉ NORTE SAS", Total: 40000, Plantilla: []byte(`{"concepto":1}`), Dia: 10, Proxima: "2026-11-10", Automatica: true, Activa: true}
-	if err := d.CrearRecurrente(ctx, c.ID, &auto); err != nil {
+	if err := d.CrearRecurrente(ctx, c.ID, &auto, 0); err != nil {
 		t.Fatal(err)
+	}
+
+	// Con límite: la cuenta ya tiene 2, con máximo 2 no entra otra.
+	extra := Recurrente{Cliente: "X", Plantilla: []byte(`{}`), Dia: 2, Proxima: "2026-12-02", Activa: true}
+	if err := d.CrearRecurrente(ctx, c.ID, &extra, 2); !errors.Is(err, ErrLimiteRecurrentes) {
+		t.Fatalf("límite: %v", err)
 	}
 
 	rs, err := d.ListarRecurrentes(ctx, c.ID)

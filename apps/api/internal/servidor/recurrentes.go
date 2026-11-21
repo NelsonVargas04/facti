@@ -71,6 +71,11 @@ type pedidoRecurrente struct {
 
 // POST /recurrentes: la plantilla es el mismo pedido de emisión de la web (sin fechas).
 func (s *Servidor) crearRecurrente(w http.ResponseWriter, r *http.Request) error {
+	// Primero la sesión: sin ella no se lee ni se valida nada.
+	d, c, err := s.cuenta(r)
+	if err != nil {
+		return err
+	}
 	var body pedidoRecurrente
 	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)).Decode(&body); err != nil {
 		return pedidoInvalido("datos_invalidos", "No pudimos leer la factura recurrente.")
@@ -87,21 +92,9 @@ func (s *Servidor) crearRecurrente(w http.ResponseWriter, r *http.Request) error
 	if err != nil {
 		return err
 	}
-	d, c, err := s.cuenta(r)
-	if err != nil {
-		return err
-	}
+	max := 0
 	if c.Plan != datos.PlanPro {
-		rs, err := d.ListarRecurrentes(r.Context(), c.ID)
-		if err != nil {
-			return &BaseDatosError{Mensaje: err.Error()}
-		}
-		if len(rs) >= maxRecurrentesGratis {
-			return &errorPedido{
-				estado: http.StatusForbidden, codigo: "limite_plan",
-				mensaje: "En el plan Gratis podés tener 1 factura recurrente. Pasate a Pro para tener todas las que quieras.",
-			}
-		}
+		max = maxRecurrentesGratis
 	}
 	guardada, _ := json.Marshal(plantilla)
 	cliente := strings.TrimSpace(plantilla.Receptor.Nombre)
@@ -112,7 +105,13 @@ func (s *Servidor) crearRecurrente(w http.ResponseWriter, r *http.Request) error
 		Cliente: cliente, Total: prep.total, Plantilla: guardada, Dia: body.Dia,
 		Proxima: datos.SiguienteFecha(s.hoyAR(), body.Dia), Automatica: body.Automatica, Activa: true,
 	}
-	if err := d.CrearRecurrente(r.Context(), c.ID, &rec); err != nil {
+	if err := d.CrearRecurrente(r.Context(), c.ID, &rec, max); err != nil {
+		if errors.Is(err, datos.ErrLimiteRecurrentes) {
+			return &errorPedido{
+				estado: http.StatusForbidden, codigo: "limite_plan",
+				mensaje: "En el plan Gratis podés tener 1 factura recurrente. Pasate a Pro para tener todas las que quieras.",
+			}
+		}
 		return &BaseDatosError{Mensaje: err.Error()}
 	}
 	responderJSON(w, http.StatusCreated, s.vista(rec))

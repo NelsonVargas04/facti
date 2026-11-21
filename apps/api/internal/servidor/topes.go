@@ -18,6 +18,11 @@ const maxArchivo = 4 << 20
 // importarComprobantes recibe el archivo de "Mis Comprobantes – Emitidos" (CSV o Excel, en el cuerpo
 // del pedido tal cual) y guarda los comprobantes emitidos fuera de Facti.
 func (s *Servidor) importarComprobantes(w http.ResponseWriter, r *http.Request) error {
+	// Primero la sesión: sin ella no se lee el archivo (que puede pesar varios MB).
+	d, c, err := s.cuenta(r)
+	if err != nil {
+		return err
+	}
 	b, err := io.ReadAll(http.MaxBytesReader(w, r.Body, maxArchivo))
 	if err != nil {
 		var grande *http.MaxBytesError
@@ -29,10 +34,6 @@ func (s *Servidor) importarComprobantes(w http.ResponseWriter, r *http.Request) 
 	leido, err := miscomprobantes.Leer(b)
 	if err != nil {
 		return pedidoInvalido("archivo_invalido", err.Error())
-	}
-	d, c, err := s.cuenta(r)
-	if err != nil {
-		return err
 	}
 	imp, err := d.ImportarExternos(r.Context(), c.ID, leido.Comprobantes)
 	if err != nil {

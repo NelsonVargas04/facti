@@ -35,8 +35,9 @@ type RecurrenteDeCuenta struct {
 
 // Recurrentes guarda las facturas recurrentes. La implementan Memoria y Postgres.
 type Recurrentes interface {
-	// CrearRecurrente completa ID y CreadaEn.
-	CrearRecurrente(ctx context.Context, cuentaID int64, r *Recurrente) error
+	// CrearRecurrente completa ID y CreadaEn. Con max > 0, si la cuenta ya tiene max devuelve
+	// ErrLimiteRecurrentes; contar y crear es un solo paso (dos pedidos a la vez no pasan el límite).
+	CrearRecurrente(ctx context.Context, cuentaID int64, r *Recurrente, max int) error
 	ListarRecurrentes(ctx context.Context, cuentaID int64) ([]Recurrente, error)
 	VerRecurrente(ctx context.Context, cuentaID, id int64) (Recurrente, error)
 	// ActualizarRecurrente cambia día, próxima fecha, modo y si está activa (no la plantilla).
@@ -48,6 +49,9 @@ type Recurrentes interface {
 	// AutomaticasVencidas: activas, automáticas y con próxima fecha hasta `hasta` inclusive, de todas las cuentas.
 	AutomaticasVencidas(ctx context.Context, hasta string) ([]RecurrenteDeCuenta, error)
 }
+
+// ErrLimiteRecurrentes: la cuenta ya tiene todas las recurrentes que permite su plan.
+var ErrLimiteRecurrentes = errors.New("límite de facturas recurrentes del plan")
 
 // SiguienteFecha devuelve el día `dia` del mes siguiente al de `desde` (AAAA-MM-DD).
 func SiguienteFecha(desde time.Time, dia int) string {
@@ -62,11 +66,22 @@ func SiguienteFecha(desde time.Time, dia int) string {
 
 // ---------- Memoria ----------
 
-func (m *Memoria) CrearRecurrente(_ context.Context, cuentaID int64, r *Recurrente) error {
+func (m *Memoria) CrearRecurrente(_ context.Context, cuentaID int64, r *Recurrente, max int) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	if !m.existeCuenta(cuentaID) {
 		return ErrNoEncontrado
+	}
+	if max > 0 {
+		n := 0
+		for _, x := range m.recurrentes {
+			if x.cuentaID == cuentaID {
+				n++
+			}
+		}
+		if n >= max {
+			return ErrLimiteRecurrentes
+		}
 	}
 	m.ultimaRecurrente++
 	r.ID = m.ultimaRecurrente
@@ -187,11 +202,32 @@ func scanRecurrente(row pgx.Row, extra ...any) (Recurrente, error) {
 	return r, err
 }
 
-func (p *Postgres) CrearRecurrente(ctx context.Context, cuentaID int64, r *Recurrente) error {
-	return p.pool.QueryRow(ctx, `
+func (p *Postgres) CrearRecurrente(ctx context.Context, cuentaID int64, r *Recurrente, max int) error {
+	tx, err := p.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+	if max > 0 {
+		// Un candado por cuenta mientras dura la transacción: dos pedidos a la vez se ponen en fila.
+		if _, err := tx.Exec(ctx, `select pg_advisory_xact_lock(8008, $1::int)`, cuentaID); err != nil {
+			return err
+		}
+		var n int
+		if err := tx.QueryRow(ctx, `select count(*) from facti.recurrentes where cuenta_id = $1`, cuentaID).Scan(&n); err != nil {
+			return err
+		}
+		if n >= max {
+			return ErrLimiteRecurrentes
+		}
+	}
+	if err := tx.QueryRow(ctx, `
 		insert into facti.recurrentes (cuenta_id, cliente, total, plantilla, dia, proxima, automatica, activa)
 		values ($1, $2, $3, $4::jsonb, $5, $6::date, $7, $8) returning id, creada_en`,
-		cuentaID, r.Cliente, r.Total, string(r.Plantilla), r.Dia, r.Proxima, r.Automatica, r.Activa).Scan(&r.ID, &r.CreadaEn)
+		cuentaID, r.Cliente, r.Total, string(r.Plantilla), r.Dia, r.Proxima, r.Automatica, r.Activa).Scan(&r.ID, &r.CreadaEn); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
 }
 
 func (p *Postgres) ListarRecurrentes(ctx context.Context, cuentaID int64) ([]Recurrente, error) {
