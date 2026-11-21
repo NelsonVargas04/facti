@@ -241,6 +241,8 @@ type Datos interface {
 	Recurrentes
 	// Link privado para suscribirse al calendario.
 	Calendario
+	// Métricas globales para el portal de administración.
+	Admin
 
 	Cerrar()
 }

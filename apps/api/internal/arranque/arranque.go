@@ -86,6 +86,8 @@ func Armar(log *slog.Logger, conDemo bool) (http.Handler, config.Config, error) 
 		PrecioProUSD:    cfg.PrecioProUSD,
 		WebURL:          cfg.WebURL,
 		CronSecret:      cfg.CronSecret,
+		AdminToken:      cfg.AdminReportToken,
+		Version:         cfg.Version,
 	})
 	return h, cfg, nil
 }

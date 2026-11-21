@@ -47,6 +47,10 @@ type Config struct {
 	WebURL string
 	// CronSecret: clave del cron diario que emite las facturas recurrentes automáticas.
 	CronSecret string
+	// AdminReportToken: clave del portal de administración para GET /api/admin/report.
+	AdminReportToken string
+	// Version: lo que se desplegó (FACTI_VERSION o, en Vercel, el commit).
+	Version string
 }
 
 // Cargar busca el .env subiendo desde la carpeta actual (la API corre dentro de apps/api)
@@ -86,6 +90,11 @@ func Cargar() Config {
 	c.MPAccessToken = strings.TrimSpace(os.Getenv("MP_ACCESS_TOKEN"))
 	c.MPWebhookSecret = strings.TrimSpace(os.Getenv("MP_WEBHOOK_SECRET"))
 	c.CronSecret = strings.TrimSpace(os.Getenv("CRON_SECRET"))
+	c.AdminReportToken = strings.TrimSpace(os.Getenv("ADMIN_REPORT_TOKEN"))
+	c.Version = strings.TrimSpace(os.Getenv("FACTI_VERSION"))
+	if sha := strings.TrimSpace(os.Getenv("VERCEL_GIT_COMMIT_SHA")); c.Version == "" && len(sha) >= 7 {
+		c.Version = sha[:7]
+	}
 	c.PrecioProUSD = 10
 	if v, err := strconv.ParseFloat(strings.TrimSpace(os.Getenv("FACTI_PRECIO_PRO_USD")), 64); err == nil && v > 0 {
 		c.PrecioProUSD = v

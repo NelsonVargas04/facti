@@ -39,6 +39,10 @@ type Servidor struct {
 	webURL       string
 	// cronSecreto protege POST /recurrentes/procesar (lo llama el cron diario).
 	cronSecreto string
+	// adminToken protege GET /api/admin/report (lo llama el portal de administración).
+	adminToken string
+	version    string
+	inicio     time.Time
 }
 
 // Opciones para construir el servidor.
@@ -67,6 +71,10 @@ type Opciones struct {
 	WebURL string
 	// CronSecret: clave del cron que emite las facturas recurrentes automáticas (vacía = desactivado).
 	CronSecret string
+	// AdminToken: clave del portal de administración (vacía = reporte desactivado).
+	AdminToken string
+	// Version que informa el reporte de administración (por ejemplo, el commit desplegado).
+	Version string
 }
 
 // Nuevo devuelve el http.Handler con todas las rutas.
@@ -78,6 +86,7 @@ func Nuevo(o Opciones) http.Handler {
 		categorias:        o.Categorias,
 		mp:                o.MercadoPago, mpSecreto: o.MPWebhookSecret, cotizador: o.Cotizador,
 		precioProUSD: o.PrecioProUSD, webURL: o.WebURL, cronSecreto: o.CronSecret,
+		adminToken: o.AdminToken, version: o.Version, inicio: time.Now(),
 	}
 	if s.precioProUSD == 0 {
 		s.precioProUSD = 10
@@ -149,6 +158,8 @@ func Nuevo(o Opciones) http.Handler {
 	mux.Handle("GET /recurrentes/{id}", s.ruta(s.verRecurrente))
 	mux.Handle("PATCH /recurrentes/{id}", s.ruta(s.cambiarRecurrente))
 	mux.Handle("DELETE /recurrentes/{id}", s.ruta(s.borrarRecurrente))
+	// Portal de administración: métricas globales (sin sesión, con ADMIN_REPORT_TOKEN).
+	mux.Handle("GET /api/admin/report", s.ruta(s.reporteAdmin))
 
 	return s.registrar(s.cors(mux))
 }
