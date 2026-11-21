@@ -71,6 +71,13 @@ export function PagosReales({ inicial, uso, titular, volvio }: { inicial: Estado
   }, [volvio]);
 
   const esPro = e.plan === 'pro';
+  // Dio de baja pero le queda Pro pago: no se muestra "Dar de baja" y puede volver.
+  const deBaja = esPro && Boolean(e.proHasta);
+  const diaSiguiente = (iso: string) => {
+    const d = new Date(`${iso}T12:00:00`);
+    d.setDate(d.getDate() + 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
   const s = e.suscripcion;
   const medio = s ? medioDe(s) : null;
   const enPesosHoy = e.dolar ? Math.ceil(e.precioUsd * e.dolar.valor) : null;
@@ -94,7 +101,12 @@ export function PagosReales({ inicial, uso, titular, volvio }: { inicial: Estado
     setBajando(false);
     if (!r.ok) return setAviso({ tono: 'error', texto: r.mensaje });
     setE(r.dato);
-    setAviso({ tono: 'aviso', texto: 'Listo, diste de baja Pro. No se te cobra más.' });
+    setAviso({
+      tono: 'aviso',
+      texto: r.dato.proHasta
+        ? `Listo, diste de baja Pro. No se te cobra más y seguís con Pro hasta el ${fecha(r.dato.proHasta)}, lo que ya pagaste.`
+        : 'Listo, diste de baja Pro. No se te cobra más.',
+    });
   }
 
   const colorAviso = { exito: 'bg-exito-suave text-exito-texto', aviso: 'bg-aviso-suave text-aviso-texto', error: 'bg-error-suave text-error' };
@@ -115,7 +127,38 @@ export function PagosReales({ inicial, uso, titular, volvio }: { inicial: Estado
             </div>
           )}
 
-          {esPro && s ? (
+          {deBaja ? (
+            <>
+              <div className="flex flex-col gap-2 rounded-[18px] bg-fondo p-4 sm:p-5">
+                <strong>Diste de baja Pro</strong>
+                <p className="text-texto-suave">
+                  No se te cobra más. Seguís con Pro hasta el <b className="text-texto">{fecha(e.proHasta!)}</b>, lo que ya pagaste; después volvés al plan Gratis.
+                </p>
+              </div>
+              <IncluyePro animado={false} />
+              <div className="mt-auto flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={pasarAPro}
+                  disabled={yendo}
+                  className="btn-lift inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-acento px-5 font-bold text-texto shadow-[0_6px_16px_rgba(224,161,0,0.25)] disabled:opacity-70"
+                >
+                  {yendo ? (
+                    <>
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-texto/30 border-t-texto" />
+                      Te llevamos a Mercado Pago…
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="estrella" size={18} />
+                      {s?.estado === 'pending' ? 'Terminar el pago en Mercado Pago' : 'Volver a Pro'}
+                    </>
+                  )}
+                </button>
+                <p className="text-texto-suave">Si volvés, el primer cobro es el {fecha(diaSiguiente(e.proHasta!))}: no pagás dos veces el mismo mes.</p>
+              </div>
+            </>
+          ) : esPro && s ? (
             <>
               <dl className="flex flex-col divide-y divide-[#EEF1F6]">
                 <Fila k="Precio" v={`${pesos(s.importe)} por mes (US$${s.precioUsd})`} />
@@ -132,7 +175,7 @@ export function PagosReales({ inicial, uso, titular, volvio }: { inicial: Estado
                 <Desplegable abierto={bajando}>
                   <div className="flex flex-col gap-3 rounded-[18px] bg-error-suave p-4 sm:p-5">
                     <strong>¿Volvés al plan Gratis?</strong>
-                    <p className="text-texto-suave">Cancelamos la suscripción en Mercado Pago y no se te cobra más. Vuelven los límites de 10 facturas A, B y C y 1 Factura E por mes.</p>
+                    <p className="text-texto-suave">Cancelamos la suscripción en Mercado Pago y no se te cobra más. Seguís con Pro hasta el final del mes que ya pagaste; después vuelven los límites de 10 facturas A, B y C y 1 Factura E por mes.</p>
                     <div className="flex flex-wrap gap-3">
                       <button type="button" onClick={darDeBaja} disabled={cancelando} className="btn-lift inline-flex h-11 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-[#E5484D] px-5 font-bold text-white disabled:opacity-60">
                         {cancelando && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}

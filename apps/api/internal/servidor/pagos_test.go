@@ -158,9 +158,9 @@ func TestSuscripcionPro(t *testing.T) {
 		t.Fatalf("ya es Pro: %d %v", res.StatusCode, j)
 	}
 
-	// Da de baja: vuelve a Gratis y el historial se queda.
+	// Da de baja: sigue en Pro hasta el día antes del próximo cobro (lo que ya pagó) y el historial se queda.
 	res, j = e.pedir(t, "POST", "/pagos/cancelar", "")
-	if res.StatusCode != 200 || j["plan"] != "gratis" || len(j["pagos"].([]any)) != 1 {
+	if res.StatusCode != 200 || j["plan"] != "pro" || j["proHasta"] != "2026-12-16" || len(j["pagos"].([]any)) != 1 {
 		t.Fatalf("cancelar: %d %v", res.StatusCode, j)
 	}
 }

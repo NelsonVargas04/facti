@@ -78,23 +78,28 @@ type PedidoSuscripcion struct {
 	Motivo     string // lo que ve el usuario en Mercado Pago ("Facti Pro")
 	Referencia string // para saber de qué cuenta es (external_reference)
 	ImporteARS float64
-	VolverA    string // URL a la que vuelve después del checkout
+	VolverA    string    // URL a la que vuelve después del checkout
+	Inicio     time.Time // primer cobro; cero = ahora (sirve para volver a Pro sin cobrar dos veces el mismo mes)
 }
 
 // CrearSuscripcion crea la suscripción "pendiente" y devuelve la URL del checkout de Mercado Pago.
 func (c *Cliente) CrearSuscripcion(ctx context.Context, p PedidoSuscripcion) (Suscripcion, error) {
+	recurrencia := map[string]any{
+		"frequency":          1,
+		"frequency_type":     "months",
+		"transaction_amount": p.ImporteARS,
+		"currency_id":        "ARS",
+	}
+	if !p.Inicio.IsZero() {
+		recurrencia["start_date"] = p.Inicio.Format("2006-01-02T15:04:05.000-07:00")
+	}
 	cuerpo := map[string]any{
 		"reason":             p.Motivo,
 		"external_reference": p.Referencia,
 		"payer_email":        p.Email,
 		"back_url":           p.VolverA,
 		"status":             Pendiente,
-		"auto_recurring": map[string]any{
-			"frequency":          1,
-			"frequency_type":     "months",
-			"transaction_amount": p.ImporteARS,
-			"currency_id":        "ARS",
-		},
+		"auto_recurring":     recurrencia,
 	}
 	var s Suscripcion
 	err := c.pedir(ctx, http.MethodPost, "/preapproval", cuerpo, &s)

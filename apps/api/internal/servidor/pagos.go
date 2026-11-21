@@ -41,10 +41,12 @@ type estadoPagos struct {
 	MercadoPago bool               `json:"mercadoPago"` // false = todavía no está configurado (vista previa)
 	Suscripcion *datos.Suscripcion `json:"suscripcion"`
 	Pagos       []datos.PagoFacti  `json:"pagos"`
+	// ProHasta: dio de baja Pro pero sigue con Pro hasta esta fecha (lo que ya pagó).
+	ProHasta string `json:"proHasta,omitempty"`
 }
 
 func (s *Servidor) armarEstadoPagos(ctx context.Context, d datos.Datos, c datos.Cuenta) (estadoPagos, error) {
-	e := estadoPagos{Plan: c.Plan, PrecioUSD: s.precioProUSD, MercadoPago: s.mp != nil, Pagos: []datos.PagoFacti{}}
+	e := estadoPagos{Plan: c.Plan, PrecioUSD: s.precioProUSD, MercadoPago: s.mp != nil, Pagos: []datos.PagoFacti{}, ProHasta: c.ProHasta}
 	sus, err := d.VerSuscripcion(ctx, c.ID)
 	if err != nil {
 		return e, &BaseDatosError{Mensaje: err.Error()}
@@ -87,8 +89,14 @@ func (s *Servidor) suscribirse(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
+	// Si dio de baja pero todavía le queda Pro pago, puede volver: el primer cobro es cuando se le termina.
+	var inicio time.Time
 	if c.Plan == datos.PlanPro {
-		return &errorPedido{estado: http.StatusConflict, codigo: "ya_pro", mensaje: "Ya tenés Facti Pro."}
+		if c.ProHasta == "" {
+			return &errorPedido{estado: http.StatusConflict, codigo: "ya_pro", mensaje: "Ya tenés Facti Pro."}
+		}
+		inicio, _ = time.ParseInLocation("2006-01-02", c.ProHasta, horaArgentina)
+		inicio = inicio.AddDate(0, 0, 1).Add(12 * time.Hour) // el día siguiente al último pago
 	}
 	if s.cotizador == nil {
 		return &ConfiguracionError{Mensaje: "Falta la cotización del dólar para calcular el precio en pesos."}
@@ -105,6 +113,7 @@ func (s *Servidor) suscribirse(w http.ResponseWriter, r *http.Request) error {
 		Referencia: "cuenta:" + strconv.FormatInt(c.ID, 10),
 		ImporteARS: importe,
 		VolverA:    strings.TrimRight(s.webURL, "/") + "/app/cuenta?mp=vuelta",
+		Inicio:     inicio,
 	})
 	if err != nil {
 		return errorMercadoPago(err)
@@ -216,6 +225,10 @@ func (s *Servidor) sincronizar(ctx context.Context, d datos.Datos, cuentaID int6
 				pagos = append(pagos, p)
 			}
 		}
+		// Al pasar de autorizada a cancelada o pausada, sigue con Pro hasta el final de lo que ya pagó.
+		if guardada.Estado == datos.SuscripcionAutorizada && (nueva.Estado == datos.SuscripcionCancelada || nueva.Estado == datos.SuscripcionPausada) {
+			nueva.ProHasta = finDelPeriodo(guardada.ProximoCobro, pagos, s.ahora())
+		}
 		if err := d.GuardarSuscripcion(ctx, cuentaID, nueva); err != nil {
 			return datos.Cuenta{}, &BaseDatosError{Mensaje: err.Error()}
 		}
@@ -228,6 +241,33 @@ func (s *Servidor) sincronizar(ctx context.Context, d datos.Datos, cuentaID int6
 		return datos.Cuenta{}, &BaseDatosError{Mensaje: err.Error()}
 	}
 	return c, nil
+}
+
+var horaArgentina = time.FixedZone("ART", -3*3600)
+
+// finDelPeriodo es el último día de Pro ya pagado: el día antes del próximo cobro, o un mes después
+// del último pago aprobado. "" si no queda nada pago.
+func finDelPeriodo(proximoCobro string, pagos []datos.PagoFacti, ahora time.Time) string {
+	hoy := ahora.In(horaArgentina).Format("2006-01-02")
+	fin := ""
+	if t, err := time.Parse("2006-01-02", proximoCobro); err == nil {
+		fin = t.AddDate(0, 0, -1).Format("2006-01-02")
+	} else {
+		for _, p := range pagos {
+			if p.Estado != "aprobado" {
+				continue
+			}
+			if t, err := time.Parse("2006-01-02", p.Fecha); err == nil {
+				if f := t.AddDate(0, 1, -1).Format("2006-01-02"); f > fin {
+					fin = f
+				}
+			}
+		}
+	}
+	if fin < hoy {
+		return ""
+	}
+	return fin
 }
 
 func estadoCobro(c mercadopago.Cobro) string {

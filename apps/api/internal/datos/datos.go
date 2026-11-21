@@ -35,18 +35,20 @@ const (
 
 // Cuenta del emisor: una por usuario. Cuit queda vacío hasta que lo carga en el onboarding.
 type Cuenta struct {
-	ID                int64     `json:"id"`
-	Email             string    `json:"email"`
-	Cuit              string    `json:"cuit"`
-	Nombre            string    `json:"nombre"`
-	Domicilio         string    `json:"domicilio"`
-	Condicion         string    `json:"condicion"` // responsable_inscripto, monotributo, exento…
-	Categoria         string    `json:"categoria"` // categoría de monotributo según el padrón
-	IngresosBrutos    string    `json:"ingresosBrutos"`
-	InicioActividades string    `json:"inicioActividades"` // AAAA-MM-DD o ""
-	PuntoVenta        int       `json:"puntoVenta"`
-	Plan              Plan      `json:"plan"`
-	CreadaEn          time.Time `json:"creadaEn"`
+	ID                int64  `json:"id"`
+	Email             string `json:"email"`
+	Cuit              string `json:"cuit"`
+	Nombre            string `json:"nombre"`
+	Domicilio         string `json:"domicilio"`
+	Condicion         string `json:"condicion"` // responsable_inscripto, monotributo, exento…
+	Categoria         string `json:"categoria"` // categoría de monotributo según el padrón
+	IngresosBrutos    string `json:"ingresosBrutos"`
+	InicioActividades string `json:"inicioActividades"` // AAAA-MM-DD o ""
+	PuntoVenta        int    `json:"puntoVenta"`
+	Plan              Plan   `json:"plan"`
+	// ProHasta: si dio de baja Pro, sigue con Pro hasta esta fecha (lo que ya pagó). AAAA-MM-DD o "".
+	ProHasta string    `json:"proHasta,omitempty"`
+	CreadaEn time.Time `json:"creadaEn"`
 }
 
 // Perfil fiscal del emisor (sale del padrón de ARCA).

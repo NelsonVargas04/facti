@@ -45,7 +45,7 @@ func (m *Memoria) CuentaDeUsuario(_ context.Context, usuarioID, email string, pu
 	if id, ok := m.usuarios[usuarioID]; ok {
 		c := &m.cuentas[id-1]
 		c.Email = email
-		return *c, nil
+		return m.vigente(*c), nil
 	}
 	c := Cuenta{ID: int64(len(m.cuentas) + 1), Email: email, PuntoVenta: puntoVenta, Plan: PlanGratis, CreadaEn: m.ahora()}
 	m.cuentas = append(m.cuentas, c)
@@ -66,7 +66,7 @@ func (m *Memoria) AsignarCuit(_ context.Context, cuentaID int64, cuit string, p 
 	}
 	c := &m.cuentas[cuentaID-1]
 	c.Cuit, c.Nombre, c.Domicilio, c.Condicion, c.Categoria = cuit, p.Nombre, p.Domicilio, p.Condicion, p.Categoria
-	return *c, nil
+	return m.vigente(*c), nil
 }
 
 func (m *Memoria) ActualizarPerfil(_ context.Context, cuentaID int64, p Perfil) (Cuenta, error) {
@@ -76,7 +76,7 @@ func (m *Memoria) ActualizarPerfil(_ context.Context, cuentaID int64, p Perfil) 
 		if m.cuentas[i].ID == cuentaID {
 			c := &m.cuentas[i]
 			c.Nombre, c.Domicilio, c.Condicion, c.Categoria = p.Nombre, p.Domicilio, p.Condicion, p.Categoria
-			return *c, nil
+			return m.vigente(*c), nil
 		}
 	}
 	return Cuenta{}, ErrNoEncontrado

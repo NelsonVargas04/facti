@@ -112,12 +112,17 @@ func nulo(s string) any {
 }
 
 const columnasCuenta = `id, email, coalesce(cuit, ''), nombre, domicilio, condicion, categoria, ingresos_brutos,
-	coalesce(to_char(inicio_actividades, 'YYYY-MM-DD'), ''), punto_venta, plan, creada_en`
+	coalesce(to_char(inicio_actividades, 'YYYY-MM-DD'), ''), punto_venta,
+	case when plan = 'gratis' and pro_hasta >= ` + hoyArgentina + ` then 'pro' else plan end,
+	case when pro_hasta >= ` + hoyArgentina + ` then to_char(pro_hasta, 'YYYY-MM-DD') else '' end, creada_en`
+
+// hoyArgentina es la fecha de hoy en Argentina, en SQL.
+const hoyArgentina = `(now() at time zone 'America/Argentina/Buenos_Aires')::date`
 
 func scanCuenta(row pgx.Row) (Cuenta, error) {
 	var c Cuenta
 	err := row.Scan(&c.ID, &c.Email, &c.Cuit, &c.Nombre, &c.Domicilio, &c.Condicion, &c.Categoria, &c.IngresosBrutos,
-		&c.InicioActividades, &c.PuntoVenta, &c.Plan, &c.CreadaEn)
+		&c.InicioActividades, &c.PuntoVenta, &c.Plan, &c.ProHasta, &c.CreadaEn)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return c, ErrNoEncontrado
 	}

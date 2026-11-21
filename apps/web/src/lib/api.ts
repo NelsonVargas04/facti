@@ -424,6 +424,8 @@ export interface EstadoPagos {
   mercadoPago: boolean;
   suscripcion: Suscripcion | null;
   pagos: PagoFacti[];
+  /** Dio de baja Pro pero sigue con Pro hasta esta fecha (AAAA-MM-DD), lo que ya pagó. */
+  proHasta?: string;
 }
 
 export function verPagos() {

@@ -49,7 +49,7 @@ func (m *Memoria) CuentaPorTokenCalendario(_ context.Context, token string) (Cue
 		if t == token && token != "" {
 			for _, c := range m.cuentas {
 				if c.ID == id {
-					return c, nil
+					return m.vigente(c), nil
 				}
 			}
 		}

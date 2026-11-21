@@ -5,6 +5,8 @@ import (
 	"errors"
 	"time"
 
+	"facti/api/internal/arca"
+
 	"github.com/jackc/pgx/v5"
 )
 
@@ -28,6 +30,8 @@ type Suscripcion struct {
 	Ultimos       string    `json:"ultimos"`
 	Vence         string    `json:"vence"` // MM/AA
 	ActualizadaEn time.Time `json:"actualizadaEn"`
+	// ProHasta: al darse de baja, hasta cuándo sigue Pro (lo que ya pagó). Se guarda en la cuenta.
+	ProHasta string `json:"-"`
 }
 
 // PagoFacti es un cobro mensual de la suscripción.
@@ -45,6 +49,7 @@ type PagoFacti struct {
 type Pagos interface {
 	// GuardarSuscripcion crea o reemplaza la suscripción de la cuenta y deja el plan en Pro
 	// mientras esté autorizada (en Gratis si se cancela o se pausa; pendiente no cambia el plan).
+	// Si al cancelarse viene ProHasta, la cuenta sigue en Pro hasta esa fecha inclusive.
 	GuardarSuscripcion(ctx context.Context, cuentaID int64, s Suscripcion) error
 	// VerSuscripcion devuelve nil si la cuenta nunca se suscribió.
 	VerSuscripcion(ctx context.Context, cuentaID int64) (*Suscripcion, error)
@@ -86,10 +91,33 @@ func (m *Memoria) GuardarSuscripcion(_ context.Context, cuentaID int64, s Suscri
 		for i := range m.cuentas {
 			if m.cuentas[i].ID == cuentaID {
 				m.cuentas[i].Plan = p
+				if p == PlanPro {
+					m.cuentas[i].ProHasta = ""
+				} else if s.ProHasta != "" {
+					m.cuentas[i].ProHasta = s.ProHasta
+				}
 			}
 		}
 	}
 	return nil
+}
+
+// vigente aplica a la cuenta el Pro que ya pagó después de darse de baja (con el lock tomado).
+func (m *Memoria) vigente(c Cuenta) Cuenta {
+	hoy := m.ahora().In(arca.HoraArgentina).Format("2006-01-02")
+	if c.ProHasta != "" && c.ProHasta >= hoy {
+		c.Plan = PlanPro
+	} else {
+		c.ProHasta = ""
+	}
+	return c
+}
+
+// FijarAhora cambia el reloj (para los tests).
+func (m *Memoria) FijarAhora(f func() time.Time) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.ahora = f
 }
 
 func (m *Memoria) VerSuscripcion(_ context.Context, cuentaID int64) (*Suscripcion, error) {
@@ -151,7 +179,7 @@ func (m *Memoria) CuentaPorID(_ context.Context, id int64) (Cuenta, error) {
 	defer m.mu.Unlock()
 	for _, c := range m.cuentas {
 		if c.ID == id {
-			return c, nil
+			return m.vigente(c), nil
 		}
 	}
 	return Cuenta{}, ErrNoEncontrado
@@ -183,8 +211,15 @@ func (p *Postgres) GuardarSuscripcion(ctx context.Context, cuentaID int64, s Sus
 		cuentaID, s.MPID, s.Estado, s.Importe, s.PrecioUSD, s.Cotizacion, nulo(s.ProximoCobro), s.Medio, s.Ultimos, s.Vence); err != nil {
 		return err
 	}
-	if pl := planDe(s.Estado); pl != "" {
-		if _, err := tx.Exec(ctx, `update facti.cuentas set plan = $2 where id = $1`, cuentaID, pl); err != nil {
+	switch pl := planDe(s.Estado); pl {
+	case PlanPro:
+		if _, err := tx.Exec(ctx, `update facti.cuentas set plan = 'pro', pro_hasta = null where id = $1`, cuentaID); err != nil {
+			return err
+		}
+	case PlanGratis:
+		// Sin ProHasta se deja el que había (los avisos siguientes de una baja no lo borran).
+		if _, err := tx.Exec(ctx, `update facti.cuentas set plan = 'gratis', pro_hasta = coalesce($2::date, pro_hasta) where id = $1`,
+			cuentaID, nulo(s.ProHasta)); err != nil {
 			return err
 		}
 	}
