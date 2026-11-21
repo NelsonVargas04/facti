@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"facti/api/internal/arca"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -193,16 +195,16 @@ func (p *Postgres) GuardarComprobante(ctx context.Context, cuentaID int64, c *Co
 			importe_total, importe_neto, importe_iva, cae, cae_vto, qr_url,
 			periodo_desde, periodo_hasta, vto_pago, condicion_venta,
 			receptor_doc_tipo, receptor_doc_nro, receptor_nombre, receptor_condicion_iva_id,
-			receptor_condicion, receptor_domicilio, receptor_email, cobro, respuesta_arca)
+			receptor_condicion, receptor_domicilio, receptor_email, cobro, respuesta_arca, asociado_id)
 		values ((select coalesce(max(numero_interno), 0) + 1 from facti.comprobantes where cuenta_id = $1),
 			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19,
-			$20, $21, $22, $23, $24, $25, $26, $27, $28)
+			$20, $21, $22, $23, $24, $25, $26, $27, $28, $29)
 		returning id, numero_interno, creado_en`,
 		cuentaID, c.ClienteID, c.Tipo, c.PuntoVenta, c.Numero, c.Fecha, c.Concepto, c.Moneda, c.Cotizacion,
 		c.Total, c.Neto, c.IVA, c.CAE, nulo(c.CAEVto), c.QR,
 		nulo(desde), nulo(hasta), nulo(vto), c.CondicionVenta,
 		r.DocTipo, r.DocNro, r.Nombre, r.CondicionIvaID, r.Condicion, r.Domicilio, r.Email,
-		string(c.Cobro), c.Respuesta,
+		string(c.Cobro), c.Respuesta, c.AsociadoID,
 	).Scan(&c.ID, &c.NumeroInterno, &c.CreadoEn)
 	if err != nil {
 		return fmt.Errorf("guardar comprobante: %w", err)
@@ -224,7 +226,9 @@ const columnasComprobante = `c.id, c.numero_interno, c.tipo, c.punto_venta, c.nu
 	coalesce(to_char(c.periodo_desde, 'YYYY-MM-DD'), ''), coalesce(to_char(c.periodo_hasta, 'YYYY-MM-DD'), ''),
 	coalesce(to_char(c.vto_pago, 'YYYY-MM-DD'), ''), c.condicion_venta,
 	c.receptor_doc_tipo, c.receptor_doc_nro, c.receptor_nombre, c.receptor_condicion_iva_id,
-	c.receptor_condicion, c.receptor_domicilio, c.receptor_email, c.cliente_id, c.cobro, c.cobrada_en, c.creado_en`
+	c.receptor_condicion, c.receptor_domicilio, c.receptor_email, c.cliente_id, c.cobro, c.cobrada_en, c.creado_en,
+	c.asociado_id,
+	coalesce((select sum(n.importe_total) from facti.comprobantes n where n.asociado_id = c.id), 0)::float8`
 
 func scanComprobante(row pgx.Row) (Comprobante, error) {
 	var c Comprobante
@@ -234,7 +238,7 @@ func scanComprobante(row pgx.Row) (Comprobante, error) {
 		&c.Moneda, &c.Cotizacion, &c.Total, &c.Neto, &c.IVA,
 		&c.CAE, &c.CAEVto, &c.QR, &desde, &hasta, &vto, &c.CondicionVenta,
 		&r.DocTipo, &r.DocNro, &r.Nombre, &r.CondicionIvaID, &r.Condicion, &r.Domicilio, &r.Email,
-		&c.ClienteID, &cobro, &c.CobradaEn, &c.CreadoEn)
+		&c.ClienteID, &cobro, &c.CobradaEn, &c.CreadoEn, &c.AsociadoID, &c.Acreditado)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return c, ErrNoEncontrado
 	}
@@ -266,7 +270,20 @@ func (p *Postgres) Comprobante(ctx context.Context, cuentaID, id int64) (Comprob
 		err := r.Scan(&it.Descripcion, &it.Cantidad, &it.Unidad, &it.PrecioUnitario, &it.Subtotal)
 		return it, err
 	})
-	return c, err
+	if err != nil || c.AsociadoID == nil {
+		return c, err
+	}
+	a := Referencia{ID: *c.AsociadoID}
+	err = p.pool.QueryRow(ctx, `
+		select tipo, punto_venta, numero, to_char(fecha, 'YYYY-MM-DD'), importe_total::float8
+		from facti.comprobantes where cuenta_id = $1 and id = $2`, cuentaID, a.ID).
+		Scan(&a.Tipo, &a.PuntoVenta, &a.Numero, &a.Fecha, &a.Total)
+	if err != nil {
+		return c, err
+	}
+	a.Sigla = arca.Sigla(a.Tipo)
+	c.Asociado = &a
+	return c, nil
 }
 
 // ordenes posibles del listado. El id desempata para que la paginación sea estable.

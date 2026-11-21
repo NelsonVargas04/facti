@@ -26,6 +26,7 @@ func (s *Servidor) raiz(w http.ResponseWriter, _ *http.Request) {
 			"GET /arca/condiciones-iva?clase=C",
 			"GET /arca/padron/{cuit}",
 			"POST /facturas",
+			"POST /comprobantes/{id}/nota-credito",
 			"GET /cuenta",
 			"GET /resumen?mes=AAAA-MM",
 			"GET /comprobantes?desde=&hasta=&q=&cobro=&orden=&limite=&saltar=",
@@ -252,8 +253,26 @@ func (body nuevaFactura) preparar(ahora time.Time) (facturaPreparada, error) {
 
 // emitirC pide el CAE a ARCA y guarda la Factura C. La usan la web y las recurrentes automáticas.
 func (s *Servidor) emitirC(ctx context.Context, d datos.Datos, cuenta datos.Cuenta, cl *ClientesArca, body nuevaFactura, prep facturaPreparada) (facturaEmitida, error) {
+	return s.emitirTipoC(ctx, d, cuenta, cl, body, prep, nil)
+}
+
+// emitirTipoC emite una Factura C o, si viene la factura original, una Nota de Crédito C asociada a ella.
+// Las notas de crédito no cuentan para el límite del plan ni quedan para cobrar.
+func (s *Servidor) emitirTipoC(ctx context.Context, d datos.Datos, cuenta datos.Cuenta, cl *ClientesArca, body nuevaFactura, prep facturaPreparada, original *datos.Comprobante) (facturaEmitida, error) {
 	fecha, total, servicio := prep.fecha, prep.total, prep.servicio
-	if lim := limitesDe(cuenta.Plan); lim != nil {
+	tipo, nombre, cobro := arca.FacturaC, "la factura", datos.Pendiente
+	var asociados []arca.ComprobanteAsociado
+	var asociadoID *int64
+	if original != nil {
+		tipo, nombre, cobro = arca.NotaCreditoC, "la nota de crédito", datos.SinCobro
+		fechaOrig, _ := time.ParseInLocation("2006-01-02", original.Fecha, arca.HoraArgentina)
+		asociados = []arca.ComprobanteAsociado{{
+			Tipo: original.Tipo, PuntoVenta: original.PuntoVenta, Numero: original.Numero, Cuit: cuenta.Cuit, Fecha: fechaOrig,
+		}}
+		id := original.ID
+		asociadoID = &id
+	}
+	if lim := limitesDe(cuenta.Plan); lim != nil && original == nil {
 		desde, hasta := mes(fecha.In(arca.HoraArgentina))
 		uso, err := d.Uso(ctx, cuenta.ID, desde, hasta)
 		if err != nil {
@@ -272,7 +291,7 @@ func (s *Servidor) emitirC(ctx context.Context, d datos.Datos, cuenta datos.Cuen
 	rec := body.Receptor
 	res, err := cl.WsfeDe(cuenta.Cuit).Emitir(ctx, arca.NuevoComprobante{
 		PuntoVenta:             pv,
-		Tipo:                   arca.FacturaC,
+		Tipo:                   tipo,
 		Concepto:               body.Concepto,
 		DocTipo:                *rec.DocTipo,
 		DocNro:                 rec.DocNro,
@@ -281,13 +300,14 @@ func (s *Servidor) emitirC(ctx context.Context, d datos.Datos, cuenta datos.Cuen
 		ImporteTotal:           total,
 		ImporteNeto:            total, // La Factura C no discrimina IVA.
 		Servicio:               servicio,
+		Asociados:              asociados,
 	})
 	if err != nil {
 		return facturaEmitida{}, err
 	}
 	if !res.Aprobado || res.CAE == "" {
 		return facturaEmitida{}, &errorPedido{
-			estado: http.StatusUnprocessableEntity, codigo: "rechazada", mensaje: "ARCA no autorizó la factura.",
+			estado: http.StatusUnprocessableEntity, codigo: "rechazada", mensaje: "ARCA no autorizó " + nombre + ".",
 			extra: map[string]any{"observaciones": res.Observaciones, "errores": res.Errores},
 		}
 	}
@@ -301,7 +321,7 @@ func (s *Servidor) emitirC(ctx context.Context, d datos.Datos, cuenta datos.Cuen
 	out := facturaEmitida{
 		Aprobado:   true,
 		Letra:      "C",
-		Tipo:       arca.FacturaC,
+		Tipo:       tipo,
 		PuntoVenta: pv,
 		Numero:     res.Numero,
 		CAE:        res.CAE,
@@ -311,7 +331,7 @@ func (s *Servidor) emitirC(ctx context.Context, d datos.Datos, cuenta datos.Cuen
 			Fecha:      fechaISO,
 			Cuit:       cuitEmisor,
 			PtoVta:     pv,
-			TipoCmp:    arca.FacturaC,
+			TipoCmp:    tipo,
 			NroCmp:     res.Numero,
 			Importe:    total,
 			Moneda:     "PES",
@@ -328,7 +348,7 @@ func (s *Servidor) emitirC(ctx context.Context, d datos.Datos, cuenta datos.Cuen
 	}
 
 	comp := datos.Comprobante{
-		Tipo: arca.FacturaC, PuntoVenta: pv, Numero: res.Numero, Fecha: fechaISO,
+		Tipo: tipo, PuntoVenta: pv, Numero: res.Numero, Fecha: fechaISO, AsociadoID: asociadoID,
 		Concepto: body.Concepto, Moneda: "PES", Cotizacion: 1, Total: total, Neto: total,
 		CAE: res.CAE, CAEVto: out.VencimientoCAE, QR: out.QR,
 		CondicionVenta: body.CondicionVenta,
@@ -337,7 +357,7 @@ func (s *Servidor) emitirC(ctx context.Context, d datos.Datos, cuenta datos.Cuen
 			CondicionIvaID: *rec.CondicionIvaReceptorID, Condicion: rec.Condicion,
 			Domicilio: strings.TrimSpace(rec.Domicilio), Email: strings.TrimSpace(rec.Email),
 		},
-		Cobro: datos.Pendiente, Items: prep.items, Respuesta: res.Respuesta,
+		Cobro: cobro, Items: prep.items, Respuesta: res.Respuesta,
 	}
 	if comp.Receptor.DocNro == "" {
 		comp.Receptor.DocNro = "0"
@@ -355,7 +375,7 @@ func (s *Servidor) emitirC(ctx context.Context, d datos.Datos, cuenta datos.Cuen
 		s.log.Error("comprobante autorizado sin guardar", "error", err, "comprobante", string(completo), "respuesta", res.Respuesta)
 		return facturaEmitida{}, &errorPedido{
 			estado: http.StatusInternalServerError, codigo: "no_guardado",
-			mensaje: fmt.Sprintf("ARCA autorizó la factura %05d-%08d (CAE %s), pero no pudimos guardarla en Facti. No la vuelvas a emitir: ya es válida.", pv, res.Numero, res.CAE),
+			mensaje: fmt.Sprintf("ARCA autorizó %s %05d-%08d (CAE %s), pero no pudimos guardarla en Facti. No la vuelvas a emitir: ya es válida.", nombre, pv, res.Numero, res.CAE),
 			extra:   map[string]any{"factura": out},
 		}
 	}

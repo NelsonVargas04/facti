@@ -145,10 +145,31 @@ func (m *Memoria) Comprobante(_ context.Context, cuentaID, id int64) (Comprobant
 	defer m.mu.Unlock()
 	for _, x := range m.comprobantes {
 		if x.v.ID == id && x.cuentaID == cuentaID {
-			return x.v, nil
+			c := x.v
+			c.Acreditado = m.acreditado(cuentaID, c.ID)
+			if c.AsociadoID != nil {
+				for _, a := range m.comprobantes {
+					if a.cuentaID == cuentaID && a.v.ID == *c.AsociadoID {
+						c.Asociado = &Referencia{ID: a.v.ID, Tipo: a.v.Tipo, Sigla: a.v.Sigla, PuntoVenta: a.v.PuntoVenta,
+							Numero: a.v.Numero, Fecha: a.v.Fecha, Total: a.v.Total}
+					}
+				}
+			}
+			return c, nil
 		}
 	}
 	return Comprobante{}, ErrNoEncontrado
+}
+
+// acreditado suma las notas de crédito que apuntan a la factura id (con el lock tomado).
+func (m *Memoria) acreditado(cuentaID, id int64) float64 {
+	var t float64
+	for _, x := range m.comprobantes {
+		if x.cuentaID == cuentaID && x.v.AsociadoID != nil && *x.v.AsociadoID == id {
+			t += x.v.Total
+		}
+	}
+	return t
 }
 
 func numeroDe(c Comprobante) string { return fmt.Sprintf("%05d-%08d", c.PuntoVenta, c.Numero) }
@@ -171,6 +192,7 @@ func (m *Memoria) ListarComprobantes(_ context.Context, cuentaID int64, f Filtro
 			continue
 		}
 		c.Items = nil
+		c.Acreditado = m.acreditado(cuentaID, c.ID)
 		lista = append(lista, c)
 	}
 	menor := map[string]func(a, b Comprobante) bool{

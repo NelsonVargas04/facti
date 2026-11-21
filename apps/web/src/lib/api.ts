@@ -166,6 +166,11 @@ export interface Comprobante {
   cobradaEn?: string;
   items?: { descripcion: string; cantidad: number; unidad: string; precioUnitario: number; subtotal: number }[];
   creadoEn: string;
+  /** En una nota de crédito: la factura que anula o corrige. */
+  asociadoId?: number;
+  asociado?: { id: number; tipo: number; sigla: string; puntoVenta: number; numero: number; fecha: string; total: number };
+  /** En una factura: cuánto suman las notas de crédito que la anulan o corrigen. */
+  acreditado: number;
 }
 
 export interface FiltroComprobantes {
@@ -195,6 +200,11 @@ export function verComprobante(id: number | string) {
 
 export function marcarCobro(id: number, cobro: 'pendiente' | 'cobrada') {
   return pedir<Comprobante>(`/comprobantes/${id}/cobro`, { method: 'PATCH', body: JSON.stringify({ cobro }) });
+}
+
+/** Nota de Crédito C sobre una Factura C. Sin importe, anula lo que queda de la factura. */
+export function emitirNotaCredito(id: number, body: { importe?: number; motivo?: string } = {}) {
+  return pedir<FacturaEmitida>(`/comprobantes/${id}/nota-credito`, { method: 'POST', body: JSON.stringify(body) });
 }
 
 // ---------- Resumen ----------

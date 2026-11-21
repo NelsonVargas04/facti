@@ -9,6 +9,7 @@ import { BackLink } from '@/components/BackLink';
 import { Facti } from '@/components/Facti';
 import { ComprobanteC } from '@/components/ComprobanteC';
 import { EscalarComprobante } from '@/components/EscalarComprobante';
+import { NotaCredito } from '@/components/NotaCredito';
 import { ChipCobro, totalFirmado, nroCorto } from '@/components/TablaFacturas';
 import { marcarCobro, verComprobante, type ErrorApi } from '@/lib/api';
 import { datosComprobante, nombreCliente } from '@/lib/comprobante';
@@ -160,6 +161,7 @@ export default function DetalleFactura() {
             )}
             {errCobro && <AvisoApi error={errCobro} compacto />}
           </div>
+          <NotaCredito comprobante={f} />
           {!esE && (
             <div className="flex flex-col gap-2.5 rounded-tarjeta bg-superficie p-6 shadow-tarjeta">
               <button type="button" onClick={() => window.print()} className="btn-lift flex h-12 items-center justify-center gap-2 rounded-full bg-primario font-bold text-white shadow-boton">

@@ -126,6 +126,7 @@ func Nuevo(o Opciones) http.Handler {
 	mux.Handle("GET /comprobantes", s.ruta(s.listarComprobantes))
 	mux.Handle("GET /comprobantes/{id}", s.ruta(s.verComprobante))
 	mux.Handle("PATCH /comprobantes/{id}/cobro", s.ruta(s.marcarCobro))
+	mux.Handle("POST /comprobantes/{id}/nota-credito", s.ruta(s.emitirNotaCredito))
 	mux.Handle("GET /clientes", s.ruta(s.listarClientes))
 	mux.Handle("POST /comprobantes/importar", s.ruta(s.importarComprobantes))
 	mux.Handle("GET /monotributo/topes", s.ruta(s.verTopes))

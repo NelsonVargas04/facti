@@ -122,8 +122,25 @@ type Comprobante struct {
 	CobradaEn      *time.Time `json:"cobradaEn,omitempty"`
 	Items          []Item     `json:"items,omitempty"`
 	CreadoEn       time.Time  `json:"creadoEn"`
+	// AsociadoID: en una nota de crédito, la factura que anula o corrige.
+	AsociadoID *int64 `json:"asociadoId,omitempty"`
+	// Asociado: datos de esa factura (solo al pedir un comprobante, no en los listados).
+	Asociado *Referencia `json:"asociado,omitempty"`
+	// Acreditado: en una factura, cuánto suman las notas de crédito que la anulan o corrigen.
+	Acreditado float64 `json:"acreditado"`
 	// Respuesta original de ARCA. Se guarda 10 años pero no se manda a la web.
 	Respuesta string `json:"-"`
+}
+
+// Referencia a otro comprobante de la cuenta (por ejemplo, la factura de una nota de crédito).
+type Referencia struct {
+	ID         int64   `json:"id"`
+	Tipo       int     `json:"tipo"`
+	Sigla      string  `json:"sigla"`
+	PuntoVenta int     `json:"puntoVenta"`
+	Numero     int64   `json:"numero"`
+	Fecha      string  `json:"fecha"`
+	Total      float64 `json:"total"`
 }
 
 // completarSigla deja la sigla que corresponde al tipo (las dos implementaciones guardan solo el tipo).
