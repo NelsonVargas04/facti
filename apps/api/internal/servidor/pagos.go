@@ -89,6 +89,18 @@ func (s *Servidor) suscribirse(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
+	// El email de la cuenta de Mercado Pago con la que va a pagar: Mercado Pago rechaza el pago si no
+	// coincide con el de la suscripción, y no siempre es el de Facti (por ejemplo, si entró con Google).
+	var body struct {
+		EmailMercadoPago string `json:"emailMercadoPago"`
+	}
+	_ = json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<12)).Decode(&body)
+	emailPago := strings.TrimSpace(body.EmailMercadoPago)
+	if emailPago == "" {
+		emailPago = c.Email
+	} else if !emailValido(emailPago) {
+		return pedidoInvalido("email_invalido", "Revisá el email de tu cuenta de Mercado Pago.")
+	}
 	// Si dio de baja pero todavía le queda Pro pago, puede volver: el primer cobro es cuando se le termina.
 	var inicio time.Time
 	if c.Plan == datos.PlanPro {
@@ -108,7 +120,7 @@ func (s *Servidor) suscribirse(w http.ResponseWriter, r *http.Request) error {
 	// Se redondea al peso para arriba: Mercado Pago cobra en pesos.
 	importe := math.Ceil(s.precioProUSD * dol.Valor)
 	sus, err := s.mp.CrearSuscripcion(r.Context(), mercadopago.PedidoSuscripcion{
-		Email:      c.Email,
+		Email:      emailPago,
 		Motivo:     "Facti Pro",
 		Referencia: "cuenta:" + strconv.FormatInt(c.ID, 10),
 		ImporteARS: importe,
@@ -383,4 +395,10 @@ func (s *Servidor) webhookMercadoPago(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
+}
+
+// emailValido: una validación simple (algo@algo.algo, sin espacios); Mercado Pago valida el resto.
+func emailValido(e string) bool {
+	at := strings.LastIndex(e, "@")
+	return len(e) <= 254 && at > 0 && at < len(e)-3 && strings.Contains(e[at:], ".") && !strings.ContainsAny(e, " \t\r\n,;<>")
 }

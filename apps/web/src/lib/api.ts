@@ -433,8 +433,9 @@ export function verPagos() {
 }
 
 /** Crea la suscripción y devuelve la URL del checkout de Mercado Pago (ahí se paga con tarjeta o dinero en cuenta). */
-export function suscribirsePro() {
-  return pedir<{ url: string; importe: number }>('/pagos/suscripcion', { method: 'POST' });
+/** emailMercadoPago: el de la cuenta de Mercado Pago con la que va a pagar (si no, el de Facti). */
+export function suscribirsePro(emailMercadoPago?: string) {
+  return pedir<{ url: string; importe: number }>('/pagos/suscripcion', { method: 'POST', body: JSON.stringify({ emailMercadoPago }) });
 }
 
 /** Trae de Mercado Pago el estado de la suscripción (al volver del checkout). */

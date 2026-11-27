@@ -98,7 +98,7 @@ function Contenido() {
     return (
       <>
         {encabezado}
-        <PagosReales inicial={pagos.dato} uso={plan} titular={titular} volvio={params.get('mp') === 'vuelta'} />
+        <PagosReales inicial={pagos.dato} uso={plan} titular={titular} email={cuenta.dato?.cuenta.email} volvio={params.get('mp') === 'vuelta'} />
         <p className="text-texto-tenue">
           ¿Querés irte del todo? Usá el <Link href="/baja" className="font-semibold text-texto-suave underline underline-offset-2">botón de baja de servicio</Link>.
         </p>

@@ -164,3 +164,18 @@ func TestSuscripcionPro(t *testing.T) {
 		t.Fatalf("cancelar: %d %v", res.StatusCode, j)
 	}
 }
+
+// Se paga con la cuenta de Mercado Pago que diga el usuario (puede no ser el email de Facti).
+func TestSuscripcionConEmailDeMercadoPago(t *testing.T) {
+	mp := &mpFalso{}
+	e, _ := entornoPagos(t, mp, "")
+	if res, j := e.pedir(t, "POST", "/pagos/suscripcion", `{"emailMercadoPago": "sin-arroba"}`); res.StatusCode != 400 || j["error"] != "email_invalido" {
+		t.Fatalf("email inválido: %d %v", res.StatusCode, j)
+	}
+	if res, j := e.pedir(t, "POST", "/pagos/suscripcion", `{"emailMercadoPago": " test_user_1@testuser.com "}`); res.StatusCode != 200 {
+		t.Fatalf("suscribirse: %d %v", res.StatusCode, j)
+	}
+	if mp.pedido.Email != "test_user_1@testuser.com" {
+		t.Fatalf("email del pagador: %q", mp.pedido.Email)
+	}
+}

@@ -46,10 +46,15 @@ function EstadoPago({ estado }: { estado: string }) {
 }
 
 /** "Plan y pagos" con Mercado Pago de verdad: se paga en el checkout de Mercado Pago. */
-export function PagosReales({ inicial, uso, titular, volvio }: { inicial: EstadoPagos; uso?: Plan; titular?: string; volvio: boolean }) {
+export function PagosReales({ inicial, uso, titular, email, volvio }: { inicial: EstadoPagos; uso?: Plan; titular?: string; email?: string; volvio: boolean }) {
   const [e, setE] = useState(inicial);
   useEffect(() => setE(inicial), [inicial]);
   const [yendo, setYendo] = useState(false);
+  // Mercado Pago rechaza el pago si se paga con otra cuenta que la de este email: por defecto, el de Facti.
+  const [emailMp, setEmailMp] = useState(email ?? '');
+  useEffect(() => {
+    if (email) setEmailMp((v) => v || email);
+  }, [email]);
   const [bajando, setBajando] = useState(false);
   const [cancelando, setCancelando] = useState(false);
   const [aviso, setAviso] = useState<{ tono: 'exito' | 'aviso' | 'error'; texto: string } | null>(null);
@@ -83,9 +88,13 @@ export function PagosReales({ inicial, uso, titular, volvio }: { inicial: Estado
   const enPesosHoy = e.dolar ? Math.ceil(e.precioUsd * e.dolar.valor) : null;
 
   async function pasarAPro() {
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailMp.trim())) {
+      setAviso({ tono: 'error', texto: 'Revisá el email de tu cuenta de Mercado Pago.' });
+      return;
+    }
     setYendo(true);
     setAviso(null);
-    const r = await suscribirsePro();
+    const r = await suscribirsePro(emailMp.trim());
     if (!r.ok) {
       setYendo(false);
       setAviso({ tono: 'error', texto: r.mensaje });
@@ -137,6 +146,17 @@ export function PagosReales({ inicial, uso, titular, volvio }: { inicial: Estado
               </div>
               <IncluyePro animado={false} />
               <div className="mt-auto flex flex-col gap-2">
+                <label className="flex flex-col gap-1.5">
+                  <span className="font-semibold">Email de tu cuenta de Mercado Pago</span>
+                  <input
+                    type="email"
+                    autoComplete="email"
+                    value={emailMp}
+                    onChange={(ev) => setEmailMp(ev.target.value)}
+                    className="h-11 rounded-input border-[1.5px] border-borde bg-white px-4 text-texto outline-none focus:border-primario"
+                  />
+                  <span className="text-texto-tenue">El de la cuenta con la que vas a pagar.</span>
+                </label>
                 <button
                   type="button"
                   onClick={pasarAPro}
@@ -205,6 +225,17 @@ export function PagosReales({ inicial, uso, titular, volvio }: { inicial: Estado
                   {enPesosHoy && e.dolar ? `: hoy son ${pesos(enPesosHoy)} (dólar BCRA del ${fecha(e.dolar.fecha)})` : ''}. Pagás en Mercado Pago con tarjeta o con tu
                   cuenta, y das de baja cuando quieras.
                 </p>
+                <label className="flex flex-col gap-1.5">
+                  <span className="font-semibold">Email de tu cuenta de Mercado Pago</span>
+                  <input
+                    type="email"
+                    autoComplete="email"
+                    value={emailMp}
+                    onChange={(ev) => setEmailMp(ev.target.value)}
+                    className="h-11 rounded-input border-[1.5px] border-borde bg-white px-4 text-texto outline-none focus:border-primario"
+                  />
+                  <span className="text-texto-tenue">El de la cuenta con la que vas a pagar.</span>
+                </label>
                 <button
                   type="button"
                   onClick={pasarAPro}
